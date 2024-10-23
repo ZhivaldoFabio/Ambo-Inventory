@@ -1,15 +1,15 @@
 <template>
   <div
-    class="full-page flex items-center justify-center min-h-screen bg-background-50"
+    class="full-page flex items-center justify-center min-h-screen min-w-full bg-background-50"
   >
     <div
       class="login-card w-full max-w-md p-8 space-y-6 bg-green-100 rounded-lg shadow-lg"
     >
-      <h2 class="text-2xl font-bold text-center text-text-1000">Login</h2>
+      <h2 class="text-heading text-2xl text-center">Login</h2>
       <form @submit.prevent="login">
         <div class="space-y-4">
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700"
+            <label for="email" class="block text-sm font-medium text-text-700"
               >Email</label
             >
             <input
@@ -23,7 +23,7 @@
           <div>
             <label
               for="password"
-              class="block text-sm font-medium text-gray-700"
+              class="block text-sm font-medium text-text-700"
               >Password</label
             >
             <input
@@ -35,7 +35,7 @@
             />
           </div>
         </div>
-        <div class="flex items-center justify-between mt-6">
+        <div class="items-center justify-between mt-6">
           <button
             @click="login"
             type="submit"
@@ -43,7 +43,7 @@
           >
             Sign In
           </button>
-          <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
+          <p v-if="errorMessage" class="error opacity-90">{{ errorMessage }}</p>
         </div>
       </form>
     </div>
@@ -53,33 +53,63 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/firebase';
 
-// Define the user's credentials (in a real app, credentials would be validated through a backend)
-const validEmail = 'email@email.com';
-const validPassword = 'password';
+//Defining the Router
+const router = useRouter();
 
-// Define reactive properties for email and password
+// Define reactive properties for email, password, and error message
 const email = ref('');
 const password = ref('');
 const errorMessage = ref('');
 
-const router = useRouter();
+// Method for handling login with Firebase Authentication
+const login = async () => {
+  try {
+    // Attempt to sign in with Firebase Auth
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email.value,
+      password.value
+    );
+    console.log('Logged in user:', userCredential.user);
 
-// Method for handling login
-const login = () => {
-  console.log(`Email: ${email.value}, Password: ${password.value}`);
-  if (email.value === validEmail && password.value === validPassword) {
-    // Successful login, set authentication in localStorage
+    // Set authentication state in localStorage (or manage it in a better way like Vuex/pinia)
     localStorage.setItem('auth', 'true');
+
+    // Clear any error message
     errorMessage.value = '';
 
-    // Redirect to the home page
+    // Redirect to the home page after successful login
     router.push({ name: 'home' });
-  } else {
-    // If credentials are incorrect, display an error message
+  } catch (error) {
+    // Handle errors and show an error message
+    console.error('Login error:', error);
     errorMessage.value = 'Invalid email or password. Please try again.';
   }
 };
+
+// // Define the user's credentials (in a real app, credentials would be validated through a backend)
+// const validEmail = 'email@email.com';
+// const validPassword = 'password';
+
+// // Method for handling login (Local)
+//const login = () => {
+//   console.log(`Email: ${email.value}, Password: ${password.value}`);
+//   if (email.value === validEmail && password.value === validPassword) {
+//     // Successful login, set authentication in localStorage
+//     localStorage.setItem('auth', 'true');
+//     errorMessage.value = '';
+
+//     // Redirect to the home page
+//     router.push({ name: 'home' });
+//   } else {
+//     // If credentials are incorrect, display an error message
+//     errorMessage.value = 'Invalid email or password. Please try again.';
+//   }
+// };
+//
 </script>
 
 <style scoped>

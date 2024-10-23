@@ -45,12 +45,12 @@ function toggleSubMenu(index) {
         </RouterLink>
       </li>
       <li class="p-1 ml-5">
-        <RouterLink to="/home" class="flex items-center space-x-2">
+        <RouterLink to="/laporanpembelian" class="flex items-center space-x-2">
           <span>Laporan Pembelian</span>
         </RouterLink>
       </li>
       <li class="p-1 ml-5">
-        <RouterLink to="/home" class="flex items-center space-x-2">
+        <RouterLink to="/laporanpenjualan" class="flex items-center space-x-2">
           <span>Laporan Penjualan</span>
         </RouterLink>
       </li>
