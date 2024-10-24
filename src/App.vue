@@ -3,7 +3,7 @@ import { RouterView } from 'vue-router';
 import Navbar from '@/components/Topbar.vue';
 import Sidebar from '@/components/Sidebar.vue';
 // import Navigation from '@/components/Navigation.vue';
-// Michelle Update
+// Michelle Update 2
 </script>
 
 <template>
