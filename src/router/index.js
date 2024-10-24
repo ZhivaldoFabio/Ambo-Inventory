@@ -5,6 +5,7 @@ import NotFoundView from '@/views/NotFoundView.vue';
 import UserEditView from '@/views/UserEditView.vue';
 import LaporanPembelianView from '@/views/LaporanPembelianView.vue';
 import LaporanPenjualanView from '@/views/LaporanPenjualanView.vue';
+import TambahSupplierView from '@/components/TambahSupplierView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,6 +32,36 @@ const router = createRouter({
       path: '/laporanpembelian',
       name: 'laporan-pembelian',
       component: LaporanPembelianView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-supplier',
+      name: 'tambah-supplier',
+      component: TambahSupplierView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-unit',
+      name: 'tambah-unit',
+      component: TambahUnitView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-kategori',
+      name: 'tambah-kategori',
+      component: TambahKategoriView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-stock',
+      name: 'tambah-stock',
+      component: TambahStockView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-produk',
+      name: 'tambah-produk',
+      component: TambahProdukView,
       meta: { requiresAuth: true },
     },
     {
