@@ -65,6 +65,18 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/tambah-pembelian',
+      name: 'tambah-pembelian',
+      component: TambahPembelianView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-penjualan',
+      name: 'tambah-penjualan',
+      component: TambahPenjualanView,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/laporanpenjualan',
       name: 'laporan-penjualan',
       component: LaporanPenjualanView,
