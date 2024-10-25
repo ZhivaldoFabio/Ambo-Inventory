@@ -4,6 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/firebase';
 import { useRouter } from 'vue-router';
 import { updateProfile, updateEmail } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 
 const username = ref('');
 const email = ref('');
@@ -15,10 +16,12 @@ const router = useRouter();
 // SIGN OUT FUNCTION
 const logout = async () => {
   try {
+    console.log('Logging Out')
     await signOut(auth); // Sign out the user
     router.push('/'); //redirect to the login page (or home)
   } catch (err) {
     error.value = 'Error logging out: ' + err.message; // Handle Error Message
+    console.error('Logout error:', err); // Debug log for errors
   }
 };
 
