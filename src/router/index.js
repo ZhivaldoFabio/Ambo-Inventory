@@ -45,6 +45,48 @@ const router = createRouter({
       },
     },
     {
+      path: '/tambah-supplier',
+      name: 'tambah-supplier',
+      component: TambahSupplierView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-unit',
+      name: 'tambah-unit',
+      component: TambahUnitView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-kategori',
+      name: 'tambah-kategori',
+      component: TambahKategoriView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-stock',
+      name: 'tambah-stock',
+      component: TambahStockView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-produk',
+      name: 'tambah-produk',
+      component: TambahProdukView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-pembelian',
+      name: 'tambah-pembelian',
+      component: TambahPembelianView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tambah-penjualan',
+      name: 'tambah-penjualan',
+      component: TambahPenjualanView,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/laporanpenjualan',
       name: 'laporan-penjualan',
       component: LaporanPenjualanView,
