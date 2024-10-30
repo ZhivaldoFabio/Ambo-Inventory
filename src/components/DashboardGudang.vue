@@ -59,70 +59,12 @@ onMounted(fetchTotalProdukSum);
   <!-- Developers and Employers -->
   <section class="py-4 font-body">
     <div class="container-xl lg:container m-auto">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 p-4 my-4 rounded-lg">
-        <!-- 1 -->
-        <Card bg="bg-primary-200">
-          <div class="flex items-center space-x-2">
-            <i class="pi pi-money-bill flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Pendapatan</h1>
-          </div>
-
-          <div class="text-3xl mt-14 font-bold place-self-center">
-            <!-- Display total_harga here -->
-            Rp. {{ formatCurrency(totalHargaSum) }}
-          </div>
-        </Card>
-        <!-- 2 -->
-        <Card>
-          <div class="flex items-center space-x-2">
-            <i class="pi pi-box flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Produk yang Terjual</h1>
-          </div>
-          <div class="text-3xl mt-14 font-bold place-self-center">
-            {{ totalProdukSum }}
-          </div>
-        </Card>
-        <!-- 3 -->
-        <Card>
-          <div class="flex items-center space-x-2">
-            <i class="pi pi-receipt flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Jumlah Transaksi</h1>
-          </div>
-          <div class="text-3xl mt-14 font-bold place-self-center">
-            <!-- Display total docuement in collection "Invoice" -->
-            {{ totalDocuments }}
-          </div>
-        </Card>
-
-        <!-- 4 -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-5 p-4 my-1 rounded-lg">
         <Card class="col-span-2">
-          <!-- <div class="flex items-center space-x-2">
-            <i class="pi pi-chart-bar flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Pendapatan</h1>
-          </div> -->
-          <div>
-            <ProgressPendapatan />
-          </div>
+          <ProdukTerjual />
         </Card>
-        <!-- 5 -->
-        <Card>
-          <!-- <div class="flex items-center space-x-2">
-            <i class="pi pi-chart-bar flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Best Selling Product</h1>
-          </div> -->
-          <div>
-            <ProdukTerjual />
-          </div>
-        </Card>
-        <!-- <Card>
-          <div class="flex items-center space-x-2">
-            <i class="pi pi-shopping-cart flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Jumlah Pesanan</h1>
-          </div>
-          <div class="text-3xl mt-14 font-bold place-self-center">147</div>
-        </Card> -->
-        <!-- 6 -->
-        <Card class="col-span-3">
+
+        <Card class="col-span-2">
           <div class="flex items-center space-x-2">
             <i
               class="pi pi-exclamation-circle flex text-xl text-accent-500"
@@ -163,14 +105,6 @@ onMounted(fetchTotalProdukSum);
             </table>
           </div>
         </Card>
-        <!-- 7 -->
-        <!-- <Card class="max-h-40">
-          <div class="flex items-center space-x-2">
-            <i class="pi pi-user flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Customer</h1>
-          </div>
-          <div class="text-2xl mt-5 font-bold text-right">1.453.415</div>
-        </Card> -->
       </div>
     </div>
   </section>

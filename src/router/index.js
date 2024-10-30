@@ -8,6 +8,18 @@ import UserEditView from '@/views/UserEditView.vue';
 import LaporanPembelianView from '@/views/LaporanPembelianView.vue';
 import LaporanPenjualanView from '@/views/LaporanPenjualanView.vue';
 import TambahSupplierView from '@/views/TambahSupplierView.vue';
+import TambahUnitView from '@/views/TambahUnitView.vue';
+import TambahKategoriView from '@/views/TambahKategoriView.vue';
+import TambahPembelianView from '@/views/TambahPembelianView.vue';
+import TambahPenjualanView from '@/views/TambahPenjualanView.vue';
+import TambahProdukView from '@/views/TambahProdukView.vue';
+import TambahStockView from '@/views/TambahStockView.vue';
+import DataProduk from '@/components/DataProduk.vue';
+import DataUnit from '@/components/DataUnit.vue';
+import DataKategori from '@/components/DataKategori.vue';
+import DataPembelian from '@/components/DataPembelian.vue';
+import DataSupplier from '@/components/DataSupplier.vue';
+import DataStock from '@/components/DataStock.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,44 +56,98 @@ const router = createRouter({
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
     },
+    // -------------------- BAGIAN GUDANG --------------------
     {
-      path: '/tambah-supplier',
-      name: 'tambah-supplier',
-      component: TambahSupplierView,
-      meta: { requiresAuth: true },
+      path: '/supplier',
+      name: 'supplier',
+      component: DataSupplier,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
     },
     {
-      path: '/tambah-unit',
+      path: '/stock',
+      name: 'stock',
+      component: DataStock,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/produk',
+      name: 'produk',
+      component: DataProduk,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/unit',
+      name: 'unit',
+      component: DataUnit,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/kategori',
+      name: 'kategori',
+      component: DataKategori,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/pembelian',
+      name: 'pembelian',
+      component: DataPembelian,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    // -------------------- BAGIAN KARYAWAN --------------------
+
+    // {
+    //   path: '/home',
+    //   name: 'tambah-unit',
+    //   component: TambahUnitView,
+    //   meta: { requiresAuth: true },
+    // },
+    
+    // -------------------- BAGIAN Belom --------------------
+
+    {
+      path: '/tambahunit',
       name: 'tambah-unit',
       component: TambahUnitView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/tambah-kategori',
+      path: '/tambahkategori',
       name: 'tambah-kategori',
       component: TambahKategoriView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/tambah-stock',
+      path: '/tambahstock',
       name: 'tambah-stock',
       component: TambahStockView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/tambah-produk',
+      path: '/tambahproduk',
       name: 'tambah-produk',
       component: TambahProdukView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/tambah-pembelian',
+      path: '/tambahpembelian',
       name: 'tambah-pembelian',
       component: TambahPembelianView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/tambah-penjualan',
+      path: '/tambahpenjualan',
       name: 'tambah-penjualan',
       component: TambahPenjualanView,
       meta: { requiresAuth: true },
