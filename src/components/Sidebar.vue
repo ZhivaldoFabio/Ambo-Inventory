@@ -25,14 +25,7 @@ onMounted(() => {
 
 <template>
   <nav
-    :class="[
-      'flex',
-      'min-h-screen',
-
-      'transition-all',
-      'duration-300',
-      'h-full',
-    ]"
+    :class="['flex', 'min-h-full', 'transition-all', 'duration-300', 'h-full']"
     class="m-2"
   >
     <div>
@@ -70,7 +63,7 @@ onMounted(() => {
       </ul>
 
       <!-- GUDANG -->
-       
+
       <ul v-if="currentUser && userRole === 'Gudang'" class="p-4 rounded-md">
         <!-- SIDEBAR TITLE -->
         <li class="text-primary-300 flex items-center space-x-2 mt-5">
