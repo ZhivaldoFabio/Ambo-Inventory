@@ -1,43 +1,54 @@
-<script setup></script>
+<script setup>
+import { ref, onMounted } from 'vue';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/firebase'; // Adjust this path if needed
+
+// Reactive variable to store Pembelian data
+const pembelians = ref([]);
+
+onMounted(async () => {
+  try {
+    // Reference to the "Kategori" collection in Firestore
+    const PembelianCollection = collection(db, 'Pembelian');
+
+    // Fetch documents from Firestore
+    const snapshot = await getDocs(PembelianCollection);
+
+    // Map each document data to Pembelian array
+    kategoris.value = snapshot.docs.map((doc) => doc.data());
+  } catch (error) {
+    console.error('Error fetching pembelians:', error);
+  }
+});
+</script>
 
 <template>
-  <Card class="col-span-2">
-    <div class="flex items-center space-x-2">
-      <i class="pi pi-exclamation-circle flex text-xl text-accent-500"></i>
-      <h1 class="flex text-xl text-heading">Stock Menipis</h1>
-    </div>
-    <div>
-      <table class="table-auto border-collapse w-full text-left">
-        <thead class="border-b-2 mb-2">
-          <tr>
-            <th>Checkbox</th>
-            <th>Nama Produk</th>
-            <th>Kategori</th>
-            <th>Supplier</th>
-            <th>Stock Minimum</th>
-            <th>QTY</th>
-            <th>Presentase</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Checkbox</td>
-            <td>Sunsilk</td>
-            <td>Shampoo</td>
-            <td>Pabrik</td>
-            <td>20</td>
-            <td>120</td>
-          </tr>
-          <tr>
-            <td>Checkbox</td>
-            <td>Sunsilk</td>
-            <td>Shampoo</td>
-            <td>Pabrik</td>
-            <td>20</td>
-            <td>120</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </Card>
+  <div class="container mx-auto p-4">
+    <h2 class="text-2xl font-semibold mb-4">Pembelian List</h2>
+    <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+      <thead>
+        <tr class="bg-gray-200 text-left">
+          <th class="px-4 py-2 border-b">Kode Pemesanan</th>
+          <th class="px-4 py-2 border-b">Tanggal</th>
+          <th class="px-4 py-2 border-b">Nama Supplier</th>
+          <th class="px-4 py-2 border-b">Kategori</th>
+          <th class="px-4 py-2 border-b">Nama Produk</th>
+          <th class="px-4 py-2 border-b">Qty</th>
+          <th class="px-4 py-2 border-b">Unit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="pembelian in pembelians"
+          :key="pembelian.id"
+          class="hover:bg-gray-50"
+        >
+          <td class="px-4 py-2 border-b">{{ pembelian.kode_pemesanan }}</td>
+          <td class="px-4 py-2 border-b">{{ pembelian.tanggal }}</td>
+          <td class="px-4 py-2 border-b">{{ pembelian.tanggal }}</td>
+          <td class="px-4 py-2 border-b">{{ pembelian.tanggal }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
