@@ -1,7 +1,8 @@
+<!-- DataStock.vue -->
+
 <script setup>
+import axios from 'axios';
 import { ref, onMounted } from 'vue';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/firebase'; // Adjust this path if needed
 
 // Reactive variable to store suppliers data
 const stocks = ref([]);
@@ -9,66 +10,108 @@ const suppliers = ref([]);
 const units = ref([]);
 const categories = ref([]);
 const products = ref([]);
+const newStock = ref({
+  id_produk: '',
+  id_supplier: '',
+  id_unit: '',
+  id_kategori: '',
+  jumlah_stock: 0,
+  tgl_masuk: '',
+  tgl_exp: '',
+});
 
 onMounted(async () => {
   try {
-    // Fetch documents from each Firestore collection
-    const stockSnapshot = await getDocs(collection(db, 'Stock'));
-    const supplierSnapshot = await getDocs(collection(db, 'Supplier'));
-    const unitSnapshot = await getDocs(collection(db, 'unit'));
-    const categorySnapshot = await getDocs(collection(db, 'Kategori'));
-    const productSnapshot = await getDocs(collection(db, 'Produk'));
+    const stockResponse = await axios.get(
+      'http://localhost:3000/api/all-stocks'
+    );
+    const supplierResponse = await axios.get(
+      'http://localhost:3000/api/suppliers'
+    );
+    const unitResponse = await axios.get('http://localhost:3000/api/units');
+    const categoryResponse = await axios.get(
+      'http://localhost:3000/api/categories'
+    );
+    const productResponse = await axios.get(
+      'http://localhost:3000/api/products'
+    );
 
-    // Map each document data to the respective arrays
-    stocks.value = stockSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    suppliers.value = supplierSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    units.value = unitSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    categories.value = categorySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    products.value = productSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    stocks.value = stockResponse.data;
+    suppliers.value = supplierResponse.data;
+    units.value = unitResponse.data;
+    categories.value = categoryResponse.data;
+    products.value = productResponse.data;
   } catch (error) {
     console.error('Error fetching data:', error);
   }
 });
 
-// Helper function to get related data by ID
-function getSupplierName(id) {
-  const supplier = suppliers.value.find((s) => s.id_supplier === id);
-  return supplier ? supplier.nama_supplier : 'N/A';
+// Function to delete stock
+async function deleteStock(stockId) {
+  try {
+    await axios.delete(`http://localhost:3000/api/all-stocks/${stockId}`);
+    stocks.value = stocks.value.filter((stock) => stock.id_stock !== stockId); // Remove stock from list
+    alert('Stock deleted successfully');
+  } catch (error) {
+    console.error('Error deleting stock:', error);
+  }
 }
 
-function getProductName(id) {
-  const product = products.value.find((p) => p.id_produk === id);
-  return product ? product.nama_produk : 'N/A';
+// Function to update stock
+async function updateStock(stockId, updatedStock) {
+  try {
+    await axios.put(
+      `http://localhost:3000/api/all-stocks/${stockId}`,
+      updatedStock
+    );
+    // Update the stock in the list or re-fetch data
+    alert('Stock updated successfully');
+  } catch (error) {
+    console.error('Error updating stock:', error);
+  }
 }
 
-function getUnitName(id) {
-  const unit = units.value.find((u) => u.id_unit === id);
-  return unit ? unit.nama_unit : 'N/A';
+// Helper function to get the supplier name by ID
+function getSupplierName(supplierId) {
+  const supplier = suppliers.value.find((s) => s.id_supplier === supplierId);
+  return supplier ? supplier.nama_supplier : 'Unknown Supplier';
 }
 
-function getCategoryName(id) {
-  const category = categories.value.find((c) => c.id_kategori === id);
-  return category ? category.nama_kategori : 'N/A';
+// Helper function to get the product name by ID
+function getProductName(productId) {
+  const product = products.value.find((p) => p.id_produk === productId);
+  return product ? product.nama_produk : 'Unknown Product';
 }
 
-// Format timestamp for display
+// Helper function to get the unit name by ID
+function getUnitName(unitId) {
+  const unit = units.value.find((u) => u.id_unit === unitId);
+  return unit ? unit.nama_unit : 'Unknown Unit';
+}
+
+// Helper function to get the category name by ID
+function getCategoryName(categoryId) {
+  const category = categories.value.find((c) => c.id_kategori === categoryId);
+  return category ? category.nama_kategori : 'Unknown Category';
+}
+
+// Helper function to format timestamps
 function formatTimestamp(timestamp) {
-  return timestamp ? timestamp.toDate().toLocaleDateString() : 'N/A';
+  const date = new Date(timestamp);
+  return date.toLocaleDateString();
+}
+
+// Function to reset the new stock form
+function resetForm() {
+  newStock.value = {
+    id_produk: '',
+    id_supplier: '',
+    id_unit: '',
+    id_kategori: '',
+    jumlah_stock: 0,
+    tgl_masuk: '',
+    tgl_exp: '',
+  };
 }
 </script>
 
@@ -92,20 +135,18 @@ function formatTimestamp(timestamp) {
       <tbody>
         <tr
           v-for="(stock, index) in stocks"
-          :key="stock.id"
+          :key="stock.id_stock"
           class="hover:bg-gray-50"
         >
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-          <td class="px-4 py-2 border-b">
-            {{ getSupplierName(stock.id_supplier) }}
-          </td>
-          <td class="px-4 py-2 border-b">
-            {{ getProductName(stock.id_produk) }}
-          </td>
-          <td class="px-4 py-2 border-b">{{ getUnitName(stock.id_unit) }}</td>
-          <td class="px-4 py-2 border-b">
-            {{ getCategoryName(stock.id_kategori) }}
-          </td>
+          <td class="px-4 py-2 border-b">{{ stock.nama_supplier }}</td>
+          <!-- Directly use nama_supplier -->
+          <td class="px-4 py-2 border-b">{{ stock.nama_produk }}</td>
+          <!-- Directly use nama_produk -->
+          <td class="px-4 py-2 border-b">{{ stock.nama_unit }}</td>
+          <!-- Directly use nama_unit -->
+          <td class="px-4 py-2 border-b">{{ stock.nama_kategori }}</td>
+          <!-- Directly use nama_kategori -->
           <td class="px-4 py-2 border-b">
             {{ formatTimestamp(stock.tgl_masuk) }}
           </td>
@@ -114,8 +155,18 @@ function formatTimestamp(timestamp) {
           </td>
           <td class="px-4 py-2 border-b">{{ stock.jumlah_stock }}</td>
           <td class="px-4 py-2 border-b">
-            <button class="text-blue-500 hover:underline">Edit</button>
-            <button class="text-red-500 hover:underline ml-2">Delete</button>
+            <button
+              @click="updateStock(stock.id_stock, newStock)"
+              class="text-accent-500 hover:underline"
+            >
+              Edit
+            </button>
+            <button
+              @click="deleteStock(stock.id_stock)"
+              class="text-red-500 hover:underline ml-2"
+            >
+              Delete
+            </button>
           </td>
         </tr>
       </tbody>
