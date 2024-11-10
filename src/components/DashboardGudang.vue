@@ -1,3 +1,5 @@
+<!-- DashboardGudang.vue -->
+
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
@@ -8,6 +10,7 @@ onMounted(async () => {
   try {
     const response = await axios.get('http://localhost:3000/api/stocks');
     stocks.value = response.data;
+    console.log('Fetched stock data:', response.data);
   } catch (error) {
     console.error('Error fetching stocks:', error);
   }
@@ -15,7 +18,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <!-- Developers and Employers -->
+  <!-- Stock Table -->
   <div class="container mx-auto p-4">
     <div class="flex items-center space-x-2">
       <i class="pi pi-exclamation-circle flex text-xl text-accent-500"></i>
@@ -32,7 +35,7 @@ onMounted(async () => {
             <th class="px-4 py-2 border-b">Kategori</th>
             <th class="px-4 py-2 border-b">Supplier</th>
             <th class="px-4 py-2 border-b">Stock Minimum</th>
-            <th class="px-4 py-2 border-b">QTY</th>
+            <th class="px-4 py-2 border-b">Stock Sekarang</th>
             <th class="px-4 py-2 border-b">Presentase</th>
           </tr>
         </thead>
@@ -52,7 +55,11 @@ onMounted(async () => {
             <td class="px-4 py-2 border-b">{{ stock.jumlah_stock }}</td>
             <td class="px-4 py-2 border-b">
               {{
-                ((stock.jumlah_stock / stock.stock_minimum) * 100).toFixed(2)
+                stock.stock_minimum > 0
+                  ? ((stock.jumlah_stock / stock.stock_minimum) * 100).toFixed(
+                      2
+                    )
+                  : 'N/A'
               }}%
             </td>
           </tr>

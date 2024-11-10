@@ -1,21 +1,17 @@
+<!-- DataSupplier.vue -->
+
 <script setup>
+import axios from 'axios';
 import { ref, onMounted } from 'vue';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/firebase'; // Adjust this path if needed
 
 // Reactive variable to store suppliers data
 const suppliers = ref([]);
 
 onMounted(async () => {
   try {
-    // Reference to the "Supplier" collection in Firestore
-    const supplierCollection = collection(db, 'Supplier');
-
-    // Fetch documents from Firestore
-    const snapshot = await getDocs(supplierCollection);
-
-    // Map each document data to suppliers array
-    suppliers.value = snapshot.docs.map((doc) => doc.data());
+    // Fetch data from the API
+    const response = await axios.get('http://localhost:3000/api/suppliers');
+    suppliers.value = response.data;
   } catch (error) {
     console.error('Error fetching suppliers:', error);
   }
@@ -30,7 +26,7 @@ onMounted(async () => {
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">Nama Supplier</th>
           <th class="px-4 py-2 border-b">ID Supplier</th>
-          <th class="px-4 py-2 border-b">Alamat Kantor</th>
+          <th class="px-4 py-2 border-b">Alamat</th>
           <th class="px-4 py-2 border-b">No HP</th>
           <th class="px-4 py-2 border-b">Email</th>
         </tr>
@@ -43,7 +39,7 @@ onMounted(async () => {
         >
           <td class="px-4 py-2 border-b">{{ supplier.nama_supplier }}</td>
           <td class="px-4 py-2 border-b">{{ supplier.id_supplier }}</td>
-          <td class="px-4 py-2 border-b">{{ supplier.alamat_kantor }}</td>
+          <td class="px-4 py-2 border-b">{{ supplier.alamat }}</td>
           <td class="px-4 py-2 border-b">{{ supplier.no_hp }}</td>
           <td class="px-4 py-2 border-b">{{ supplier.email }}</td>
         </tr>

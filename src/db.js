@@ -1,8 +1,8 @@
 // db.js
-import { createConnection } from 'mysql2';
 import dotenv from 'dotenv';
-
 dotenv.config();
+
+import { createConnection } from 'mysql2';
 
 const connection = createConnection({
   host: process.env.DB_HOST,

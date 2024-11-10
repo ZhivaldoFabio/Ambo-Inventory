@@ -1,3 +1,5 @@
+// src/router/index.js
+
 import { createRouter, createWebHistory } from 'vue-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/firebase';
