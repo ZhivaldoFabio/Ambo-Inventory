@@ -120,6 +120,7 @@ app.get('/api/all-stocks', (req, res) => {
     JOIN suppliers ON suppliers.id_supplier = stock.id_supplier
     JOIN units ON units.id_unit = stock.id_unit
     JOIN kategori ON kategori.id_kategori = stock.id_kategori
+    ORDER BY id_stock ASC
   `;
 
   connection.query(query, (err, results) => {

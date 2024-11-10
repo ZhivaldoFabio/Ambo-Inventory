@@ -22,6 +22,8 @@ import DataKategori from '@/components/DataKategori.vue';
 import DataPembelian from '@/components/DataPembelian.vue';
 import DataSupplier from '@/components/DataSupplier.vue';
 import DataStock from '@/components/DataStock.vue';
+import AddDataStock from '@/components/AddDataStock.vue';
+import EditDataStock from '@/components/EditDataStock.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -76,6 +78,22 @@ const router = createRouter({
       },
     },
     {
+      path: '/add-stock',
+      name: 'add-data-stock',
+      component: AddDataStock,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/edit-stock/:id',
+      name: 'edit-data-stock',
+      component: EditDataStock,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
       path: '/produk',
       name: 'produk',
       component: DataProduk,
@@ -115,7 +133,7 @@ const router = createRouter({
     //   component: TambahUnitView,
     //   meta: { requiresAuth: true },
     // },
-    
+
     // -------------------- BAGIAN Belom --------------------
 
     {
