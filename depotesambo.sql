@@ -33,11 +33,11 @@ DELETE FROM `detailpenjualan`;
 DROP TABLE IF EXISTS `kategori`;
 CREATE TABLE IF NOT EXISTS `kategori` (
   `id_kategori` int NOT NULL AUTO_INCREMENT,
-  `nama_kategori` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `nama_kategori` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`id_kategori`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
 
--- Dumping data for table depotesambo.kategori: ~3 rows (approximately)
+-- Dumping data for table depotesambo.kategori: ~6 rows (approximately)
 DELETE FROM `kategori`;
 INSERT INTO `kategori` (`id_kategori`, `nama_kategori`) VALUES
 	(1, 'Shampo'),
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS `produk` (
   CONSTRAINT `produk_ibfk_1` FOREIGN KEY (`id_kategori`) REFERENCES `kategori` (`id_kategori`) ON UPDATE CASCADE,
   CONSTRAINT `produk_ibfk_2` FOREIGN KEY (`id_unit`) REFERENCES `units` (`id_unit`) ON UPDATE CASCADE,
   CONSTRAINT `produk_ibfk_3` FOREIGN KEY (`id_supplier`) REFERENCES `suppliers` (`id_supplier`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.produk: ~6 rows (approximately)
 DELETE FROM `produk`;
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS `suppliers` (
   `email` varchar(225) NOT NULL,
   `no_hp` varchar(20) NOT NULL,
   PRIMARY KEY (`id_supplier`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.suppliers: ~6 rows (approximately)
 DELETE FROM `suppliers`;
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS `units` (
   `id_unit` int NOT NULL AUTO_INCREMENT,
   `nama_unit` varchar(50) NOT NULL,
   PRIMARY KEY (`id_unit`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.units: ~3 rows (approximately)
 DELETE FROM `units`;
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `no_hp` varchar(12) NOT NULL,
   `password` varchar(255) NOT NULL,
   PRIMARY KEY (`id_user`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.users: ~3 rows (approximately)
 DELETE FROM `users`;
