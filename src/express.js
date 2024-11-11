@@ -202,6 +202,49 @@ app.get('/api/products', (req, res) => {
   });
 });
 
+// Endpoint to get products data from MySQL
+app.get('/api/all-products', (req, res) => {
+  const query = `
+    SELECT produk.id_produk, produk.nama_produk, suppliers.nama_supplier, units.nama_unit, kategori.nama_kategori, 
+           produk.harga_beli, produk.harga_jual
+    FROM produk
+    JOIN suppliers ON suppliers.id_supplier = produk.id_supplier
+    JOIN units ON units.id_unit = produk.id_unit
+    JOIN kategori ON kategori.id_kategori = produk.id_kategori
+    ORDER BY id_produk ASC
+  `;
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching all-produk: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+// Endpoint to get pembelian data from MySQL
+app.get('/api/all-pembelian', (req, res) => {
+  const query = `
+    SELECT pembelian.id_pembelian, pembelian.tanggal_pembelian, suppliers.nama_supplier, produk.nama_produk, pembelian.jumlah_produk, units.nama_unit
+    FROM pembelian
+    JOIN suppliers ON suppliers.id_supplier = pembelian.id_supplier
+    JOIN units ON units.id_unit = pembelian.id_unit
+    JOIN produk on produk.id_produk = pembelian.id_produk
+    ORDER BY id_pembelian ASC
+  `;
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching all-produk: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });

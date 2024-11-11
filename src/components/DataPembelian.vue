@@ -1,25 +1,24 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/firebase'; // Adjust this path if needed
+import { ref, onMounted } from "vue";
+import axios from "axios";
 
 // Reactive variable to store Pembelian data
 const pembelians = ref([]);
 
 onMounted(async () => {
   try {
-    // Reference to the "Kategori" collection in Firestore
-    const PembelianCollection = collection(db, 'Pembelian');
-
-    // Fetch documents from Firestore
-    const snapshot = await getDocs(PembelianCollection);
-
-    // Map each document data to Pembelian array
-    kategoris.value = snapshot.docs.map((doc) => doc.data());
+    const response = await axios.get("http://localhost:3000/api/all-pembelian");
+    pembelians.value = response.data;
   } catch (error) {
-    console.error('Error fetching pembelians:', error);
+    console.error("Error fetching products data:", error);
   }
 });
+
+// Helper function to format timestamps
+function formatTimestamp(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString();
+}
 </script>
 
 <template>
@@ -28,10 +27,9 @@ onMounted(async () => {
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
       <thead>
         <tr class="bg-gray-200 text-left">
-          <th class="px-4 py-2 border-b">Kode Pemesanan</th>
+          <th class="px-4 py-2 border-b">No</th>
           <th class="px-4 py-2 border-b">Tanggal</th>
           <th class="px-4 py-2 border-b">Nama Supplier</th>
-          <th class="px-4 py-2 border-b">Kategori</th>
           <th class="px-4 py-2 border-b">Nama Produk</th>
           <th class="px-4 py-2 border-b">Qty</th>
           <th class="px-4 py-2 border-b">Unit</th>
@@ -39,14 +37,16 @@ onMounted(async () => {
       </thead>
       <tbody>
         <tr
-          v-for="pembelian in pembelians"
+          v-for="(pembelian, index) in pembelians"
           :key="pembelian.id"
-          class="hover:bg-gray-50"
+          class="hover:bg-gray-50 text-left"
         >
-          <td class="px-4 py-2 border-b">{{ pembelian.kode_pemesanan }}</td>
-          <td class="px-4 py-2 border-b">{{ pembelian.tanggal }}</td>
-          <td class="px-4 py-2 border-b">{{ pembelian.tanggal }}</td>
-          <td class="px-4 py-2 border-b">{{ pembelian.tanggal }}</td>
+          <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
+          <th class="px-4 py-2 border-b">{{ formatTimestamp(pembelian.tanggal_pembelian) }}</th>
+          <th class="px-4 py-2 border-b">{{ pembelian.nama_supplier }}</th>
+          <th class="px-4 py-2 border-b">{{ pembelian.nama_produk }}</th>
+          <th class="px-4 py-2 border-b">{{ pembelian.jumlah_produk }}</th>
+          <th class="px-4 py-2 border-b">{{ pembelian.nama_unit }}</th>
         </tr>
       </tbody>
     </table>
