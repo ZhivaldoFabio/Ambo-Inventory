@@ -50,15 +50,32 @@ app.post('/api/stocks', express.json(), (req, res) => {
 // PUT endpoint to update stock
 app.put('/api/stocks/:id', express.json(), (req, res) => {
   const { id } = req.params;
-  const { jumlah_stock, tgl_masuk, tgl_exp } = req.body;
+  const {
+    id_produk,
+    id_supplier,
+    id_unit,
+    id_kategori,
+    jumlah_stock,
+    tgl_masuk,
+    tgl_exp,
+  } = req.body;
   const query = `
     UPDATE stock
-    SET jumlah_stock = ?, tgl_masuk = ?, tgl_exp = ?
+    SET id_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, jumlah_stock = ?, tgl_masuk = ?, tgl_exp = ?
     WHERE id_stock = ?
   `;
   connection.query(
     query,
-    [jumlah_stock, tgl_masuk, tgl_exp, id],
+    [
+      id_produk,
+      id_supplier,
+      id_unit,
+      id_kategori,
+      jumlah_stock,
+      tgl_masuk,
+      tgl_exp,
+      id,
+    ],
     (err, result) => {
       if (err) {
         console.error('Error updating data: ', err);
@@ -68,6 +85,31 @@ app.put('/api/stocks/:id', express.json(), (req, res) => {
       }
     }
   );
+});
+
+// GET endpoint to fetch stock by ID
+app.get('/api/stocks/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT s.id_stock, s.jumlah_stock, s.tgl_masuk, s.tgl_exp,
+           p.nama_produk, sp.nama_supplier, u.nama_unit, k.nama_kategori
+    FROM stock s
+    JOIN produk p ON s.id_produk = p.id_produk
+    JOIN suppliers sp ON s.id_supplier = sp.id_supplier  -- Corrected table name here
+    JOIN units u ON s.id_unit = u.id_unit
+    JOIN kategori k ON s.id_kategori = k.id_kategori
+    WHERE s.id_stock = ?
+  `;
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('Error fetching stock data: ', err);
+      res.status(500).send('Server error');
+    } else if (results.length === 0) {
+      res.status(404).send('Stock not found');
+    } else {
+      res.json(results[0]); // Return the first result (there should only be one)
+    }
+  });
 });
 
 // DELETE endpoint to delete stock
@@ -132,7 +174,6 @@ app.get('/api/all-stocks', (req, res) => {
     }
   });
 });
-
 
 // Endpoint to get suppliers data from MySQL
 app.get('/api/suppliers', (req, res) => {

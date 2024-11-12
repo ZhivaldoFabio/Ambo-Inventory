@@ -3,7 +3,7 @@
     class="full-page flex items-center justify-center min-h-screen min-w-full bg-background-50"
   >
     <div
-      class="login-card w-full max-w-md p-8 space-y-6 bg-green-100 rounded-lg shadow-lg"
+      class="login-card w-full max-w-md p-8 space-y-6 bg-black-500 rounded-lg shadow-lg"
     >
       <h2 class="text-heading text-2xl text-center">Login</h2>
       <form @submit.prevent="login">
@@ -119,10 +119,10 @@ const login = async () => {
 }
 
 .login-card {
-  background-color: #50be7c33;
+  background-color: hsla(144, 46%, 53%, 0.2);
 }
 .button-color {
-  background-color: #50be7c;
+  background-color: hsl(144, 46%, 53%);
 }
 .error {
   color: red;
