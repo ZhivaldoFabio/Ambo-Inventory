@@ -77,10 +77,13 @@ const resetForm = () => {
 <template>
   <div class="min-w-[50rem] max-w-full mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-heading">Add New Stock</h2>
+      <div class="flex items-center space-x-2">
+        <i class="pi pi-file-plus text-2xl"></i>
+        <h2 class="text-2xl font-heading">Add Stock</h2>
+      </div>
       <RouterLink
         :to="{ name: 'stock' }"
-        class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md active:ring-2 active:ring-inset active:ring-gray-100"
+        class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
         ><i
           class="pi pi-angle-left text-primary-700"
           style="font-size: 1.3rem"
@@ -89,7 +92,7 @@ const resetForm = () => {
     </div>
 
     <form @submit.prevent="addStock">
-      <div class="flex font-body justify-between">
+      <div class="font-body w-full">
         <div class="space-y-5">
           <!-- Product Dropdown -->
           <div>
@@ -220,15 +223,17 @@ const resetForm = () => {
               />
             </div>
           </div>
+          <div class="flex justify-center">
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              class="w-96 px-4 py-2 bg-primary-500 text-white rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
+            >
+              <i class="pi pi-plus self-center"></i>
+              Add Stock
+            </button>
+          </div>
         </div>
-
-        <!-- Submit Button -->
-        <button
-          type="submit"
-          class="max-h-min self-end px-4 py-2 bg-accent-500 text-white rounded-md shadow-md hover:bg-accent-600 hover:ring hover:ring-inset ring-black-800"
-        >
-          Add Stock
-        </button>
       </div>
     </form>
   </div>

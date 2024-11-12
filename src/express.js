@@ -7,6 +7,8 @@ const app = express();
 const port = 3000;
 
 app.use(cors());
+// Add this to ensure Express can parse JSON requests
+app.use(express.json());
 
 // POST endpoint to add new stock
 app.post('/api/stocks', express.json(), (req, res) => {
@@ -48,7 +50,8 @@ app.post('/api/stocks', express.json(), (req, res) => {
 });
 
 // PUT endpoint to update stock
-app.put('/api/stocks/:id', express.json(), (req, res) => {
+app.put('/api/stocks/:id', async (req, res) => {
+  console.log(req.body); // Log the incoming request body for debugging
   const { id } = req.params;
   const {
     id_produk,
@@ -59,43 +62,64 @@ app.put('/api/stocks/:id', express.json(), (req, res) => {
     tgl_masuk,
     tgl_exp,
   } = req.body;
-  const query = `
+
+  try {
+    // Convert ISO dates to MySQL-compatible date strings
+    const formattedTglMasuk = new Date(tgl_masuk).toLocaleDateString('en-CA'); // yyyy-MM-dd
+    const formattedTglExp = tgl_exp
+      ? new Date(tgl_exp).toLocaleDateString('en-CA')
+      : null;
+
+    const query = `
     UPDATE stock
     SET id_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, jumlah_stock = ?, tgl_masuk = ?, tgl_exp = ?
     WHERE id_stock = ?
   `;
-  connection.query(
-    query,
-    [
+    const values = [
       id_produk,
       id_supplier,
       id_unit,
       id_kategori,
       jumlah_stock,
-      tgl_masuk,
-      tgl_exp,
+      formattedTglMasuk,
+      formattedTglExp,
       id,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error('Error updating data: ', err);
-        res.status(500).send('Server error');
-      } else {
-        res.json({ message: 'Stock updated successfully' });
-      }
+    ];
+
+    // Use the correct connection object
+    const [result] = await connection.promise().execute(query, values);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Stock not found.' });
     }
-  );
+
+    res.status(200).json({ message: 'Stock updated successfully.' });
+  } catch (error) {
+    console.error('Error updating stock:', error);
+    res.status(500).json({ error: 'Failed to update stock.' });
+  }
 });
 
 // GET endpoint to fetch stock by ID
 app.get('/api/stocks/:id', (req, res) => {
   const { id } = req.params;
   const query = `
-    SELECT s.id_stock, s.jumlah_stock, s.tgl_masuk, s.tgl_exp,
-           p.nama_produk, sp.nama_supplier, u.nama_unit, k.nama_kategori
+    SELECT 
+      s.id_stock, 
+      s.jumlah_stock, 
+      s.tgl_masuk, 
+      s.tgl_exp,
+      s.id_produk, 
+      p.nama_produk,
+      s.id_supplier, 
+      sp.nama_supplier,
+      s.id_unit, 
+      u.nama_unit,
+      s.id_kategori, 
+      k.nama_kategori
     FROM stock s
     JOIN produk p ON s.id_produk = p.id_produk
-    JOIN suppliers sp ON s.id_supplier = sp.id_supplier  -- Corrected table name here
+    JOIN suppliers sp ON s.id_supplier = sp.id_supplier
     JOIN units u ON s.id_unit = u.id_unit
     JOIN kategori k ON s.id_kategori = k.id_kategori
     WHERE s.id_stock = ?
