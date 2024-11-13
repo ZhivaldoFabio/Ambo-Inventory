@@ -81,7 +81,7 @@ const resetForm = () => {
         <h2 class="text-2xl font-heading">Add Product</h2>
       </div>
       <RouterLink
-        :to="{ name: 'product' }"
+        :to="{ name: 'produk' }"
         class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
         ><i
           class="pi pi-angle-left text-primary-700"

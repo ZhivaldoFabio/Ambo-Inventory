@@ -1,5 +1,3 @@
-<!-- AddDataUnit.vue -->
-
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
@@ -9,30 +7,45 @@ import { RouterLink } from 'vue-router';
 const toast = useToast();
 
 // Form state
-const newCategory = ref({
+const newUnit = ref({
   id_unit: '',
   nama_unit: '',
-  
 });
+
+// Error messages
+const errors = ref({});
 
 // Options for dropdowns, fetched from the API
 const units = ref([]);
 
+// Loading state
+const isSubmitting = ref(false);
+
 // Fetch data for dropdowns on component mount
 onMounted(async () => {
   try {
-    const unitResponse = await axios.get(
-      'http://localhost:3000/api/units'
-    );
-
+    const unitResponse = await axios.get('http://localhost:3000/api/units');
     units.value = unitResponse.data;
   } catch (error) {
+    toast.error('Failed to fetch units.');
     console.error('Error fetching dropdown data:', error);
   }
 });
 
 // Handle form submission
 const addUnit = async () => {
+  errors.value = {};
+
+  // Validation
+  if (!newUnit.value.nama_unit) {
+    errors.value.nama_unit = 'Unit name is required.';
+    toast.error('Please enter a unit name.');
+    return;
+  }
+
+  if (isSubmitting.value) return;
+
+  isSubmitting.value = true;
   try {
     await axios.post('http://localhost:3000/api/units', newUnit.value);
     toast.success('Unit added successfully!');
@@ -40,6 +53,8 @@ const addUnit = async () => {
   } catch (error) {
     toast.error('Error adding unit.');
     console.error('Error adding unit:', error);
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -53,8 +68,6 @@ const resetForm = () => {
 </script>
 
 <template>
-<div>
-  <h1>Hello</h1>
   <div class="min-w-[50rem] max-w-full mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
       <div class="flex items-center space-x-2">
@@ -64,18 +77,20 @@ const resetForm = () => {
       <RouterLink
         :to="{ name: 'unit' }"
         class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
-        ><i
+      >
+        <i
           class="pi pi-angle-left text-primary-700"
           style="font-size: 1.3rem"
-        ></i
-      ></RouterLink>
+        ></i>
+      </RouterLink>
     </div>
 
     <form @submit.prevent="addUnit">
       <div class="font-body w-full">
         <div class="space-y-5">
+          <!-- Unit Name -->
           <div>
-            <label class="" for="jumlah_stock">New Unit</label>
+            <label for="nama_unit">New Unit</label>
             <div class="mt-2">
               <input
                 class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
@@ -83,16 +98,20 @@ const resetForm = () => {
                 v-model="newUnit.nama_unit"
                 id="nama_unit"
               />
+              <p v-if="errors.nama_unit" class="text-red-500 text-sm">
+                {{ errors.nama_unit }}
+              </p>
             </div>
           </div>
 
+          <!-- Submit Button -->
           <div class="flex justify-center">
-            <!-- Submit Button -->
             <button
-              type="submit"
-              class="w-96 px-4 py-2 bg-primary-500 text-white rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
+              :disabled="isSubmitting"
+              class="w-96 px-4 py-2 bg-primary-500 text-white rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <i class="pi pi-plus self-center"></i>
+              <i v-if="!isSubmitting" class="pi pi-plus self-center"></i>
+              <span v-else>Loading...</span>
               Add Unit
             </button>
           </div>
@@ -100,7 +119,6 @@ const resetForm = () => {
       </div>
     </form>
   </div>
-</div>
 </template>
 
 <style scoped>

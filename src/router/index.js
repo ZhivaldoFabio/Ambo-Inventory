@@ -9,21 +9,17 @@ import NotFoundView from '@/views/NotFoundView.vue';
 import UserEditView from '@/views/UserEditView.vue';
 import LaporanPembelianView from '@/views/LaporanPembelianView.vue';
 import LaporanPenjualanView from '@/views/LaporanPenjualanView.vue';
-import TambahSupplierView from '@/views/TambahSupplierView.vue';
-import TambahUnitView from '@/views/TambahUnitView.vue';
-import TambahKategoriView from '@/views/TambahKategoriView.vue';
-import TambahPembelianView from '@/views/TambahPembelianView.vue';
-import TambahPenjualanView from '@/views/TambahPenjualanView.vue';
-import TambahProdukView from '@/views/TambahProdukView.vue';
-import TambahStockView from '@/views/TambahStockView.vue';
 import DataProduk from '@/components/DataProduk.vue';
-import AddDataProduk from '@/components/AddDataProduk.vue';
+import AddDataProduct from '@/components/AddDataProduct.vue';
 import DataUnit from '@/components/DataUnit.vue';
+import AddDataUnit from '@/components/AddDataUnit.vue';
 import DataKategori from '@/components/DataKategori.vue';
 import AddDataCategory from '@/components/AddDataCategory.vue';
 // import EditDataCategory from '@/components/EditDataCategory.vue';
+import EditDataProduct from '@/components/EditDataProduct.vue';
 import DataPembelian from '@/components/DataPembelian.vue';
 import DataSupplier from '@/components/DataSupplier.vue';
+import AddDataSupplier from '@/components/AddDataSupplier.vue';
 import DataStock from '@/components/DataStock.vue';
 import AddDataStock from '@/components/AddDataStock.vue';
 import EditDataStock from '@/components/EditDataStock.vue';
@@ -73,6 +69,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/add-supplier',
+      name: 'add-data-supplier',
+      component: AddDataSupplier,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
       path: '/stock',
       name: 'stock',
       component: DataStock,
@@ -106,24 +110,32 @@ const router = createRouter({
     },
     {
       path: '/add-produk',
-      name: 'add-dataproduk',
-      component: AddDataProduk,
+      name: 'add-data-produk',
+      component: AddDataProduct,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
     },
-    // {
-    //   path: '/edit-produk',
-    //   name: 'edit-data-produk',
-    //   component: EditDataProduk,
-    //   meta: {
-    //     requiresAuth: true, // This metadata marks the route as requiring authentication
-    //   },
-    // },
+    {
+      path: '/edit-produk/:id',
+      name: 'edit-data-produk',
+      component: EditDataProduct,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
     {
       path: '/unit',
       name: 'unit',
       component: DataUnit,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/add-unit',
+      name: 'add-data-unit',
+      component: AddDataUnit,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
@@ -171,54 +183,11 @@ const router = createRouter({
 
     // -------------------- BAGIAN Belom --------------------
 
-    {
-      path: '/tambahunit',
-      name: 'tambah-unit',
-      component: TambahUnitView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/tambahkategori',
-      name: 'tambah-kategori',
-      component: TambahKategoriView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/tambahstock',
-      name: 'tambah-stock',
-      component: TambahStockView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/tambahproduk',
-      name: 'tambah-produk',
-      component: TambahProdukView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/tambahpembelian',
-      name: 'tambah-pembelian',
-      component: TambahPembelianView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/tambahpenjualan',
-      name: 'tambah-penjualan',
-      component: TambahPenjualanView,
-      meta: { requiresAuth: true },
-    },
+    
     {
       path: '/laporanpenjualan',
       name: 'laporan-penjualan',
       component: LaporanPenjualanView,
-      meta: {
-        requiresAuth: true, // This metadata marks the route as requiring authentication
-      },
-    },
-    {
-      path: '/tambahsupplier',
-      name: 'tambah-supplier',
-      component: TambahSupplierView,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
