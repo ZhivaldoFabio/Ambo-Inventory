@@ -17,6 +17,7 @@ import TambahPenjualanView from '@/views/TambahPenjualanView.vue';
 import TambahProdukView from '@/views/TambahProdukView.vue';
 import TambahStockView from '@/views/TambahStockView.vue';
 import DataProduk from '@/components/DataProduk.vue';
+import AddDataProduk from '@/components/AddDataProduk.vue';
 import DataUnit from '@/components/DataUnit.vue';
 import DataKategori from '@/components/DataKategori.vue';
 import AddDataCategory from '@/components/AddDataCategory.vue';
@@ -103,6 +104,22 @@ const router = createRouter({
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
     },
+    {
+      path: '/add-produk',
+      name: 'add-dataproduk',
+      component: AddDataProduk,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    // {
+    //   path: '/edit-produk',
+    //   name: 'edit-data-produk',
+    //   component: EditDataProduk,
+    //   meta: {
+    //     requiresAuth: true, // This metadata marks the route as requiring authentication
+    //   },
+    // },
     {
       path: '/unit',
       name: 'unit',

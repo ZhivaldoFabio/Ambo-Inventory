@@ -289,6 +289,58 @@ app.get('/api/all-products', (req, res) => {
   });
 });
 
+// PUT endpoint to update product
+app.put('/api/products/:id', async (req, res) => {
+  console.log(req.body); // Log the incoming request body for debugging
+  const { id } = req.params;
+  const {
+    id_produk,
+    id_supplier,
+    id_unit,
+    id_kategori,
+    jumlah_stock,
+    tgl_masuk,
+    tgl_exp,
+  } = req.body;
+
+  try {
+    // Convert ISO dates to MySQL-compatible date strings
+    const formattedTglMasuk = new Date(tgl_masuk).toLocaleDateString('en-CA'); // yyyy-MM-dd
+    const formattedTglExp = tgl_exp
+      ? new Date(tgl_exp).toLocaleDateString('en-CA')
+      : null;
+
+    const query = `
+    UPDATE stock
+    SET id_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, jumlah_stock = ?, tgl_masuk = ?, tgl_exp = ?
+    WHERE id_stock = ?
+  `;
+    const values = [
+      id_produk,
+      id_supplier,
+      id_unit,
+      id_kategori,
+      jumlah_stock,
+      formattedTglMasuk,
+      formattedTglExp,
+      id,
+    ];
+
+    // Use the correct connection object
+    const [result] = await connection.promise().execute(query, values);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Stock not found.' });
+    }
+
+    res.status(200).json({ message: 'Stock updated successfully.' });
+  } catch (error) {
+    console.error('Error updating stock:', error);
+    res.status(500).json({ error: 'Failed to update stock.' });
+  }
+});
+
+
 // Endpoint to get pembelian data from MySQL
 app.get('/api/all-pembelian', (req, res) => {
   const query = `
