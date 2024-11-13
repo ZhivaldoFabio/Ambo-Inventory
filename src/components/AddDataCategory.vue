@@ -9,7 +9,7 @@ import { RouterLink } from 'vue-router';
 const toast = useToast();
 
 // Form state
-const newStock = ref({
+const newCategory = ref({
   id_kategori: '',
   nama_kategori: '',
   
@@ -53,6 +53,7 @@ const resetForm = () => {
 </script>
 
 <template>
+  <h1>Hello</h1>
   <div class="min-w-[50rem] max-w-full mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
       <div class="flex items-center space-x-2">
@@ -60,7 +61,7 @@ const resetForm = () => {
         <h2 class="text-2xl font-heading">Add Category</h2>
       </div>
       <RouterLink
-        :to="{ name: 'category' }"
+        :to="{ name: 'kategori' }"
         class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
         ><i
           class="pi pi-angle-left text-primary-700"
@@ -88,7 +89,7 @@ const resetForm = () => {
                   :key="category.id_kategori"
                   :value="category.id_ketegori"
                 >
-                  {{ product.nama_kategori }}
+                  {{ category.nama_kategori }}
                 </option>
               </select>
             </div>

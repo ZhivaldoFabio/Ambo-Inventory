@@ -19,6 +19,8 @@ import TambahStockView from '@/views/TambahStockView.vue';
 import DataProduk from '@/components/DataProduk.vue';
 import DataUnit from '@/components/DataUnit.vue';
 import DataKategori from '@/components/DataKategori.vue';
+import AddDataCategory from '@/components/AddDataCategory.vue';
+// import EditDataCategory from '@/components/EditDataCategory.vue';
 import DataPembelian from '@/components/DataPembelian.vue';
 import DataSupplier from '@/components/DataSupplier.vue';
 import DataStock from '@/components/DataStock.vue';
@@ -117,6 +119,22 @@ const router = createRouter({
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
     },
+    {
+      path: '/add-category',
+      name: 'add-data-category',
+      component: AddDataCategory,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    // {
+    //   path: '/edit-kategori/:id',
+    //   name: 'edit-data-category',
+    //   component: EditDataCategory,
+    //   meta: {
+    //     requiresAuth: true, // This metadata marks the route as requiring authentication
+    //   },
+    // },
     {
       path: '/pembelian',
       name: 'pembelian',
