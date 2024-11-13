@@ -1,7 +1,5 @@
-<!-- EditDataStock.vue -->
-
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
@@ -10,21 +8,19 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
-const stockId = route.params.id; // Get the ID from the route
+const productId = route.params.id; // Get the ID from the route
 
 // Reactive object for stock data
-const stockData = ref({
-  id_produk: '',
+const productData = ref({
+  nama_produk: '',
   id_supplier: '',
   id_unit: '',
   id_kategori: '',
-  jumlah_stock: 0,
-  tgl_masuk: '',
-  tgl_exp: '',
+  harga_beli: '',
+  harga_jual: '',
 });
 
 // Dropdown options for the form
-const products = ref([]);
 const suppliers = ref([]);
 const units = ref([]);
 const categories = ref([]);
@@ -33,55 +29,52 @@ const categories = ref([]);
 onMounted(async () => {
   try {
     // Fetch stock details
-    const stockResponse = await axios.get(
-      `http://localhost:3000/api/stocks/${stockId}`
+    const productResponse = await axios.get(
+      `http://localhost:3000/api/products/${productId}`
     );
 
-    // Format dates before setting them in the reactive stockData object
-    const stock = stockResponse.data;
-    stock.tgl_masuk = new Date(stock.tgl_masuk).toLocaleDateString('en-CA'); // Format as yyyy-MM-dd
-    stock.tgl_exp = new Date(stock.tgl_exp).toLocaleDateString('en-CA'); // Format as yyyy-MM-dd
-
     // Assign formatted stock data
-    stockData.value = stock;
+    productData.value = productResponse.data;
 
     // Fetch options for dropdowns
-    const [productRes, supplierRes, unitRes, categoryRes] = await Promise.all([
-      axios.get('http://localhost:3000/api/products'),
+    const [supplierRes, unitRes, categoryRes] = await Promise.all([
       axios.get('http://localhost:3000/api/suppliers'),
       axios.get('http://localhost:3000/api/units'),
       axios.get('http://localhost:3000/api/categories'),
     ]);
 
-    products.value = productRes.data;
     suppliers.value = supplierRes.data;
     units.value = unitRes.data;
     categories.value = categoryRes.data;
   } catch (error) {
-    console.error('Error fetching stock or dropdown data:', error);
-    toast.error('Failed to load stock details or options.');
+    console.error('Error fetching product or dropdown data:', error);
+    toast.error('Failed to load product details or options.');
   }
 });
 
 // Update the stock data
-const updateStock = async () => {
+const updateProduct = async () => {
+  // Validate the price fields
+  if (isNaN(productData.value.harga_beli) || isNaN(productData.value.harga_jual)) {
+    toast.error('Please enter valid numbers for the prices.');
+    return;
+  }
+
   try {
     // Revert the date format back to ISO before sending it to the server if necessary
-    const formattedStockData = {
-      ...stockData.value,
-      tgl_masuk: new Date(stockData.value.tgl_masuk).toISOString(),
-      tgl_exp: new Date(stockData.value.tgl_exp).toISOString(),
+    const formattedProductData = {
+      ...productData.value,
     };
 
     await axios.put(
-      `http://localhost:3000/api/stocks/${stockId}`,
-      formattedStockData
+      `http://localhost:3000/api/products/${productId}`,
+      formattedProductData
     );
-    toast.success('Stock updated successfully!');
-    router.push({ name: 'stock' }); // Navigate back to the Stock page
+    toast.success('Product updated successfully!');
+    router.push({ name: 'produk' }); // Navigate back to the Stock page
   } catch (error) {
-    console.error('Error updating stock:', error);
-    toast.error('Failed to update stock.');
+    console.error('Error updating product:', error);
+    toast.error('Failed to update product.');
   }
 };
 </script>
@@ -91,11 +84,11 @@ const updateStock = async () => {
     <div class="flex justify-between items-center mb-4">
       <div class="flex items-center space-x-2">
         <i class="pi pi-pen-to-square text-2xl"></i>
-        <h2 class="text-2xl font-heading">Edit Stock</h2>
+        <h2 class="text-2xl font-heading">Edit Product</h2>
       </div>
 
       <RouterLink
-        :to="{ name: 'stock' }"
+        :to="{ name: 'produk' }"
         class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
         ><i
           class="pi pi-angle-left text-primary-700"
@@ -104,29 +97,20 @@ const updateStock = async () => {
       ></RouterLink>
     </div>
 
-    <form @submit.prevent="updateStock">
+    <form @submit.prevent="updateProduct">
       <div class="font-body w-full">
         <div class="space-y-5">
-          <!-- Product Dropdown -->
-          <div>
-            <label for="id_produk">Product</label>
-            <div>
-              <select
-                id="id_produk"
-                v-model="stockData.id_produk"
-                required
-                class="w-full p-2 border rounded"
-              >
-                <option value="" disabled>Select Product</option>
-                <option
-                  v-for="product in products"
-                  :key="product.id_produk"
-                  :value="product.id_produk"
-                >
-                  {{ product.nama_produk }}
-                </option>
-              </select>
-            </div>
+          <!-- Product Name -->
+          <div class="mb-4">
+            <label for="nama_produk" class="block font-medium mb-1"
+              >Product Name</label
+            >
+            <input
+              id="nama_produk"
+              type="text"
+              v-model="productData.nama_produk"
+              class="w-full p-2 border rounded"
+            />
           </div>
 
           <!-- Supplier Dropdown -->
@@ -136,11 +120,11 @@ const updateStock = async () => {
             >
             <select
               id="id_supplier"
-              v-model="stockData.id_supplier"
+              v-model="productData.id_supplier"
               required
               class="w-full p-2 border rounded"
             >
-              <option value="" disabled v-if="!stockData.id_supplier">
+              <option value="" disabled v-if="!productData.id_supplier">
                 Select Supplier
               </option>
               <option
@@ -158,11 +142,11 @@ const updateStock = async () => {
             <label for="id_unit" class="block font-medium mb-1">Unit</label>
             <select
               id="id_unit"
-              v-model="stockData.id_unit"
+              v-model="productData.id_unit"
               required
               class="w-full p-2 border rounded"
             >
-              <option value="" disabled v-if="!stockData.id_unit">
+              <option value="" disabled v-if="!productData.id_unit">
                 Select Unit
               </option>
               <option
@@ -182,11 +166,11 @@ const updateStock = async () => {
             >
             <select
               id="id_kategori"
-              v-model="stockData.id_kategori"
+              v-model="productData.id_kategori"
               required
               class="w-full p-2 border rounded"
             >
-              <option value="" disabled v-if="!stockData.id_kategori">
+              <option value="" disabled v-if="!productData.id_kategori">
                 Select Category
               </option>
               <option
@@ -199,45 +183,28 @@ const updateStock = async () => {
             </select>
           </div>
 
-          <!-- Stock Amount -->
+          <!-- Buying Price -->
           <div class="mb-4">
-            <label for="jumlah_stock" class="block font-medium mb-1"
-              >Stock Amount</label
+            <label for="harga_beli" class="block font-medium mb-1"
+              >Buying Price</label
             >
             <input
-              id="jumlah_stock"
-              type="number"
-              v-model="stockData.jumlah_stock"
-              required
-              min="1"
+              id="harga_beli"
+              type="text"
+              v-model="productData.harga_beli"
               class="w-full p-2 border rounded"
             />
           </div>
 
-          <!-- Entry Date -->
+          <!-- Selling Price -->
           <div class="mb-4">
-            <label for="tgl_masuk" class="block font-medium mb-1"
-              >Entry Date</label
+            <label for="harga_jual" class="block font-medium mb-1"
+              >Selling Price</label
             >
             <input
-              id="tgl_masuk"
-              type="date"
-              v-model="stockData.tgl_masuk"
-              required
-              class="w-full p-2 border rounded"
-            />
-          </div>
-
-          <!-- Expiry Date -->
-          <div class="mb-4">
-            <label for="tgl_exp" class="block font-medium mb-1"
-              >Expiry Date</label
-            >
-            <input
-              id="tgl_exp"
-              type="date"
-              v-model="stockData.tgl_exp"
-              :min="stockData.tgl_masuk"
+              id="harga_jual"
+              type="text"
+              v-model="productData.harga_jual"
               class="w-full p-2 border rounded"
             />
           </div>
@@ -249,7 +216,7 @@ const updateStock = async () => {
               class="w-96 px-4 py-2 bg-primary-500 text-white rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
             >
               <i class="pi pi-pencil self-center"></i>
-              Update Stock
+              Update Product
             </button>
           </div>
         </div>
@@ -260,6 +227,6 @@ const updateStock = async () => {
 
 <style scoped>
 .container {
-  max-width: 600px;
+  max-width: 600px
 }
 </style>

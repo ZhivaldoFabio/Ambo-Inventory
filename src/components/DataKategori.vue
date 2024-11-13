@@ -1,16 +1,45 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import axios from "axios";
+import { RouterLink, useRoute } from 'vue-router';
+import axios from 'axios';
+import { ref, onMounted } from 'vue';
+import { useToast } from 'vue-toastification';
 
-// Reactive variable to store Produk data
-const kategori = ref([]);
+const toast = useToast(); // Initialize Vue Toastification
+
+// A ref to handle the confirmation logic
+const confirmDelete = (id) => {
+  const isConfirmed = window.confirm(
+    'Are you sure you want to delete this category?'
+  );
+  if (isConfirmed) {
+    deleteCategory(id); // Proceed with deletion if confirmed
+  }
+};
+
+// Function to handle deletion
+const deleteCategory = async (id) => {
+  try {
+    await axios.delete(`http://localhost:3000/api/categories/${id}`); // Ensure the API path is correct
+    // Remove category from the local list
+    categories.value = categories.value.filter((category) => category.id_kategori !== id);
+    // Display a success toast
+    toast.success('Category deleted successfully!');
+  } catch (error) {
+    toast.error('Error deleting category.'); // Error toast
+    console.error('Error deleting category:', error);
+  }
+};
+
+// Reactive variable to store categories data
+const categories = ref([]);
 
 onMounted(async () => {
   try {
-    const response = await axios.get("http://localhost:3000/api/categories");
-    kategori.value = response.data;
+    const response = await axios.get('http://localhost:3000/api/categories');
+    categories.value = response.data; // Corrected variable name
   } catch (error) {
-    console.error("Error fetching products data:", error);
+    console.error('Error fetching categories data:', error);
+    toast.error('Failed to load categories.');
   }
 });
 </script>
@@ -19,29 +48,46 @@ onMounted(async () => {
   <div class="container mx-auto p-4">
     <div class="flex justify-between">
       <h2 class="text-2xl font-semibold mb-4">Category List</h2>
-      <RouterLink :to="{ name: 'add-data-category' }"
+      <RouterLink :to="{ name: 'add-data-kategori' }"
         class="max-h-10 py-2 px-3 rounded-md self-center text-text-500 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         Add New
       </RouterLink>
     </div>
+
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Nama Kategori</th>
-          <th class="px-4 py-2 border-b">ID Kategori</th>
+          <th class="px-4 py-2 border-b">Category Name</th>
+          <th class="px-4 py-2 border-b">Category ID</th>
+          <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>
       </thead>
       <tbody>
         <tr
-          v-for="(kategori,index) in kategori"
-          :key="kategori.id"
+          v-for="(category, index) in categories"
+          :key="category.id_kategori"
           class="hover:bg-gray-50"
         >
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-          <td class="px-4 py-2 border-b">{{ kategori.nama_kategori }}</td>
-          <td class="px-4 py-2 border-b">{{ kategori.id_kategori }}</td>
+          <td class="px-4 py-2 border-b">{{ category.nama_kategori }}</td>
+          <td class="px-4 py-2 border-b">{{ category.id_kategori }}</td>
+          <td class="px-4 py-4 border-b flex justify-between">
+            <RouterLink
+              :to="{ name: 'edit-data-kategori', params: { id: category.id_kategori } }"
+              class="pi pi-pen-to-square flex text-primary-500 hover:drop-shadow-lg"
+            >
+              Edit
+            </RouterLink>
+
+            <button
+              @click="confirmDelete(category.id_kategori)"
+              class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
+            >
+              Delete
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>

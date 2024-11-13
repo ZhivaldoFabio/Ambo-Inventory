@@ -176,6 +176,129 @@ app.get('/api/stocks', (req, res) => {
   });
 });
 
+// POST endpoint to add new product
+app.post('/api/products', express.json(), (req, res) => {
+  const {
+    nama_produk,
+    id_supplier,
+    id_unit,
+    id_kategori,
+    harga_beli,
+    harga_jual,
+  } = req.body;
+  const query = `
+    INSERT INTO produk (nama_produk,id_supplier,id_unit,id_kategori,harga_beli,harga_jual)
+    VALUES (?,?,?,?,?,?)
+  `;
+  connection.query(
+    query,
+    [nama_produk, id_supplier, id_unit, id_kategori, harga_beli, harga_jual],
+    (err, result) => {
+      if (err) {
+        console.error('Error inserting data: ', err);
+        res.status(500).send('Server error');
+      } else {
+        res
+          .status(201)
+          .json({ message: 'Product added successfully', id: result.insertId });
+      }
+    }
+  );
+});
+// PUT endpoint to update product Mcc
+app.put('/api/products/:id', async (req, res) => {
+  console.log(req.body); // Log the incoming request body for debugging
+  const { id } = req.params;
+  const {
+    nama_produk,
+    id_supplier,
+    id_unit,
+    id_kategori,
+    harga_beli,
+    harga_jual,
+  } = req.body;
+
+  try {
+    const query = `
+    UPDATE product
+    SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?, 
+    WHERE id_produk = ?
+  `;
+    const values = [
+      nama_produk,
+      id_supplier,
+      id_unit,
+      id_kategori,
+      harga_beli,
+      harga_jual,
+      id,
+    ];
+
+    // Use the correct connection object
+    const [result] = await connection.promise().execute(query, values);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Product not found.' });
+    }
+
+    res.status(200).json({ message: 'Product updated successfully.' });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({ error: 'Failed to update product.' });
+  }
+});
+
+// DELETE endpoint to delete product
+app.delete('/api/products/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    DELETE FROM produk
+    WHERE id_produk = ?
+  `;
+  connection.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error deleting data: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res.json({ message: 'Product deleted successfully' });
+    }
+  });
+});
+
+// GET endpoint to fetch product by ID
+app.get('/api/products/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT 
+      s.id_produk, 
+      s.harga_beli, 
+      s.harga_jual,
+      p.nama_produk,
+      s.id_supplier, 
+      sp.nama_supplier,
+      s.id_unit, 
+      u.nama_unit,
+      s.id_kategori, 
+      k.nama_kategori
+    FROM produk s
+    JOIN produk p ON s.id_produk = p.id_produk
+    JOIN suppliers sp ON s.id_supplier = sp.id_supplier
+    JOIN units u ON s.id_unit = u.id_unit
+    JOIN kategori k ON s.id_kategori = k.id_kategori
+    WHERE s.id_produk = ?
+  `;
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('Error fetching product data: ', err);
+      res.status(500).send('Server error');
+    } else if (results.length === 0) {
+      res.status(404).send('Product not found');
+    } else {
+      res.json(results[0]); // Return the first result (there should only be one)
+    }
+  });
+});
+
 // Endpoint to get all stock data from MySQL (for the stock page)
 app.get('/api/all-stocks', (req, res) => {
   const query = `
@@ -199,6 +322,98 @@ app.get('/api/all-stocks', (req, res) => {
   });
 });
 
+// POST endpoint to add new supplier
+app.post('/api/suppliers', express.json(), (req, res) => {
+  const { nama_supplier, alamat, email, no_hp } = req.body;
+  const query = `
+    INSERT INTO suppliers (nama_supplier,alamat,email,no_hp)
+    VALUES (?,?,?,?)
+  `;
+  connection.query(
+    query,
+    [nama_supplier, alamat, email, no_hp],
+    (err, result) => {
+      if (err) {
+        console.error('Error inserting data: ', err);
+        res.status(500).send('Server error');
+      } else {
+        res.status(201).json({
+          message: 'Supplier added successfully',
+          id: result.insertId,
+        });
+      }
+    }
+  );
+});
+// PUT endpoint to update supplier Mcc
+app.put('/api/suppliers/:id', async (req, res) => {
+  console.log(req.body); // Log the incoming request body for debugging
+  const { id } = req.params;
+  const { nama_supplier, alamat, email, no_hp } = req.body;
+
+  try {
+    const query = `
+    UPDATE suppliers
+    SET nama_supplier = ?, alamat = ?, email = ?, no_hp = ?,
+    WHERE id_supplier = ?
+  `;
+    const values = [nama_supplier, alamat, email, no_hp, id];
+
+    // Use the correct connection object
+    const [result] = await connection.promise().execute(query, values);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Supplier not found.' });
+    }
+
+    res.status(200).json({ message: 'Supplier updated successfully.' });
+  } catch (error) {
+    console.error('Error updating Supplier:', error);
+    res.status(500).json({ error: 'Failed to update Supplier.' });
+  }
+});
+
+// DELETE endpoint to delete product
+app.delete('/api/suppliers/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    DELETE FROM suppliers
+    WHERE id_supplier = ?
+  `;
+  connection.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error deleting data: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res.json({ message: 'Supplier deleted successfully' });
+    }
+  });
+});
+
+// GET endpoint to fetch supplier by ID
+app.get('/api/suppliers/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT 
+      s.nama_supplier, 
+      s.alamat, 
+      s.email,
+      s.no_hp
+    FROM suppliers s
+    WHERE s.id_supplier = ?
+  `;
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('Error fetching supplier data: ', err);
+      res.status(500).send('Server error');
+    } else if (results.length === 0) {
+      res.status(404).send('Supplier not found');
+    } else {
+      res.json(results[0]); // Return the first result (there should only be one)
+    }
+  });
+});
+
 // Endpoint to get suppliers data from MySQL
 app.get('/api/suppliers', (req, res) => {
   const query = `
@@ -216,6 +431,91 @@ app.get('/api/suppliers', (req, res) => {
   });
 });
 
+// POST endpoint to add new unit
+app.post('/api/units', express.json(), (req, res) => {
+  const { nama_unit } = req.body;
+  const query = `
+    INSERT INTO units (nama_unit)
+    VALUES (?)
+  `;
+  connection.query(query, [nama_unit], (err, result) => {
+    if (err) {
+      console.error('Error inserting data: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res
+        .status(201)
+        .json({ message: 'Unit added successfully', id: result.insertId });
+    }
+  });
+});
+// PUT endpoint to update unit Mcc
+app.put('/api/units/:id', async (req, res) => {
+  console.log(req.body); // Log the incoming request body for debugging
+  const { id } = req.params;
+  const { nama_unit } = req.body;
+
+  try {
+    const query = `
+    UPDATE unit
+    SET nama_unit = ?
+    WHERE id_unit = ?
+  `;
+    const values = [nama_unit, id];
+
+    // Use the correct connection object
+    const [result] = await connection.promise().execute(query, values);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Unit not found.' });
+    }
+
+    res.status(200).json({ message: 'Unit updated successfully.' });
+  } catch (error) {
+    console.error('Error updating unit:', error);
+    res.status(500).json({ error: 'Failed to update unit.' });
+  }
+});
+
+// DELETE endpoint to delete unit
+app.delete('/api/units/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    DELETE FROM unit
+    WHERE id_unit = ?
+  `;
+  connection.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error deleting data: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res.json({ message: 'Unit deleted successfully' });
+    }
+  });
+});
+
+// GET endpoint to fetch unit by ID
+app.get('/api/units/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT 
+      s.id_unit, 
+      s.nama_unit
+    FROM units s
+    WHERE s.id_unit = ?
+  `;
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('Error fetching unit data: ', err);
+      res.status(500).send('Server error');
+    } else if (results.length === 0) {
+      res.status(404).send('Unit not found');
+    } else {
+      res.json(results[0]); // Return the first result (there should only be one)
+    }
+  });
+});
+
 // Endpoint to get units data from MySQL
 app.get('/api/units', (req, res) => {
   const query = `
@@ -229,6 +529,91 @@ app.get('/api/units', (req, res) => {
       res.status(500).send('Server error');
     } else {
       res.json(results);
+    }
+  });
+});
+
+// POST endpoint to add new category
+app.post('/api/categories', express.json(), (req, res) => {
+  const { nama_kategori } = req.body;
+  const query = `
+    INSERT INTO kategori (nama_kategori)
+    VALUES (?)
+  `;
+  connection.query(query, [nama_kategori], (err, result) => {
+    if (err) {
+      console.error('Error inserting data: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res
+        .status(201)
+        .json({ message: 'Category added successfully', id: result.insertId });
+    }
+  });
+});
+// PUT endpoint to update category Mcc
+app.put('/api/categories/:id', async (req, res) => {
+  console.log(req.body); // Log the incoming request body for debugging
+  const { id } = req.params;
+  const { nama_unit } = req.body;
+
+  try {
+    const query = `
+    UPDATE kategori
+    SET nama_kategori = ?
+    WHERE id_kategori = ?
+  `;
+    const values = [nama_kategori, id];
+
+    // Use the correct connection object
+    const [result] = await connection.promise().execute(query, values);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Category not found.' });
+    }
+
+    res.status(200).json({ message: 'Category updated successfully.' });
+  } catch (error) {
+    console.error('Error updating category:', error);
+    res.status(500).json({ error: 'Failed to update category.' });
+  }
+});
+
+// DELETE endpoint to delete category
+app.delete('/api/categories/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    DELETE FROM kategori
+    WHERE id_kategori = ?
+  `;
+  connection.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error deleting data: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res.json({ message: 'Category deleted successfully' });
+    }
+  });
+});
+
+// GET endpoint to fetch unit by ID
+app.get('/api/categories/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT 
+      s.id_kategori, 
+      s.nama_kategori
+    FROM kategori s
+    WHERE s.id_kategori = ?
+  `;
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('Error fetching category data: ', err);
+      res.status(500).send('Server error');
+    } else if (results.length === 0) {
+      res.status(404).send('Category not found');
+    } else {
+      res.json(results[0]); // Return the first result (there should only be one)
     }
   });
 });
@@ -288,58 +673,6 @@ app.get('/api/all-products', (req, res) => {
     }
   });
 });
-
-// PUT endpoint to update product
-app.put('/api/products/:id', async (req, res) => {
-  console.log(req.body); // Log the incoming request body for debugging
-  const { id } = req.params;
-  const {
-    id_produk,
-    id_supplier,
-    id_unit,
-    id_kategori,
-    jumlah_stock,
-    tgl_masuk,
-    tgl_exp,
-  } = req.body;
-
-  try {
-    // Convert ISO dates to MySQL-compatible date strings
-    const formattedTglMasuk = new Date(tgl_masuk).toLocaleDateString('en-CA'); // yyyy-MM-dd
-    const formattedTglExp = tgl_exp
-      ? new Date(tgl_exp).toLocaleDateString('en-CA')
-      : null;
-
-    const query = `
-    UPDATE stock
-    SET id_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, jumlah_stock = ?, tgl_masuk = ?, tgl_exp = ?
-    WHERE id_stock = ?
-  `;
-    const values = [
-      id_produk,
-      id_supplier,
-      id_unit,
-      id_kategori,
-      jumlah_stock,
-      formattedTglMasuk,
-      formattedTglExp,
-      id,
-    ];
-
-    // Use the correct connection object
-    const [result] = await connection.promise().execute(query, values);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Stock not found.' });
-    }
-
-    res.status(200).json({ message: 'Stock updated successfully.' });
-  } catch (error) {
-    console.error('Error updating stock:', error);
-    res.status(500).json({ error: 'Failed to update stock.' });
-  }
-});
-
 
 // Endpoint to get pembelian data from MySQL
 app.get('/api/all-pembelian', (req, res) => {

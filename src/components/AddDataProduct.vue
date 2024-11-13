@@ -62,7 +62,7 @@ const addProduct = async () => {
 
 // Reset form fields
 const resetForm = () => {
-  newStock.value = {
+  newProduct.value = {
     nama_produk:'',
     id_supplier: '',
     id_unit: '',
@@ -90,7 +90,7 @@ const resetForm = () => {
       ></RouterLink>
     </div>
 
-    <form @submit.prevent="addStock">
+    <form @submit.prevent="addProduct">
       <div class="font-body w-full">
         <div class="space-y-5">
           <!-- New Product  -->
@@ -101,7 +101,7 @@ const resetForm = () => {
                 class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
                 type="text"
                 v-model="newProduct.nama_produk"
-                id="nam_produk"
+                id="nama_produk"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ const resetForm = () => {
 
           <!-- Harga Beli -->
           <div>
-            <label class="" for="jumlah_stock">Buying Price</label>
+            <label class="" for="harga_beli">Buying Price</label>
             <div class="mt-2">
               <input
                 class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
@@ -187,7 +187,7 @@ const resetForm = () => {
           </div>
            <!-- Harga Jual -->
            <div>
-            <label class="" for="jumlah_stock">Selling Price</label>
+            <label class="" for="harga_jual">Selling Price</label>
             <div class="mt-2">
               <input
                 class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"

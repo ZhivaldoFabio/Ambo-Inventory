@@ -10,7 +10,6 @@ onMounted(async () => {
   try {
     const response = await axios.get('http://localhost:3000/api/stocks');
     stocks.value = response.data;
-    console.log('Fetched stock data:', response.data);
   } catch (error) {
     console.error('Error fetching stocks:', error);
   }
