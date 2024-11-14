@@ -18,16 +18,21 @@
 DROP TABLE IF EXISTS `detailpenjualan`;
 CREATE TABLE IF NOT EXISTS `detailpenjualan` (
   `id_detail_penjualan` int NOT NULL AUTO_INCREMENT,
+  `id_penjualan` int NOT NULL,
   `id_produk` int NOT NULL,
   `jumlah_produk` int NOT NULL,
   `harga` int NOT NULL,
   PRIMARY KEY (`id_detail_penjualan`),
   KEY `id_produk` (`id_produk`),
-  CONSTRAINT `detailpenjualan_ibfk_1` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  KEY `id_penjualan` (`id_penjualan`) USING BTREE,
+  CONSTRAINT `detailpenjualan_ibfk_1` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`) ON UPDATE CASCADE,
+  CONSTRAINT `detailpenjualan_ibfk_2` FOREIGN KEY (`id_penjualan`) REFERENCES `penjualan` (`id_penjualan`) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 -- Dumping data for table depotesambo.detailpenjualan: ~0 rows (approximately)
 DELETE FROM `detailpenjualan`;
+INSERT INTO `detailpenjualan` (`id_detail_penjualan`, `id_penjualan`, `id_produk`, `jumlah_produk`, `harga`) VALUES
+	(1, 1, 1, 1, 22000);
 
 -- Dumping structure for table depotesambo.kategori
 DROP TABLE IF EXISTS `kategori`;
@@ -46,6 +51,17 @@ INSERT INTO `kategori` (`id_kategori`, `nama_kategori`) VALUES
 	(4, 'Tepung'),
 	(5, 'Kecap'),
 	(6, 'Lilin');
+
+-- Dumping structure for table depotesambo.kategoris
+DROP TABLE IF EXISTS `kategoris`;
+CREATE TABLE IF NOT EXISTS `kategoris` (
+  `id_kategori` int NOT NULL AUTO_INCREMENT,
+  `nama_kategori` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  PRIMARY KEY (`id_kategori`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table depotesambo.kategoris: ~0 rows (approximately)
+DELETE FROM `kategoris`;
 
 -- Dumping structure for table depotesambo.pembelian
 DROP TABLE IF EXISTS `pembelian`;
@@ -74,28 +90,27 @@ INSERT INTO `pembelian` (`id_pembelian`, `jumlah_produk`, `tanggal_pembelian`, `
 -- Dumping structure for table depotesambo.penjualan
 DROP TABLE IF EXISTS `penjualan`;
 CREATE TABLE IF NOT EXISTS `penjualan` (
-  `id_penjualan` varchar(50) NOT NULL,
-  `id_detail_penjualan` int NOT NULL,
+  `id_penjualan` int NOT NULL AUTO_INCREMENT,
   `total_harga` int NOT NULL,
   `tanggal_penjualan` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_penjualan`),
-  KEY `id_detail_penjualan` (`id_detail_penjualan`),
-  CONSTRAINT `penjualan_ibfk_1` FOREIGN KEY (`id_detail_penjualan`) REFERENCES `detailpenjualan` (`id_detail_penjualan`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  PRIMARY KEY (`id_penjualan`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 -- Dumping data for table depotesambo.penjualan: ~0 rows (approximately)
 DELETE FROM `penjualan`;
+INSERT INTO `penjualan` (`id_penjualan`, `total_harga`, `tanggal_penjualan`) VALUES
+	(1, 22000, '2024-11-12 17:00:00');
 
 -- Dumping structure for table depotesambo.produk
 DROP TABLE IF EXISTS `produk`;
 CREATE TABLE IF NOT EXISTS `produk` (
   `id_produk` int NOT NULL AUTO_INCREMENT,
-  `nama_produk` varchar(255) NOT NULL,
+  `nama_produk` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `harga_beli` int NOT NULL,
   `harga_jual` int NOT NULL,
   `id_kategori` int NOT NULL,
   `id_unit` int NOT NULL,
-  `isi_produk` int NOT NULL,
+  `isi_produk` int DEFAULT NULL,
   `stock_minimum` int DEFAULT NULL,
   `id_supplier` int NOT NULL,
   PRIMARY KEY (`id_produk`) USING BTREE,
@@ -151,10 +166,10 @@ INSERT INTO `stock` (`id_stock`, `id_unit`, `id_kategori`, `id_produk`, `id_supp
 DROP TABLE IF EXISTS `suppliers`;
 CREATE TABLE IF NOT EXISTS `suppliers` (
   `id_supplier` int NOT NULL AUTO_INCREMENT,
-  `nama_supplier` varchar(50) NOT NULL,
-  `alamat` varchar(225) NOT NULL,
-  `email` varchar(225) NOT NULL,
-  `no_hp` varchar(20) NOT NULL,
+  `nama_supplier` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `alamat` varchar(225) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(225) COLLATE utf8mb4_general_ci NOT NULL,
+  `no_hp` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`id_supplier`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -172,7 +187,7 @@ INSERT INTO `suppliers` (`id_supplier`, `nama_supplier`, `alamat`, `email`, `no_
 DROP TABLE IF EXISTS `units`;
 CREATE TABLE IF NOT EXISTS `units` (
   `id_unit` int NOT NULL AUTO_INCREMENT,
-  `nama_unit` varchar(50) NOT NULL,
+  `nama_unit` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`id_unit`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -187,11 +202,11 @@ INSERT INTO `units` (`id_unit`, `nama_unit`) VALUES
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE IF NOT EXISTS `users` (
   `id_user` int NOT NULL AUTO_INCREMENT,
-  `nama_user` varchar(20) NOT NULL,
-  `role` varchar(20) NOT NULL,
-  `username` varchar(20) NOT NULL,
-  `no_hp` varchar(12) NOT NULL,
-  `password` varchar(255) NOT NULL,
+  `nama_user` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `role` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `no_hp` varchar(12) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`id_user`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

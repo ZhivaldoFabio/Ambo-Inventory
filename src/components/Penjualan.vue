@@ -1,11 +1,40 @@
+<!-- Penjualan.vue -->
+
 <script setup>
-import { ref } from 'vue';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/firebase'; // Adjust path as needed
-import { computed } from 'vue';
+import { ref, watch, computed } from 'vue';
+import axios from 'axios';
 
 // Initialize reactive invoice items array
 const invoiceItems = ref([{ id_produk: '', jumlah_produk: 1, harga: 0 }]);
+
+// To store available products
+const products = ref([]);
+
+// Watch for changes in product selection and update price
+watch(
+  () => invoiceItems.value,
+  () => {
+    invoiceItems.value.forEach(async (item) => {
+      if (item.id_produk) {
+        const product = products.value.find(
+          (p) => p.id_produk === item.id_produk
+        );
+        if (product) {
+          item.harga = product.harga_jual || 0; // Set price from the selected product
+        }
+      }
+    });
+  },
+  { deep: true }
+);
+
+// Computed property for total price of each item (harga * qty)
+const itemTotalPrice = computed(() => {
+  return invoiceItems.value.map((item) => ({
+    ...item,
+    total: item.harga * item.jumlah_produk,
+  }));
+});
 
 // Computed property for total price
 const totalPrice = computed(() =>
@@ -27,42 +56,55 @@ function removeItem(index) {
 
 // Format currency for display
 function formatCurrency(value) {
+  if (value == null || isNaN(value)) {
+    return '-'; // Return a placeholder if value is invalid
+  }
   return value.toLocaleString('en-US', { style: 'currency', currency: 'IDR' });
 }
 
-// Submit invoice to Firestore
+// Fetch products data from MySQL
+async function fetchProducts() {
+  try {
+    const response = await axios.get('/api/products'); // Endpoint to fetch products
+    products.value = response.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  }
+}
+
+// Submit invoice to MySQL through the Express API
 async function submitInvoice() {
   try {
-    const detailInvoiceIds = []; // Array to store id_detail_invoice for each detail
-
-    // Add invoice details to "Detail_Invoice" collection
-    for (let item of invoiceItems.value) {
-      const detailInvoiceId = Math.floor(Math.random() * 1000000); // Generate a unique ID
-      await addDoc(collection(db, 'Detail_Invoice'), {
-        id_detail_invoice: detailInvoiceId,
+    const invoiceData = {
+      total_harga: totalPrice.value,
+      tanggal: new Date().toISOString(), // Current timestamp
+      items: invoiceItems.value.map((item) => ({
         id_produk: item.id_produk,
         jumlah_produk: item.jumlah_produk,
         harga: item.harga,
-        no_invoice: Math.floor(Math.random() * 1000000), // Example invoice number, replace with your logic
-      });
+      })),
+    };
 
-      detailInvoiceIds.push(detailInvoiceId); // Store the generated id_detail_invoice
+    // Send invoice data to backend API
+    const response = await axios.post('/api/penjualan', invoiceData);
+
+    if (response.status === 201) {
+      alert('Invoice submitted successfully!');
+      resetForm();
     }
-
-    // Add main invoice to "Invoice" collection, including related detail IDs
-    await addDoc(collection(db, 'Invoice'), {
-      id_invoice: Math.floor(Math.random() * 1000000), // Generate unique invoice ID
-      tanggal: Timestamp.now(),
-      total_harga: totalPrice.value,
-      id_detail_invoice: detailInvoiceIds, // Array of related detail IDs
-    });
-
-    alert('Invoice submitted successfully!');
   } catch (error) {
     console.error('Error submitting invoice:', error);
     alert('Failed to submit invoice.');
   }
 }
+
+// Fetch products when the component is mounted
+fetchProducts();
+
+// Reset form fields
+const resetForm = () => {
+  invoiceItems.value = [{ id_produk: '', jumlah_produk: 1, harga: 0 }]; // Reset to initial state
+};
 </script>
 
 <template>
@@ -84,11 +126,16 @@ async function submitInvoice() {
           class="hover:bg-gray-50"
         >
           <td class="px-4 py-2 border-b">
-            <input
-              v-model="item.id_produk"
-              class="border rounded p-1 w-full"
-              placeholder="Product ID"
-            />
+            <select v-model="item.id_produk" class="border rounded p-1 w-full">
+              <option value="" disabled>Select Product</option>
+              <option
+                v-for="product in products"
+                :key="product.id_produk"
+                :value="product.id_produk"
+              >
+                {{ product.nama_produk }}
+              </option>
+            </select>
           </td>
           <td class="px-4 py-2 border-b">
             <input
@@ -99,17 +146,15 @@ async function submitInvoice() {
             />
           </td>
           <td class="px-4 py-2 border-b">
-            <input
-              v-model.number="item.harga"
-              type="number"
-              class="border rounded p-1 w-full"
-              placeholder="Price"
-            />
+            <!-- Display the price as non-editable -->
+            <span class="border rounded p-1 w-full">{{
+              formatCurrency(item.harga * item.jumlah_produk)
+            }}</span>
           </td>
           <td class="px-4 py-2 border-b">
             <button
               @click="removeItem(index)"
-              class="text-red-500 hover:underline"
+              class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
             >
               Delete
             </button>
@@ -117,23 +162,27 @@ async function submitInvoice() {
         </tr>
       </tbody>
     </table>
-    <button
-      @click="addItem"
-      class="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-    >
-      Add Item
-    </button>
+    <div class="flex w-full justify-end">
+      <button
+        @click="addItem"
+        class="mt-4 px-4 py-2 bg-secondary-500 text-white rounded"
+      >
+        Add Item
+      </button>
+    </div>
 
     <div class="mt-6">
       <h3 class="text-xl font-semibold">
         Total: {{ formatCurrency(totalPrice) }}
       </h3>
-      <button
-        @click="submitInvoice"
-        class="mt-4 px-4 py-2 bg-green-500 text-white rounded"
-      >
-        Submit Invoice
-      </button>
+      <div class="flex justify-end w-full">
+        <button
+          @click="submitInvoice"
+          class="mt-4 px-4 py-2 bg-primary-500 text-white rounded"
+        >
+          Submit Invoice
+        </button>
+      </div>
     </div>
   </div>
 </template>

@@ -253,7 +253,7 @@ app.get('/api/categories', (req, res) => {
 // Endpoint to get products data from MySQL
 app.get('/api/products', (req, res) => {
   const query = `
-    SELECT id_produk, nama_produk
+    SELECT id_produk, nama_produk, harga_jual
     FROM produk
   `;
 
@@ -340,7 +340,6 @@ app.put('/api/products/:id', async (req, res) => {
   }
 });
 
-
 // Endpoint to get pembelian data from MySQL
 app.get('/api/all-pembelian', (req, res) => {
   const query = `
@@ -362,6 +361,178 @@ app.get('/api/all-pembelian', (req, res) => {
   });
 });
 
+// Endpoint to get all sales data (penjualan)
+app.get('/api/all-penjualan', (req, res) => {
+  const query = `
+    SELECT 
+      penjualan.id_penjualan, 
+      penjualan.tanggal_penjualan, 
+      produk.nama_produk, 
+      penjualan.jumlah_produk, 
+      penjualan.total_harga, 
+      suppliers.nama_supplier, 
+      units.nama_unit 
+    FROM penjualan
+    JOIN produk ON produk.id_produk = penjualan.id_produk
+    JOIN suppliers ON suppliers.id_supplier = penjualan.id_supplier
+    JOIN units ON units.id_unit = penjualan.id_unit
+    ORDER BY penjualan.id_penjualan ASC
+  `;
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching all sales data: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+// POST endpoint to add new sales (penjualan)
+app.post('/api/penjualan', (req, res) => {
+  const { items, total_harga, tanggal_penjualan } = req.body;
+
+  if (!items || items.length === 0) {
+    return res.status(400).send('Invoice items are required.');
+  }
+
+  // Insert into `penjualan` table
+  const insertPenjualanQuery = `
+    INSERT INTO penjualan (total_harga, tanggal_penjualan)
+    VALUES (?, ?)
+  `;
+
+  // Use current date if tanggal_penjualan is not provided
+  const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
+  const date = tanggal_penjualan || currentDate;
+
+  connection.query(
+    insertPenjualanQuery,
+    [total_harga, date],
+    (err, result) => {
+      if (err) {
+        console.error('Error inserting into penjualan:', err);
+        return res.status(500).send('Failed to create invoice.');
+      }
+
+      const id_penjualan = result.insertId;
+
+      // Prepare data for `detailpenjualan` table
+      const detailItems = items.map((item) => [
+        id_penjualan, // Foreign key to `penjualan`
+        item.id_produk,
+        item.jumlah_produk,
+        item.harga,
+      ]);
+
+      // Insert into `detailpenjualan` table
+      const insertDetailQuery = `
+        INSERT INTO detailpenjualan (id_penjualan, id_produk, jumlah_produk, harga)
+        VALUES ?
+      `;
+
+      connection.query(insertDetailQuery, [detailItems], (err) => {
+        if (err) {
+          console.error('Error inserting into detailpenjualan:', err);
+          return res.status(500).send('Failed to add items to the invoice.');
+        }
+
+        res.status(201).json({
+          message: 'Sale added successfully',
+          id_penjualan,
+        });
+      });
+    }
+  );
+});
+
+// PUT endpoint to update sales (penjualan)
+app.put('/api/penjualan/:id', (req, res) => {
+  const { id } = req.params;
+  const {
+    id_produk,
+    id_supplier,
+    id_unit,
+    jumlah_produk,
+    total_harga,
+    tanggal_penjualan,
+  } = req.body;
+
+  const query = `
+    UPDATE penjualan
+    SET id_produk = ?, id_supplier = ?, id_unit = ?, jumlah_produk = ?, total_harga = ?, tanggal_penjualan = ?
+    WHERE id_penjualan = ?
+  `;
+
+  connection.query(
+    query,
+    [
+      id_produk,
+      id_supplier,
+      id_unit,
+      jumlah_produk,
+      total_harga,
+      tanggal_penjualan,
+      id,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error('Error updating sale: ', err);
+        res.status(500).send('Server error');
+      } else if (result.affectedRows === 0) {
+        res.status(404).send('Sale not found');
+      } else {
+        res.status(200).json({ message: 'Sale updated successfully' });
+      }
+    }
+  );
+});
+
+// DELETE endpoint to delete a sale (penjualan)
+app.delete('/api/penjualan/:id', (req, res) => {
+  const { id } = req.params;
+
+  const query = `
+    DELETE FROM penjualan
+    WHERE id_penjualan = ?
+  `;
+
+  connection.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error deleting sale: ', err);
+      res.status(500).send('Server error');
+    } else if (result.affectedRows === 0) {
+      res.status(404).send('Sale not found');
+    } else {
+      res.json({ message: 'Sale deleted successfully' });
+    }
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+// GET endpoint to fetch penjualan by ID
+app.get('/api/penjualans/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT 
+      s.total_harga,
+      s.tanggal_penjualan
+    FROM penjualan s
+    WHERE s.id_penjualan = ?
+  `;
+  connection.query(query, [id], (err, results) => {
+    if (err) {
+      console.error('Error fetching penjualan data: ', err);
+      res.status(500).send('Server error');
+    } else if (results.length === 0) {
+      res.status(404).send('Penjualan not found');
+    } else {
+      res.json(results[0]); // Return the first result (there should only be one)
+    }
+  });
+});
+

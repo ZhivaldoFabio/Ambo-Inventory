@@ -9,6 +9,7 @@ import NotFoundView from '@/views/NotFoundView.vue';
 import UserEditView from '@/views/UserEditView.vue';
 import LaporanPembelianView from '@/views/LaporanPembelianView.vue';
 import LaporanPenjualanView from '@/views/LaporanPenjualanView.vue';
+import DataPenjualan from '@/components/DataPenjualan.vue';
 import DataProduk from '@/components/DataProduk.vue';
 import AddDataProduct from '@/components/AddDataProduct.vue';
 import DataUnit from '@/components/DataUnit.vue';
@@ -80,6 +81,14 @@ const router = createRouter({
       path: '/stock',
       name: 'stock',
       component: DataStock,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/penjualan',
+      name: 'penjualan',
+      component: DataPenjualan,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
