@@ -120,6 +120,11 @@ onMounted(() => {
             <span>Penjualan</span>
           </RouterLink>
         </li>
+        <li class="p-1 ml-5">
+          <RouterLink to="/penjualan" class="flex items-center space-x-2">
+            <span>History Penjualan</span>
+          </RouterLink>
+        </li>
       </ul>
     </div>
   </nav>
