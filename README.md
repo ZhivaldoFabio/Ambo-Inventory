@@ -10,6 +10,29 @@ This template should help get you started developing with Vue 3 in Vite.
 
 See [Vite Configuration Reference](https://vitejs.dev/config/).
 
+## Dependencies
+
+```sh
+npm install vue-toastification
+npm install -g nodemon
+npm install axios
+
+https://vue-toastification.maronato.dev/
+```
+
+## Installing Node
+
+```sh
+nvm install --lts
+nvm use `<version>`
+```
+
+### Updating NPM
+
+```sh
+npm install -g npm
+```
+
 ## Project Setup
 
 ```sh
