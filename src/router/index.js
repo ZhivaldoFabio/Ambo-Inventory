@@ -97,8 +97,8 @@ const router = createRouter({
       },
     },
     {
-      path: '/penjualan',
-      name: 'penjualan',
+      path: '/data-penjualan',
+      name: 'data-penjualan',
       component: DataPenjualan,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication

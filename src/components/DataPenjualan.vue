@@ -61,7 +61,8 @@ function formatTimestamp(timestamp) {
   <div class="container mx-auto p-4">
     <div class="flex justify-between">
       <h2 class="text-2xl font-semibold mb-4">Penjualan List</h2>
-      <RouterLink :to="{ name: 'add-data-penjualan' }"
+      <RouterLink
+        :to="{ name: 'home' }"
         class="max-h-10 py-2 px-3 rounded-md self-center text-text-500 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         Add New
@@ -88,9 +89,11 @@ function formatTimestamp(timestamp) {
           <!-- Directly use nama_supplier -->
           <td class="px-4 py-2 border-b">{{ penjualan.total_harga }}</td>
           <!-- Directly use nama_produk -->
-          <td class="px-4 py-2 border-b">{{ formatTimestamp(penjualan.tanggal_penjualan) }}</td>
+          <td class="px-4 py-2 border-b">
+            {{ formatTimestamp(penjualan.tanggal_penjualan) }}
+          </td>
           <td class="px-4 py-4 border-b flex justify-between"></td>
-          </tr>
+        </tr>
       </tbody>
     </table>
   </div>
