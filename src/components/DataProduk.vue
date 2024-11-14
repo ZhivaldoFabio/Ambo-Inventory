@@ -5,6 +5,7 @@ import axios from 'axios';
 // Reactive variable to store Produk data
 const products = ref([]);
 
+// Fetch products on mount
 onMounted(async () => {
   try {
     const response = await axios.get('http://localhost:3000/api/all-products');
@@ -13,6 +14,22 @@ onMounted(async () => {
     console.error('Error fetching products data:', error);
   }
 });
+
+// Delete confirmation and delete function
+const confirmDelete = (productId) => {
+  if (confirm("Are you sure you want to delete this product?")) {
+    deleteProduct(productId);
+  }
+};
+
+const deleteProduct = async (productId) => {
+  try {
+    await axios.delete(`http://localhost:3000/api/products/${productId}`);
+    products.value = products.value.filter(product => product.id_produk !== productId);
+  } catch (error) {
+    console.error('Error deleting product:', error);
+  }
+};
 </script>
 
 <template>
@@ -36,6 +53,7 @@ onMounted(async () => {
           <th class="px-4 py-2 border-b">Kategori</th>
           <th class="px-4 py-2 border-b">Harga Beli</th>
           <th class="px-4 py-2 border-b">Harga Jual</th>
+          <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -51,6 +69,21 @@ onMounted(async () => {
           <td class="px-4 py-2 border-b">{{ produk.nama_kategori }}</td>
           <td class="px-4 py-2 border-b">{{ produk.harga_beli }}</td>
           <td class="px-4 py-2 border-b">{{ produk.harga_jual }}</td>
+          <td class="px-4 py-4 border-b flex justify-between">
+            <RouterLink
+              :to="{ name: 'edit-data-produk', params: { id: produk.id_produk } }"
+              class="pi pi-pen-to-square flex text-primary-500 hover:drop-shadow-lg"
+            >
+              Edit
+            </RouterLink>
+
+            <button
+              @click="confirmDelete(produk.id_produk)"
+              class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
+            >
+              Delete
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>

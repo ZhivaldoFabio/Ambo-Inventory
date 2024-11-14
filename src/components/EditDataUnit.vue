@@ -1,5 +1,3 @@
-<!-- EditDataUnit.vue -->
-
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -10,78 +8,51 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
-const stockId = route.params.id; // Get the ID from the route
+const unitId = route.params.id; // Get the ID from the route
 
-// Reactive object for stock data
+// Reactive object for unit data
 const unitData = ref({
-  id_produk: '',
-  id_supplier: '',
-  id_unit: '',
-  id_kategori: '',
-  jumlah_stock: 0,
-  tgl_masuk: '',
-  tgl_exp: '',
+  nama_unit: '',
 });
 
-// Dropdown options for the form
-const products = ref([]);
-const suppliers = ref([]);
-const units = ref([]);
-const categories = ref([]);
-
-// Fetch the current stock data and dropdown options
+// Fetch the current unit data and dropdown options
 onMounted(async () => {
   try {
-    // Fetch stock details
-    const stockResponse = await axios.get(
-      `http://localhost:3000/api/stocks/${stockId}`
+    // Fetch unit details
+    const unitResponse = await axios.get(
+      `http://localhost:3000/api/units/${unitId}`
     );
 
-    // Format dates before setting them in the reactive unitData object
-    const stock = stockResponse.data;
-    stock.tgl_masuk = new Date(stock.tgl_masuk).toLocaleDateString('en-CA'); // Format as yyyy-MM-dd
-    stock.tgl_exp = new Date(stock.tgl_exp).toLocaleDateString('en-CA'); // Format as yyyy-MM-dd
+    const unit = unitResponse.data;
+    unitData.value = unit;
 
-    // Assign formatted stock data
-    unitData.value = stock;
-
-    // Fetch options for dropdowns
-    const [productRes, supplierRes, unitRes, categoryRes] = await Promise.all([
-      axios.get('http://localhost:3000/api/products'),
-      axios.get('http://localhost:3000/api/suppliers'),
+    // Optionally fetch more options for dropdowns if needed
+    const [unitRes] = await Promise.all([
       axios.get('http://localhost:3000/api/units'),
-      axios.get('http://localhost:3000/api/categories'),
     ]);
 
-    products.value = productRes.data;
-    suppliers.value = supplierRes.data;
-    units.value = unitRes.data;
-    categories.value = categoryRes.data;
   } catch (error) {
-    console.error('Error fetching stock or dropdown data:', error);
-    toast.error('Failed to load stock details or options.');
+    console.error('Error fetching unit or dropdown data:', error);
+    toast.error('Failed to load unit details or options.');
   }
 });
 
-// Update the stock data
+// Update the unit data
 const updateUnit = async () => {
   try {
-    // Revert the date format back to ISO before sending it to the server if necessary
     const formattedUnitData = {
       ...unitData.value,
-      tgl_masuk: new Date(unitData.value.tgl_masuk).toISOString(),
-      tgl_exp: new Date(unitData.value.tgl_exp).toISOString(),
     };
 
     await axios.put(
-      `http://localhost:3000/api/stocks/${stockId}`,
+      `http://localhost:3000/api/units/${unitId}`,
       formattedUnitData
     );
     toast.success('Unit updated successfully!');
-    router.push({ name: 'stock' }); // Navigate back to the Unit page
+    router.push({ name: 'unit' }); // Navigate back to the Unit page
   } catch (error) {
-    console.error('Error updating stock:', error);
-    toast.error('Failed to update stock.');
+    console.error('Error updating unit:', error);
+    toast.error('Failed to update unit.');
   }
 };
 </script>
@@ -95,149 +66,23 @@ const updateUnit = async () => {
       </div>
 
       <RouterLink
-        :to="{ name: 'stock' }"
+        :to="{ name: 'unit' }"
         class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
-        ><i
-          class="pi pi-angle-left text-primary-700"
-          style="font-size: 1.3rem"
-        ></i
-      ></RouterLink>
+      >
+        <i class="pi pi-angle-left text-primary-700" style="font-size: 1.3rem"></i>
+      </RouterLink>
     </div>
 
     <form @submit.prevent="updateUnit">
       <div class="font-body w-full">
         <div class="space-y-5">
-          <!-- Product Dropdown -->
-          <div>
-            <label for="id_produk">Product</label>
-            <div>
-              <select
-                id="id_produk"
-                v-model="unitData.id_produk"
-                required
-                class="w-full p-2 border rounded"
-              >
-                <option value="" disabled>Select Product</option>
-                <option
-                  v-for="product in products"
-                  :key="product.id_produk"
-                  :value="product.id_produk"
-                >
-                  {{ product.nama_produk }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Supplier Dropdown -->
+          <!-- Unit Name Input -->
           <div class="mb-4">
-            <label for="id_supplier" class="block font-medium mb-1"
-              >Supplier</label
-            >
-            <select
-              id="id_supplier"
-              v-model="unitData.id_supplier"
-              required
-              class="w-full p-2 border rounded"
-            >
-              <option value="" disabled v-if="!unitData.id_supplier">
-                Select Supplier
-              </option>
-              <option
-                v-for="supplier in suppliers"
-                :key="supplier.id_supplier"
-                :value="supplier.id_supplier"
-              >
-                {{ supplier.nama_supplier }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Unit Dropdown -->
-          <div class="mb-4">
-            <label for="id_unit" class="block font-medium mb-1">Unit</label>
-            <select
-              id="id_unit"
-              v-model="unitData.id_unit"
-              required
-              class="w-full p-2 border rounded"
-            >
-              <option value="" disabled v-if="!unitData.id_unit">
-                Select Unit
-              </option>
-              <option
-                v-for="unit in units"
-                :key="unit.id_unit"
-                :value="unit.id_unit"
-              >
-                {{ unit.nama_unit }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Category Dropdown -->
-          <div class="mb-4">
-            <label for="id_kategori" class="block font-medium mb-1"
-              >Category</label
-            >
-            <select
-              id="id_kategori"
-              v-model="unitData.id_kategori"
-              required
-              class="w-full p-2 border rounded"
-            >
-              <option value="" disabled v-if="!unitData.id_kategori">
-                Select Category
-              </option>
-              <option
-                v-for="category in categories"
-                :key="category.id_kategori"
-                :value="category.id_kategori"
-              >
-                {{ category.nama_kategori }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Unit Amount -->
-          <div class="mb-4">
-            <label for="jumlah_stock" class="block font-medium mb-1"
-              >Unit Amount</label
-            >
+            <label for="nama_unit" class="block font-medium mb-1">Unit Name</label>
             <input
-              id="jumlah_stock"
-              type="number"
-              v-model="unitData.jumlah_stock"
-              required
-              min="1"
-              class="w-full p-2 border rounded"
-            />
-          </div>
-
-          <!-- Entry Date -->
-          <div class="mb-4">
-            <label for="tgl_masuk" class="block font-medium mb-1"
-              >Entry Date</label
-            >
-            <input
-              id="tgl_masuk"
-              type="date"
-              v-model="unitData.tgl_masuk"
-              required
-              class="w-full p-2 border rounded"
-            />
-          </div>
-
-          <!-- Expiry Date -->
-          <div class="mb-4">
-            <label for="tgl_exp" class="block font-medium mb-1"
-              >Expiry Date</label
-            >
-            <input
-              id="tgl_exp"
-              type="date"
-              v-model="unitData.tgl_exp"
-              :min="unitData.tgl_masuk"
+              id="nama_unit"
+              type="text"
+              v-model="unitData.nama_unit"
               class="w-full p-2 border rounded"
             />
           </div>

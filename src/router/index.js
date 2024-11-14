@@ -18,6 +18,9 @@ import DataKategori from '@/components/DataKategori.vue';
 import AddDataCategory from '@/components/AddDataCategory.vue';
 // import EditDataCategory from '@/components/EditDataCategory.vue';
 import EditDataProduct from '@/components/EditDataProduct.vue';
+import EditDataUnit from '@/components/EditDataUnit.vue';
+import EditDataCategory from '@/components/EditDataCategory.vue';
+import EditDataSupplier from '@/components/EditDataSupplier.vue';
 import DataPembelian from '@/components/DataPembelian.vue';
 import DataSupplier from '@/components/DataSupplier.vue';
 import AddDataSupplier from '@/components/AddDataSupplier.vue';
@@ -73,6 +76,14 @@ const router = createRouter({
       path: '/add-supplier',
       name: 'add-data-supplier',
       component: AddDataSupplier,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/edit-supplier/:id',
+      name: 'edit-data-supplier',
+      component: EditDataSupplier,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
@@ -150,6 +161,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/edit-unit/:id',
+      name: 'edit-data-unit',
+      component: EditDataUnit,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
       path: '/kategori',
       name: 'kategori',
       component: DataKategori,
@@ -158,21 +177,29 @@ const router = createRouter({
       },
     },
     {
-      path: '/add-category',
-      name: 'add-data-category',
+      path: '/add-kategori',
+      name: 'add-data-kategori',
       component: AddDataCategory,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
     },
-    // {
-    //   path: '/edit-kategori/:id',
-    //   name: 'edit-data-category',
-    //   component: EditDataCategory,
-    //   meta: {
-    //     requiresAuth: true, // This metadata marks the route as requiring authentication
-    //   },
-    // },
+    {
+      path: '/edit-kategori/:id',
+      name: 'edit-data-kategori',
+      component: EditDataCategory,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/edit-kategori/:id',
+      name: 'edit-data-kategori',
+      component: EditDataUnit,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
     {
       path: '/pembelian',
       name: 'pembelian',

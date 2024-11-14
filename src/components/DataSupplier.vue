@@ -1,9 +1,34 @@
-<!-- DataSupplier.vue -->
-
 <script setup>
-import axios from "axios";
-import { ref, onMounted } from "vue";
+import { RouterLink, useRoute } from 'vue-router';
+import axios from 'axios';
+import { ref, onMounted } from 'vue';
+import { useToast } from 'vue-toastification';
 
+const toast = useToast(); // Initialize Vue Toastification
+
+// A ref to handle the confirmation logic
+const confirmDelete = (id) => {
+  const isConfirmed = window.confirm(
+    'Are you sure you want to delete this supplier?'
+  );
+  if (isConfirmed) {
+    deleteSupplier(id); // Proceed with deletion if confirmed
+  }
+};
+
+// Function to handle deletion
+const deleteSupplier = async (id) => {
+  try {
+    await axios.delete(`http://localhost:3000/api/suppliers/${id}`); // Ensure the API path is correct
+    // Remove supplier from the local list
+    suppliers.value = suppliers.value.filter((supplier) => supplier.id_supplier !== id);
+    // Display a success toast
+    toast.success('Supplier deleted successfully!');
+  } catch (error) {
+    toast.error('Error deleting supplier.'); // Error toast
+    console.error('Error deleting supplier:', error);
+  }
+};
 // Reactive variable to store suppliers data
 const suppliers = ref([]);
 
@@ -33,10 +58,10 @@ onMounted(async () => {
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
           <th class="px-4 py-2 border-b">Nama Supplier</th>
-          <th class="px-4 py-2 border-b">ID Supplier</th>
           <th class="px-4 py-2 border-b">Alamat</th>
           <th class="px-4 py-2 border-b">No HP</th>
           <th class="px-4 py-2 border-b">Email</th>
+          <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -47,10 +72,24 @@ onMounted(async () => {
         >
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
           <td class="px-4 py-2 border-b">{{ supplier.nama_supplier }}</td>
-          <td class="px-4 py-2 border-b">{{ supplier.id_supplier }}</td>
           <td class="px-4 py-2 border-b">{{ supplier.alamat }}</td>
           <td class="px-4 py-2 border-b">{{ supplier.no_hp }}</td>
           <td class="px-4 py-2 border-b">{{ supplier.email }}</td>
+          <td class="px-4 py-4 border-b flex justify-between">
+            <RouterLink
+              :to="{ name: 'edit-data-supplier', params: { id: supplier.id_supplier } }"
+              class="pi pi-pen-to-square flex text-primary-500 hover:drop-shadow-lg"
+            >
+              Edit
+            </RouterLink>
+
+            <button
+              @click="confirmDelete(supplier.id_supplier)"
+              class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
+            >
+              Delete
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
