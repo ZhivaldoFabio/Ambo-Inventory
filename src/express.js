@@ -751,17 +751,10 @@ app.get('/api/all-penjualan', (req, res) => {
   const query = `
     SELECT 
       penjualan.id_penjualan, 
-      penjualan.tanggal_penjualan, 
-      produk.nama_produk, 
-      penjualan.jumlah_produk, 
-      penjualan.total_harga, 
-      suppliers.nama_supplier, 
-      units.nama_unit 
+      penjualan.total_harga,
+      penjualan.tanggal_penjualan
     FROM penjualan
-    JOIN produk ON produk.id_produk = penjualan.id_produk
-    JOIN suppliers ON suppliers.id_supplier = penjualan.id_supplier
-    JOIN units ON units.id_unit = penjualan.id_unit
-    ORDER BY penjualan.id_penjualan ASC
+    ORDER BY id_penjualan ASC
   `;
 
   connection.query(query, (err, results) => {
@@ -771,6 +764,46 @@ app.get('/api/all-penjualan', (req, res) => {
     } else {
       res.json(results);
     }
+  });
+});
+
+// Endpoint to get details of a specific penjualan
+app.get('/api/penjualan/:id/details', (req, res) => {
+  const { id } = req.params;
+
+  // Validate the ID
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Invalid penjualan ID.' });
+  }
+
+  const query = `
+    SELECT 
+      detailpenjualan.id_detail_penjualan, 
+      detailpenjualan.id_penjualan, 
+      produk.nama_produk, 
+      detailpenjualan.jumlah_produk,
+      detailpenjualan.harga,
+      penjualan.total_harga
+    FROM detailpenjualan
+    JOIN produk ON produk.id_produk = detailpenjualan.id_produk
+    JOIN penjualan ON penjualan.id_penjualan = detailpenjualan.id_penjualan
+    WHERE detailpenjualan.id_penjualan = ?
+    ORDER BY detailpenjualan.id_detail_penjualan ASC
+  `;
+
+  connection.query(query, [id], (error, results) => {
+    if (error) {
+      console.error('Error fetching penjualan details:', error);
+      return res.status(500).json({ message: 'Internal server error.' });
+    }
+
+    if (results.length === 0) {
+      return res
+        .status(404)
+        .json({ message: 'No details found for this penjualan ID.' });
+    }
+
+    return res.json({ success: true, data: results });
   });
 });
 
@@ -792,44 +825,40 @@ app.post('/api/penjualan', (req, res) => {
   const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
   const date = tanggal_penjualan || currentDate;
 
-  connection.query(
-    insertPenjualanQuery,
-    [total_harga, date],
-    (err, result) => {
-      if (err) {
-        console.error('Error inserting into penjualan:', err);
-        return res.status(500).send('Failed to create invoice.');
-      }
+  connection.query(insertPenjualanQuery, [total_harga, date], (err, result) => {
+    if (err) {
+      console.error('Error inserting into penjualan:', err);
+      return res.status(500).send('Failed to create invoice.');
+    }
 
-      const id_penjualan = result.insertId;
+    const id_penjualan = result.insertId;
 
-      // Prepare data for `detailpenjualan` table
-      const detailItems = items.map((item) => [
-        id_penjualan, // Foreign key to `penjualan`
-        item.id_produk,
-        item.jumlah_produk,
-        item.harga,
-      ]);
+    // Prepare data for `detailpenjualan` table
+    const detailItems = items.map((item) => [
+      id_penjualan, // Foreign key to `penjualan`
+      item.id_produk,
+      item.jumlah_produk,
+      item.harga,
+    ]);
 
-      // Insert into `detailpenjualan` table
-      const insertDetailQuery = `
+    // Insert into `detailpenjualan` table
+    const insertDetailQuery = `
         INSERT INTO detailpenjualan (id_penjualan, id_produk, jumlah_produk, harga)
         VALUES ?
       `;
 
-      connection.query(insertDetailQuery, [detailItems], (err) => {
-        if (err) {
-          console.error('Error inserting into detailpenjualan:', err);
-          return res.status(500).send('Failed to add items to the invoice.');
-        }
+    connection.query(insertDetailQuery, [detailItems], (err) => {
+      if (err) {
+        console.error('Error inserting into detailpenjualan:', err);
+        return res.status(500).send('Failed to add items to the invoice.');
+      }
 
-        res.status(201).json({
-          message: 'Sale added successfully',
-          id_penjualan,
-        });
+      res.status(201).json({
+        message: 'Sale added successfully',
+        id_penjualan,
       });
-    }
-  );
+    });
+  });
 });
 
 // PUT endpoint to update sales (penjualan)
@@ -920,4 +949,3 @@ app.get('/api/penjualans/:id', (req, res) => {
     }
   });
 });
-

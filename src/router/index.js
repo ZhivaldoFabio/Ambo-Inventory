@@ -16,7 +16,6 @@ import DataUnit from '@/components/DataUnit.vue';
 import AddDataUnit from '@/components/AddDataUnit.vue';
 import DataKategori from '@/components/DataKategori.vue';
 import AddDataCategory from '@/components/AddDataCategory.vue';
-// import EditDataCategory from '@/components/EditDataCategory.vue';
 import EditDataProduct from '@/components/EditDataProduct.vue';
 import EditDataUnit from '@/components/EditDataUnit.vue';
 import EditDataCategory from '@/components/EditDataCategory.vue';
@@ -27,6 +26,7 @@ import AddDataSupplier from '@/components/AddDataSupplier.vue';
 import DataStock from '@/components/DataStock.vue';
 import AddDataStock from '@/components/AddDataStock.vue';
 import EditDataStock from '@/components/EditDataStock.vue';
+import DetailDataPenjualan from '@/components/DetailDataPenjualan.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -100,6 +100,14 @@ const router = createRouter({
       path: '/data-penjualan',
       name: 'data-penjualan',
       component: DataPenjualan,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/detail-data-penjualan/:id',
+      name: 'detail-data-penjualan',
+      component: DetailDataPenjualan,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },

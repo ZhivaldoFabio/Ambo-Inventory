@@ -3,6 +3,9 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
 
 // Initialize reactive invoice items array
 const invoiceItems = ref([{ id_produk: '', jumlah_produk: 1, harga: 0 }]);
@@ -69,15 +72,30 @@ async function fetchProducts() {
     products.value = response.data;
   } catch (error) {
     console.error('Error fetching products:', error);
+    toast.error('Failed to fetch product data. Please refresh the page.');
   }
 }
 
 // Submit invoice to MySQL through the Express API
 async function submitInvoice() {
+  if (invoiceItems.value.length === 0) {
+    toast.error('Please add at least one item before submitting.');
+    return;
+  }
+
+  if (
+    invoiceItems.value.some(
+      (item) => !item.id_produk || item.jumlah_produk <= 0
+    )
+  ) {
+    toast.error('Ensure all items have valid products and quantities.');
+    return;
+  }
+
   try {
     const invoiceData = {
       total_harga: totalPrice.value,
-      tanggal: new Date().toISOString(), // Current timestamp
+      tanggal: new Date().toISOString(),
       items: invoiceItems.value.map((item) => ({
         id_produk: item.id_produk,
         jumlah_produk: item.jumlah_produk,
@@ -85,16 +103,15 @@ async function submitInvoice() {
       })),
     };
 
-    // Send invoice data to backend API
     const response = await axios.post('/api/penjualan', invoiceData);
 
     if (response.status === 201) {
-      alert('Invoice submitted successfully!');
+      toast.success('Invoice submitted successfully!');
       resetForm();
     }
   } catch (error) {
     console.error('Error submitting invoice:', error);
-    alert('Failed to submit invoice.');
+    toast.error('Failed to submit invoice. Please try again.');
   }
 }
 

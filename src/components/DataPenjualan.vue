@@ -5,48 +5,21 @@ import { RouterLink, useRoute } from 'vue-router';
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
 import { useToast } from 'vue-toastification';
+import DetailDataPenjualan from './DetailDataPenjualan.vue';
 
 const toast = useToast(); // Initialize Vue Toastification
 
-// Props or data passed to the component
-const props = defineProps({
-  stock: Object, // Assuming stock is passed as a prop
-});
-
-// A ref to handle the confirmation logic
-const confirmDelete = (id) => {
-  const isConfirmed = window.confirm(
-    'Are you sure you want to delete this penjualan?'
-  );
-  if (isConfirmed) {
-    deletePenjualan(id); // Proceed with deletion if confirmed
-  }
-};
-
-// Function to handle deletion
-const deletePenjualan = async (id) => {
-  try {
-    await axios.delete(`http://localhost:3000/api/stocks/${id}`); // Ensure the API path is correct
-    // Remove stock from the local list
-    stocks.value = stocks.value.filter((stock) => stock.id_stock !== id);
-    // Display a success toast
-    toast.success('Stock deleted successfully!');
-  } catch (error) {
-    toast.error('Error deleting stock.'); // Error toast
-    console.error('Error deleting stock:', error);
-  }
-};
-
 // Reactive variable to store suppliers data
-const stocks = ref([]);
+const penjualans = ref([]);
 
-// Fetch the stock list from the API
+// Fetch the penjualan list from the API
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/all-stocks');
-    stocks.value = response.data;
+    const response = await axios.get('api/all-penjualan');
+    penjualans.value = response.data;
   } catch (error) {
     console.error('Error fetching stock data:', error);
+    toast.error('Failed to fetch penjualan data.');
   }
 });
 
@@ -55,6 +28,13 @@ function formatTimestamp(timestamp) {
   const date = new Date(timestamp);
   return date.toLocaleDateString();
 }
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+  }).format(value);
+};
 </script>
 
 <template>
@@ -74,8 +54,9 @@ function formatTimestamp(timestamp) {
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
           <th class="px-4 py-2 border-b">No Penjualan</th>
-          <th class="px-4 py-2 border-b">Tanggal</th>
           <th class="px-4 py-2 border-b">Total Harga</th>
+          <th class="px-4 py-2 border-b">Tanggal</th>
+          <th class="px-4 py-2 border-b">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -84,15 +65,24 @@ function formatTimestamp(timestamp) {
           :key="penjualan.id_penjualan"
           class="hover:bg-gray-50"
         >
+          <!-- Main Row -->
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
           <td class="px-4 py-2 border-b">{{ penjualan.id_penjualan }}</td>
-          <!-- Directly use nama_supplier -->
-          <td class="px-4 py-2 border-b">{{ penjualan.total_harga }}</td>
-          <!-- Directly use nama_produk -->
+          <td class="px-4 py-2 border-b">{{ formatCurrency(penjualan.total_harga) }}</td>
           <td class="px-4 py-2 border-b">
             {{ formatTimestamp(penjualan.tanggal_penjualan) }}
           </td>
-          <td class="px-4 py-4 border-b flex justify-between"></td>
+          <td class="px-4 py-2 border-b">
+            <RouterLink
+              :to="{
+                name: 'detail-data-penjualan',
+                params: { id: penjualan.id_penjualan },
+              }"
+              class=" p-2 px-4 bg-primary-500 text-white-50 rounded-md hover:shadow-md"
+            >
+              View
+            </RouterLink>
+          </td>
         </tr>
       </tbody>
     </table>
