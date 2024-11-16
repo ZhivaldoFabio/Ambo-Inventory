@@ -2,9 +2,21 @@
 import { ref, onMounted } from 'vue';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/firebase';
+import axios from 'axios';
 import Card from '@/components/Card.vue';
 import ProdukTerjual from '@/components/ProdukTerjual.vue';
 import ProgressPendapatan from '@/components/ProgressPendapatan.vue';
+
+const stocks = ref([]); // Array to hold the fetched stock data
+
+onMounted(async () => {
+  try {
+    const response = await axios.get('/api/stocks');
+    stocks.value = response.data;
+  } catch (error) {
+    console.error('Error fetching stocks:', error);
+  }
+});
 
 const totalHargaSum = ref(0);
 const totalDocuments = ref(0);
@@ -96,31 +108,16 @@ onMounted(fetchTotalProdukSum);
 
         <!-- 4 -->
         <Card class="col-span-2">
-          <!-- <div class="flex items-center space-x-2">
-            <i class="pi pi-chart-bar flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Pendapatan</h1>
-          </div> -->
           <div>
             <ProgressPendapatan />
           </div>
         </Card>
         <!-- 5 -->
         <Card>
-          <!-- <div class="flex items-center space-x-2">
-            <i class="pi pi-chart-bar flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Best Selling Product</h1>
-          </div> -->
           <div>
             <ProdukTerjual />
           </div>
         </Card>
-        <!-- <Card>
-          <div class="flex items-center space-x-2">
-            <i class="pi pi-shopping-cart flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Jumlah Pesanan</h1>
-          </div>
-          <div class="text-3xl mt-14 font-bold place-self-center">147</div>
-        </Card> -->
         <!-- 6 -->
         <Card class="col-span-3">
           <div class="flex items-center space-x-2">
@@ -130,47 +127,50 @@ onMounted(fetchTotalProdukSum);
             <h1 class="flex text-xl text-heading">Stock Menipis</h1>
           </div>
           <div>
-            <table class="table-auto border-collapse w-full text-left">
-              <thead class="border-b-2 mb-2">
-                <tr>
-                  <th>Checkbox</th>
-                  <th>Nama Produk</th>
-                  <th>Kategori</th>
-                  <th>Supplier</th>
-                  <th>Stock Minimum</th>
-                  <th>QTY</th>
-                  <th>Presentase</th>
+            <table
+              class="min-w-full text-left border border-gray-300 rounded-lg overflow-hidden"
+            >
+              <thead>
+                <tr class="bg-gray-200 text-left">
+                  <th class="px-4 py-2 border-b">No</th>
+                  <th class="px-4 py-2 border-b">Nama Produk</th>
+                  <th class="px-4 py-2 border-b">Kategori</th>
+                  <th class="px-4 py-2 border-b">Supplier</th>
+                  <th class="px-4 py-2 border-b">Stock Minimum</th>
+                  <th class="px-4 py-2 border-b">Stock Sekarang</th>
+                  <th class="px-4 py-2 border-b">Presentase</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Checkbox</td>
-                  <td>Sunsilk</td>
-                  <td>Shampoo</td>
-                  <td>Pabrik</td>
-                  <td>20</td>
-                  <td>120</td>
-                </tr>
-                <tr>
-                  <td>Checkbox</td>
-                  <td>Sunsilk</td>
-                  <td>Shampoo</td>
-                  <td>Pabrik</td>
-                  <td>20</td>
-                  <td>120</td>
+                <tr
+                  v-for="(stock, index) in stocks"
+                  :key="index"
+                  class="hover:bg-gray-50"
+                >
+                  <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
+                  <td class="px-4 py-2 border-b">{{ stock.nama_produk }}</td>
+                  <td class="px-4 py-2 border-b">{{ stock.nama_kategori }}</td>
+                  <td class="px-4 py-2 border-b">{{ stock.nama_supplier }}</td>
+                  <td class="px-4 py-2 border-b">
+                    {{ stock.stock_minimum || 'N/A' }}
+                  </td>
+                  <td class="px-4 py-2 border-b">{{ stock.jumlah_stock }}</td>
+                  <td class="px-4 py-2 border-b">
+                    {{
+                      stock.stock_minimum > 0
+                        ? (
+                            (stock.jumlah_stock / stock.stock_minimum) *
+                            100
+                          ).toFixed(2)
+                        : 'N/A'
+                    }}%
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </Card>
         <!-- 7 -->
-        <!-- <Card class="max-h-40">
-          <div class="flex items-center space-x-2">
-            <i class="pi pi-user flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Customer</h1>
-          </div>
-          <div class="text-2xl mt-5 font-bold text-right">1.453.415</div>
-        </Card> -->
       </div>
     </div>
   </section>

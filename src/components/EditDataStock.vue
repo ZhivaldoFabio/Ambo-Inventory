@@ -1,7 +1,7 @@
 <!-- EditDataStock.vue -->
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
@@ -34,7 +34,7 @@ onMounted(async () => {
   try {
     // Fetch stock details
     const stockResponse = await axios.get(
-      `http://localhost:3000/api/stocks/${stockId}`
+      `/api/stocks/${stockId}`
     );
 
     // Format dates before setting them in the reactive stockData object
@@ -47,10 +47,10 @@ onMounted(async () => {
 
     // Fetch options for dropdowns
     const [productRes, supplierRes, unitRes, categoryRes] = await Promise.all([
-      axios.get('http://localhost:3000/api/products'),
-      axios.get('http://localhost:3000/api/suppliers'),
-      axios.get('http://localhost:3000/api/units'),
-      axios.get('http://localhost:3000/api/categories'),
+      axios.get('/api/products'),
+      axios.get('/api/suppliers'),
+      axios.get('/api/units'),
+      axios.get('/api/categories'),
     ]);
 
     products.value = productRes.data;

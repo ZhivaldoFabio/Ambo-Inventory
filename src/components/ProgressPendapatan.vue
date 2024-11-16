@@ -39,6 +39,11 @@ const option = ref({
       type: 'line',
       data: [],
       smooth: true,
+      label: {
+        show: true, // Enable labels
+        position: 'top', // Position labels above the line points
+        formatter: '{c}', // Display the value at each point
+      },
     },
   ],
 });

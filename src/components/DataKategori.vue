@@ -21,7 +21,9 @@ const deleteCategory = async (id) => {
   try {
     await axios.delete(`http://localhost:3000/api/categories/${id}`); // Ensure the API path is correct
     // Remove category from the local list
-    categories.value = categories.value.filter((category) => category.id_kategori !== id);
+    categories.value = categories.value.filter(
+      (category) => category.id_kategori !== id
+    );
     // Display a success toast
     toast.success('Category deleted successfully!');
   } catch (error) {
@@ -48,8 +50,9 @@ onMounted(async () => {
   <div class="container mx-auto p-4">
     <div class="flex justify-between">
       <h2 class="text-2xl font-semibold mb-4">Category List</h2>
-      <RouterLink :to="{ name: 'add-data-kategori' }"
-        class="max-h-10 py-2 px-3 rounded-md self-center text-text-500 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
+      <RouterLink
+        :to="{ name: 'add-data-kategori' }"
+        class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         Add New
       </RouterLink>
@@ -73,20 +76,20 @@ onMounted(async () => {
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
           <td class="px-4 py-2 border-b">{{ category.nama_kategori }}</td>
           <td class="px-4 py-2 border-b">{{ category.id_kategori }}</td>
-          <td class="px-4 py-4 border-b flex justify-between">
+          <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
-              :to="{ name: 'edit-data-kategori', params: { id: category.id_kategori } }"
-              class="pi pi-pen-to-square flex text-primary-500 hover:drop-shadow-lg"
+              :to="{
+                name: 'edit-data-kategori',
+                params: { id: category.id_kategori },
+              }"
+              class="bg-primary-500 p-2 rounded-md pi pi-pen-to-square flex text-white-50 hover:drop-shadow-lg hover:bg-secondary-500"
             >
-              Edit
             </RouterLink>
 
             <button
               @click="confirmDelete(category.id_kategori)"
               class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
-            >
-              Delete
-            </button>
+            ></button>
           </td>
         </tr>
       </tbody>

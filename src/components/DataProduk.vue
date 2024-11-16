@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
 // Reactive variable to store Produk data
@@ -17,7 +17,7 @@ onMounted(async () => {
 
 // Delete confirmation and delete function
 const confirmDelete = (productId) => {
-  if (confirm("Are you sure you want to delete this product?")) {
+  if (confirm('Are you sure you want to delete this product?')) {
     deleteProduct(productId);
   }
 };
@@ -25,7 +25,9 @@ const confirmDelete = (productId) => {
 const deleteProduct = async (productId) => {
   try {
     await axios.delete(`http://localhost:3000/api/products/${productId}`);
-    products.value = products.value.filter(product => product.id_produk !== productId);
+    products.value = products.value.filter(
+      (product) => product.id_produk !== productId
+    );
   } catch (error) {
     console.error('Error deleting product:', error);
   }
@@ -36,8 +38,9 @@ const deleteProduct = async (productId) => {
   <div class="container mx-auto p-4">
     <div class="flex justify-between">
       <h2 class="text-2xl font-semibold mb-4">Product List</h2>
-      <RouterLink :to="{ name: 'add-data-produk' }"
-        class="max-h-10 py-2 px-3 rounded-md self-center text-text-500 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
+      <RouterLink
+        :to="{ name: 'add-data-produk' }"
+        class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         Add New
       </RouterLink>
@@ -69,20 +72,20 @@ const deleteProduct = async (productId) => {
           <td class="px-4 py-2 border-b">{{ produk.nama_kategori }}</td>
           <td class="px-4 py-2 border-b">{{ produk.harga_beli }}</td>
           <td class="px-4 py-2 border-b">{{ produk.harga_jual }}</td>
-          <td class="px-4 py-4 border-b flex justify-between">
+          <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
-              :to="{ name: 'edit-data-produk', params: { id: produk.id_produk } }"
-              class="pi pi-pen-to-square flex text-primary-500 hover:drop-shadow-lg"
+              :to="{
+                name: 'edit-data-produk',
+                params: { id: produk.id_produk },
+              }"
+              class="bg-primary-500 p-2 rounded-md pi pi-pen-to-square flex text-white-50 hover:drop-shadow-lg hover:bg-secondary-500"
             >
-              Edit
             </RouterLink>
 
             <button
               @click="confirmDelete(produk.id_produk)"
               class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
-            >
-              Delete
-            </button>
+            ></button>
           </td>
         </tr>
       </tbody>

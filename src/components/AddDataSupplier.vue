@@ -1,3 +1,5 @@
+<!-- AddDataSupplier.vue -->
+
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
@@ -31,11 +33,19 @@ const addSupplier = async () => {
   if (!newSupplier.value.nama_supplier)
     errors.value.nama_supplier = 'Name is required.';
   if (!newSupplier.value.alamat) errors.value.alamat = 'Address is required.';
-  if (!newSupplier.value.email) errors.value.email = 'Email is required.';
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newSupplier.value.email))
+  if (!newSupplier.value.email) {
+    errors.value.email = 'Email is required.';
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newSupplier.value.email)) {
     errors.value.email = 'Email format is invalid.';
-  if (!newSupplier.value.no_hp)
+  }
+
+  if (!newSupplier.value.no_hp) {
     errors.value.no_hp = 'Phone number is required.';
+  } else if (!/^0\d{9,14}$/.test(newSupplier.value.no_hp)) {
+    // Regex ensures the number starts with "0" and contains 10-15 digits
+    errors.value.no_hp =
+      'Phone number must start with "0" and be 10-15 digits long.';
+  }
 
   // Show validation errors if any
   if (Object.keys(errors.value).length > 0) {
@@ -46,7 +56,7 @@ const addSupplier = async () => {
   // Submit data
   isSubmitting.value = true;
   try {
-    await axios.post('http://localhost:3000/api/suppliers', newSupplier.value);
+    await axios.post('api/suppliers', newSupplier.value);
     toast.success('Supplier added successfully!');
     resetForm();
   } catch (error) {

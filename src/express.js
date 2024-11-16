@@ -354,7 +354,7 @@ app.put('/api/suppliers/:id', async (req, res) => {
   try {
     const query = `
     UPDATE suppliers
-    SET nama_supplier = ?, alamat = ?, email = ?, no_hp = ?,
+    SET nama_supplier = ?, alamat = ?, email = ?, no_hp = ?
     WHERE id_supplier = ?
   `;
     const values = [nama_supplier, alamat, email, no_hp, id];

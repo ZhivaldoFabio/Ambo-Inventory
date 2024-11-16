@@ -21,7 +21,9 @@ const deleteSupplier = async (id) => {
   try {
     await axios.delete(`http://localhost:3000/api/suppliers/${id}`); // Ensure the API path is correct
     // Remove supplier from the local list
-    suppliers.value = suppliers.value.filter((supplier) => supplier.id_supplier !== id);
+    suppliers.value = suppliers.value.filter(
+      (supplier) => supplier.id_supplier !== id
+    );
     // Display a success toast
     toast.success('Supplier deleted successfully!');
   } catch (error) {
@@ -35,10 +37,10 @@ const suppliers = ref([]);
 onMounted(async () => {
   try {
     // Fetch data from the API
-    const response = await axios.get("http://localhost:3000/api/suppliers");
+    const response = await axios.get('http://localhost:3000/api/suppliers');
     suppliers.value = response.data;
   } catch (error) {
-    console.error("Error fetching suppliers:", error);
+    console.error('Error fetching suppliers:', error);
   }
 });
 </script>
@@ -47,8 +49,9 @@ onMounted(async () => {
   <div class="container mx-auto p-4">
     <div class="flex justify-between">
       <h2 class="text-2xl font-semibold mb-4">Supplier List</h2>
-      <RouterLink :to="{ name: 'add-data-supplier' }"
-        class="max-h-10 py-2 px-3 rounded-md self-center text-text-500 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
+      <RouterLink
+        :to="{ name: 'add-data-supplier' }"
+        class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         Add New
       </RouterLink>
@@ -75,20 +78,20 @@ onMounted(async () => {
           <td class="px-4 py-2 border-b">{{ supplier.alamat }}</td>
           <td class="px-4 py-2 border-b">{{ supplier.no_hp }}</td>
           <td class="px-4 py-2 border-b">{{ supplier.email }}</td>
-          <td class="px-4 py-4 border-b flex justify-between">
+          <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
-              :to="{ name: 'edit-data-supplier', params: { id: supplier.id_supplier } }"
-              class="pi pi-pen-to-square flex text-primary-500 hover:drop-shadow-lg"
+              :to="{
+                name: 'edit-data-supplier',
+                params: { id: supplier.id_supplier },
+              }"
+              class="bg-primary-500 p-2 rounded-md pi pi-pen-to-square flex text-white-50 hover:drop-shadow-lg hover:bg-secondary-500"
             >
-              Edit
             </RouterLink>
 
             <button
               @click="confirmDelete(supplier.id_supplier)"
               class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
-            >
-              Delete
-            </button>
+            ></button>
           </td>
         </tr>
       </tbody>

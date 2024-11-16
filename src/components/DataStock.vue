@@ -63,7 +63,7 @@ function formatTimestamp(timestamp) {
       <h2 class="text-2xl font-semibold mb-4">Stock List</h2>
       <RouterLink
         :to="{ name: 'add-data-stock' }"
-        class="max-h-10 py-2 px-3 rounded-md self-center text-text-500 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
+        class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         Add New
       </RouterLink>
@@ -105,20 +105,17 @@ function formatTimestamp(timestamp) {
             {{ formatTimestamp(stock.tgl_exp) }}
           </td>
           <td class="px-4 py-2 border-b">{{ stock.jumlah_stock }}</td>
-          <td class="px-4 py-4 border-b flex justify-between">
+          <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
               :to="{ name: 'edit-data-stock', params: { id: stock.id_stock } }"
-              class="pi pi-pen-to-square flex text-primary-500 hover:drop-shadow-lg"
+              class="bg-primary-500 p-2 rounded-md pi pi-pen-to-square flex text-white-50 hover:drop-shadow-lg hover:bg-secondary-500"
             >
-              Edit
             </RouterLink>
 
             <button
               @click="confirmDelete(stock.id_stock)"
               class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
-            >
-              Delete
-            </button>
+            ></button>
           </td>
         </tr>
       </tbody>

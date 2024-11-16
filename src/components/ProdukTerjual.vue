@@ -86,6 +86,10 @@ onMounted(async () => {
         type: 'pie',
         radius: '50%',
         data: pieData,
+        label: {
+          show: true,
+          formatter: '({d}%)',
+        },
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
