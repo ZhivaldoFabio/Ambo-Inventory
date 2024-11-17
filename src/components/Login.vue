@@ -85,18 +85,17 @@ const login = async () => {
       password: password.value,
     });
 
-    console.log('Login response:', response.data); // Add this log to inspect the response
 
     const { token, role } = response.data;
 
-    console.log('Token:', token);  // Check if the token is correctly received
-    console.log('Role:', role);    // Check if the role is correctly received
+    // console.log('Token:', token);  // Check if the token is correctly received
+    // console.log('Role:', role);    // Check if the role is correctly received
 
     if (token && role) {
       localStorage.setItem('authToken', token);
       localStorage.setItem('userRole', role); // Store the user role
-      console.log('Token saved:', localStorage.getItem('authToken'));
-      console.log('Role saved:', localStorage.getItem('userRole')); // Log role
+      // console.log('Token saved:', localStorage.getItem('authToken'));
+      // console.log('Role saved:', localStorage.getItem('userRole')); // Log role
 
       router.push({ name: 'home' });
     } else {

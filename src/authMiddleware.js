@@ -8,7 +8,6 @@ dotenv.config();
 // Middleware to authenticate JWT
 export const authenticateJWT = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  console.log('Authorization Header:', authHeader); // Log the header
 
   if (authHeader) {
     const token = authHeader.split(' ')[1]; // Get the token from the header
@@ -17,9 +16,8 @@ export const authenticateJWT = async (req, res, next) => {
         console.error('Token verification failed:', err.message);
         return res.status(403).json({ message: 'Forbidden' });
       }
-      console.log('Decoded Token:', user); // Log decoded token
-      req.userId = user.id; // Attach the user ID from token to the request object
-      next(); // Proceed to the next middleware or route handler
+      req.userId = user.id; // Attach the user ID to the request object
+      next();
     });
   } else {
     console.error('Authorization header missing');
@@ -69,7 +67,6 @@ export const loginUser = async (req, res) => {
 
 // To fetch user details from the database (use this in your route handler)
 export const getUserDetails = async (userId) => {
-  console.log('User ID:', userId); // Log the userId
 
   if (!userId) {
     console.error('User ID is missing');
@@ -86,6 +83,6 @@ export const getUserDetails = async (userId) => {
     console.error('User not found');
     return null; // Return null if no user found
   }
-
+  // console.log('Fetched User:', rows[0]); // Debug fetched user details
   return rows[0]; // Return user data if found
 };

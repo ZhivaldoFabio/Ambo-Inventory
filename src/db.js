@@ -1,10 +1,9 @@
 // db.js
 import dotenv from 'dotenv';
 dotenv.config();
+import { createPool } from 'mysql2/promise';
 
-import { createConnection } from 'mysql2/promise';
-
-const connection = await createConnection({
+const pool = createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -14,10 +13,12 @@ const connection = await createConnection({
   queueLimit: 0, // Unlimited queue limit (optional)
 });
 
+
 process.on('SIGINT', async () => {
-  await connection.end();  // Close the connection when the app is stopped
+  await pool.end();  // Close the connection when the app is stopped
   console.log('MySQL connection closed');
   process.exit();
 });
 
-export default connection;
+
+export default pool;

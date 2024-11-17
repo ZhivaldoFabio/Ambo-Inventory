@@ -43,7 +43,7 @@ const router = createRouter({
       component: HomeView,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
-        allowedRoles: ['Admin', 'Gudang', 'Karyawan'],
+        allowedRoles: ['Admin', 'Gudang', 'Kasir'],
       },
     },
     {
@@ -52,7 +52,7 @@ const router = createRouter({
       component: UserEditView,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
-        allowedRoles: ['Admin', 'Gudang', 'Karyawan'],
+        allowedRoles: ['Admin', 'Gudang', 'Kasir'],
       },
     },
     {
@@ -211,15 +211,6 @@ const router = createRouter({
       },
     },
     {
-      path: '/edit-kategori/:id',
-      name: 'edit-data-kategori',
-      component: EditDataUnit,
-      meta: {
-        requiresAuth: true, // This metadata marks the route as requiring authentication
-        allowedRoles: ['Gudang'],
-      },
-    },
-    {
       path: '/pembelian',
       name: 'pembelian',
       component: DataPembelian,
@@ -228,7 +219,7 @@ const router = createRouter({
         allowedRoles: ['Gudang'],
       },
     },
-    // -------------------- BAGIAN KARYAWAN --------------------
+    // -------------------- BAGIAN Kasir --------------------
 
     {
       path: '/data-penjualan',
@@ -236,7 +227,7 @@ const router = createRouter({
       component: DataPenjualan,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
-        allowedRoles: ['Karyawan'],
+        allowedRoles: ['Kasir'],
       },
     },
     {
@@ -245,7 +236,7 @@ const router = createRouter({
       component: DetailDataPenjualan,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
-        allowedRoles: ['Karyawan'],
+        allowedRoles: ['Kasir'],
       },
     },
 

@@ -42,8 +42,15 @@ const fetchUserData = async () => {
   }
 };
 
-// Fetch user data when the component is mounted
-onMounted(fetchUserData);
+// Fetch user data only after user logs in (not immediately on page load)
+onMounted(() => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    fetchUserData(); // Proceed to fetch user data only if token exists
+  } else {
+    isLoading.value = false; // No need to load anything if no token
+  }
+});
 </script>
 
 <template>
@@ -62,18 +69,26 @@ onMounted(fetchUserData);
           <span class="text-background-300"> Admin </span>
         </li>
 
-        <li class="p-1 ml-5 hover:shadow-lg hover:shadow-background-200 rounded-lg">
+        <li
+          class="p-1 ml-5 hover:shadow-lg hover:shadow-background-200 rounded-lg"
+        >
           <RouterLink to="/home" class="flex items-center space-x-2">
             <span>Dashboard</span>
           </RouterLink>
         </li>
         <li class="p-1 ml-5">
-          <RouterLink to="/laporanpembelian" class="flex items-center space-x-2">
+          <RouterLink
+            to="/laporanpembelian"
+            class="flex items-center space-x-2"
+          >
             <span>Laporan Pembelian</span>
           </RouterLink>
         </li>
         <li class="p-1 ml-5">
-          <RouterLink to="/laporanpenjualan" class="flex items-center space-x-2">
+          <RouterLink
+            to="/laporanpenjualan"
+            class="flex items-center space-x-2"
+          >
             <span>Laporan Penjualan</span>
           </RouterLink>
         </li>
@@ -122,11 +137,11 @@ onMounted(fetchUserData);
         </li>
       </ul>
 
-      <!-- Karyawan Role Sidebar -->
-      <ul v-if="!isLoading && userRole === 'Karyawan'" class="p-4 rounded-md">
+      <!-- Kasir Role Sidebar -->
+      <ul v-if="!isLoading && userRole === 'Kasir'" class="p-4 rounded-md">
         <li class="text-primary-300 flex items-center space-x-2 mt-5">
           <i class="pi pi-warehouse"></i>
-          <span class="text-background-300"> Karyawan </span>
+          <span class="text-background-300"> Kasir </span>
         </li>
         <li class="p-1 ml-5">
           <RouterLink to="/home" class="flex items-center space-x-2">
@@ -134,7 +149,10 @@ onMounted(fetchUserData);
           </RouterLink>
         </li>
         <li class="p-1 ml-5">
-          <RouterLink :to="{ name: 'data-penjualan' }" class="flex items-center space-x-2">
+          <RouterLink
+            :to="{ name: 'data-penjualan' }"
+            class="flex items-center space-x-2"
+          >
             <span>History Penjualan</span>
           </RouterLink>
         </li>

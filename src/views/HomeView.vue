@@ -14,7 +14,7 @@ const loading = ref(true); // Track loading state
 
 const isAdmin = ref(false); // Track if user is Admin
 const isGudang = ref(false); // Track if user is Gudang
-const isKaryawan = ref(false); // Track if user is Karyawan
+const isKasir = ref(false); // Track if user is Kasir
 const user = ref(null); // Store user data
 
 onMounted(async () => {
@@ -31,9 +31,11 @@ onMounted(async () => {
     });
 
     user.value = response.data;
+
+    // Set role-based flags
     isAdmin.value = user.value.role === 'Admin';
     isGudang.value = user.value.role === 'Gudang';
-    isKaryawan.value = user.value.role === 'Karyawan';
+    isKasir.value = user.value.role === 'Kasir';
   } catch (error) {
     console.error('Error fetching user data:', error);
     router.push('/'); // Redirect to login page on error
@@ -52,7 +54,7 @@ onMounted(async () => {
     <div v-if="!loading">
       <HomeCards v-if="isAdmin" />
       <DashboardGudang v-if="isGudang" />
-      <Penjualan v-if="isKaryawan" />
+      <Penjualan v-if="isKasir" />
     </div>
   </div>
 </template>

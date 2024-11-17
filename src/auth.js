@@ -63,7 +63,6 @@ const verifyToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded; // Attach user info to request object
-    console.log('Decoded Token:', decoded); // Log the decoded token for debugging
     next();
   } catch (err) {
     console.error('Token verification error:', err);
@@ -77,7 +76,7 @@ router.get('/user', verifyToken, async (req, res) => {
   // Log the SQL query and parameters
   console.log(
     'Executing Query:',
-    'SELECT id_user, email, role FROM users WHERE id_user = ?',
+    'SELECT * FROM users WHERE id_user = ?',
     [req.user.id] // Use req.user.id here (assuming id is the correct field)
   );
 
