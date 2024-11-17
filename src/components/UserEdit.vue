@@ -1,10 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/firebase';
 import { useRouter } from 'vue-router';
-import { updateProfile, updateEmail } from 'firebase/auth';
-import { signOut } from 'firebase/auth';
+import axios from 'axios';
 
 const username = ref('');
 const email = ref('');
@@ -16,61 +13,78 @@ const router = useRouter();
 // SIGN OUT FUNCTION
 const logout = async () => {
   try {
-    console.log('Logging Out')
-    await signOut(auth); // Sign out the user
-    router.push('/'); //redirect to the login page (or home)
+    console.log('Logging Out');
+
+    // Clear the auth token from localStorage
+    localStorage.removeItem('authToken', 'userRole');
+
+    // Optionally, make an API call to invalidate the session on the server if applicable
+    await axios.post('/api/logout'); // assuming you have a logout API endpoint
+
+    // Redirect the user to the login page
+    router.push('/'); // Redirect to the login page or home page
   } catch (err) {
-    error.value = 'Error logging out: ' + err.message; // Handle Error Message
-    console.error('Logout error:', err); // Debug log for errors
+    error.value = 'Error logging out: ' + err.message;
+    console.error('Logout error:', err);
   }
 };
 
 // Save the updated profile data
 const saveProfile = async () => {
   try {
-    const user = auth.currentUser;
-
-    if (user) {
-      // Check if new username is not empty and differs from the current displayName
-      if (newUsername.value && newUsername.value !== user.displayName) {
-        await updateProfile(user, {
-          displayName: newUsername.value,
-        });
-      }
-
-      // Update email in Firebase Auth
-      if (newEmail.value && newEmail.value !== user.email) {
-        await updateEmail(user, newEmail.value);
-      }
-
-      // Optionally show a success message or redirect
-      alert('Profile updated successfully!');
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('No token found. Please log in again.');
     }
+
+    // Send updated user data to the backend
+    await axios.put(
+      '/api/user',
+      {
+        username: newUsername.value,
+        email: newEmail.value,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    // Update the local UI state
+    username.value = newUsername.value;
+    email.value = newEmail.value;
+    alert('Profile updated successfully!');
   } catch (err) {
     error.value = 'Error saving profile: ' + err.message;
+    console.error('Save profile error:', err);
   }
 };
 
-// CHECK USER STATUS AND pre-FILLING THE FORM
-onMounted(() => {
-  // Listen for auth state changes
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // User is singned in, retrieve email and displayName
-      email.value = user.email;
-      username.value = user.displayName || 'Anonymous'; // Fallback if displayName is not set
-      newUsername.value = username.value;
-      newEmail.value = email.value;
-    } else {
-      // User is signed out
-      email.value = '';
-      username.value = '';
+// Fetch user data on mount
+onMounted(async () => {
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('No token found. Redirecting to login.');
     }
-  });
+
+    // Fetch the current user data from the backend
+    const response = await axios.get('/api/user', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // Populate form fields with the fetched user data
+    const userData = response.data;
+    username.value = userData.username || 'Anonymous';
+    email.value = userData.email || '';
+    newUsername.value = username.value;
+    newEmail.value = email.value;
+  } catch (err) {
+    console.error('Error fetching user data:', err);
+    router.push('/'); // Redirect to login page on error
+  }
 });
 </script>
 
-<!-- UserEdit.vue -->
 <template>
   <form class="mx-auto overscroll-contain">
     <div class="space-y-12">

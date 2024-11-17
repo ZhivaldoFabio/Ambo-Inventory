@@ -1,14 +1,18 @@
+<!-- HomeCards.vue -->
+
 <script setup>
 import { ref, onMounted } from 'vue';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/firebase';
 import axios from 'axios';
 import Card from '@/components/Card.vue';
 import ProdukTerjual from '@/components/ProdukTerjual.vue';
 import ProgressPendapatan from '@/components/ProgressPendapatan.vue';
 
 const stocks = ref([]); // Array to hold the fetched stock data
+const totalHargaSum = ref(0);
+const totalPenjualan = ref(0);
+const totalProdukSum = ref(0);
 
+// Fetch stocks from the backend (MySQL)
 onMounted(async () => {
   try {
     const response = await axios.get('/api/stocks');
@@ -18,53 +22,40 @@ onMounted(async () => {
   }
 });
 
-const totalHargaSum = ref(0);
-const totalDocuments = ref(0);
-const totalProdukSum = ref(0);
-
-async function fetchTotalHargaSum() {
+// Fetch the total Harga sum from the backend
+onMounted(async () => {
   try {
-    // Replace with your collection name and document ID
-    const invoiceCollectioRef = collection(db, 'Invoice');
-    const snapshot = await getDocs(invoiceCollectioRef);
-
-    // Calculate the sum of total_harga from each document
-    totalHargaSum.value = snapshot.docs.reduce((sum, doc) => {
-      const data = doc.data();
-      return sum + (data.total_harga || 0); // Add total_harga if it exists, otherwise add 0
-    }, 0);
-
-    // Set the document count
-    totalDocuments.value = snapshot.size; // Number of documents in the collection
+    const response = await axios.get('/api/total-harga-sum');
+    totalHargaSum.value = response.data.total_harga_sum; // Assuming the response contains a `total_harga_sum`
   } catch (error) {
-    console.error('Error fetching document:', error);
+    console.error('Error fetching totalHargaSum:', error);
   }
-}
+});
 
-async function fetchTotalProdukSum() {
+// Fetch the total Produk sum from the backend
+onMounted(async () => {
   try {
-    // Replace with your collection name and document ID
-    const detailInvoiceCollectioRef = collection(db, 'Detail_Invoice');
-    const snapshot = await getDocs(detailInvoiceCollectioRef);
-
-    // Calculate the sum of total_harga from each document
-    totalProdukSum.value = snapshot.docs.reduce((sum, doc) => {
-      const data = doc.data();
-      return sum + (data.jumlah_produk || 0); // Add jumlah_produk if it exists, otherwise add 0
-    }, 0);
+    const response = await axios.get('/api/total-produk-sum');
+    totalProdukSum.value = response.data.total_produk_sum; // Assuming the response contains a `total_produk_sum`
   } catch (error) {
-    console.error('Error fetching document:', error);
+    console.error('Error fetching totalProdukSum:', error);
   }
-}
+});
+
+// Fetch total penjualan (transaction count)
+onMounted(async () => {
+  try {
+    const response = await axios.get('/api/total-penjualan');
+    totalPenjualan.value = response.data.total_penjualan;
+  } catch (error) {
+    console.error('Error fetching totalPenjualan:', error);
+  }
+});
 
 // Function to format numbers with thousands separator
 function formatCurrency(value) {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
-
-// Fetch data when the component is mounted
-onMounted(fetchTotalHargaSum);
-onMounted(fetchTotalProdukSum);
 </script>
 
 <template>
@@ -101,8 +92,8 @@ onMounted(fetchTotalProdukSum);
             <h1 class="flex text-xl text-heading">Jumlah Transaksi</h1>
           </div>
           <div class="text-3xl mt-14 font-bold place-self-center">
-            <!-- Display total docuement in collection "Invoice" -->
-            {{ totalDocuments }}
+            <!-- Display total penjualan -->
+            {{ totalPenjualan }}
           </div>
         </Card>
 
@@ -118,6 +109,7 @@ onMounted(fetchTotalProdukSum);
             <ProdukTerjual />
           </div>
         </Card>
+
         <!-- 6 -->
         <Card class="col-span-3">
           <div class="flex items-center space-x-2">

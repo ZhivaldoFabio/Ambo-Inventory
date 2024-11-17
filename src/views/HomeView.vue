@@ -1,66 +1,58 @@
+<!-- HomeView.vue -->
+
 <script setup>
 import { ref, onMounted } from 'vue';
-import { auth, db } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 import HomeCards from '@/components/HomeCards.vue';
 import DashboardGudang from '@/components/DashboardGudang.vue';
 import Penjualan from '@/components/Penjualan.vue';
 
-const isAdmin = ref(false);
-const isGudang = ref(false);
-const isKaryawan = ref(false);
-const user = ref(null);
+const router = useRouter();
+const loading = ref(true); // Track loading state
 
-onMounted(() => {
-  onAuthStateChanged(auth, async (currentUser) => {
-    if (currentUser) {
-      // Fetch user doc from firestore
-      try {
-        const userDoc = await getDoc(doc(db, 'user', currentUser.uid));
+const isAdmin = ref(false); // Track if user is Admin
+const isGudang = ref(false); // Track if user is Gudang
+const isKaryawan = ref(false); // Track if user is Karyawan
+const user = ref(null); // Store user data
 
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          isAdmin.value = userData.role === 'Admin'; // Check if the user's role is Admin
-          isGudang.value = userData.role === 'Gudang';
-          isKaryawan.value = userData.role === 'Karyawan';
-          user.value = userData; // Store user data if needed
-        } else {
-          console.log('No such document!');
-        }
-      } catch (error) {
-        console.error('Error fetching user document:', error);
-      }
-    } else {
-      console.log('No user is logged in.');
+onMounted(async () => {
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      console.error('No token found. Redirecting to login.');
+      router.push('/'); // Redirect to login if no token
+      return;
     }
-  });
-  //   const currentUser = auth.currentUser;
 
-  //   if (currentUser) {
-  //     // Fetch user doc from firestore
-  //     const userDoc = await getDoc(doc(db, 'user', currentUser.uid));
+    const response = await axios.get('/api/user', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  //     if (userDoc.exists()) {
-  //       const userData = userDoc.data();
-  //       isAdmin.value = userData.role === 'Admin'; // Check if the user's role is Admin
-  //       isGudang.value = userData.role === 'Gudang';
-  //       isKaryawan.value = userData.role === 'Karyawan';
-  //       user.value = userData; // Store user data if needed
-  //     } else {
-  //       console.log('No Such Document!');
-  //     }
-  //   } else {
-  //     console.log('No user is logged in.');
-  //   }
+    user.value = response.data;
+    isAdmin.value = user.value.role === 'Admin';
+    isGudang.value = user.value.role === 'Gudang';
+    isKaryawan.value = user.value.role === 'Karyawan';
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    router.push('/'); // Redirect to login page on error
+  } finally {
+    loading.value = false; // Stop loading once user data is fetched
+  }
 });
 </script>
 
 <template>
   <div class="flex-1 p-4">
-    <HomeCards v-if="isAdmin" />
-    <DashboardGudang v-if="isGudang" />
-    <Penjualan v-if="isKaryawan" />
+    <!-- Display loading message until data is fetched -->
+    <div v-if="loading">Loading...</div>
+
+    <!-- Conditionally render components based on user role -->
+    <div v-if="!loading">
+      <HomeCards v-if="isAdmin" />
+      <DashboardGudang v-if="isGudang" />
+      <Penjualan v-if="isKaryawan" />
+    </div>
   </div>
 </template>

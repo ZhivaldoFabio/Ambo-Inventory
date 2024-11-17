@@ -1,17 +1,53 @@
 // src/express.js
 import express from 'express';
+import dotenv from 'dotenv';
+
+
 import connection from './db.js';
-import cors from 'cors';
+import { authenticateJWT } from './authMiddleware.js'; // Import the middleware
+import userController from './userController.js'; // Import other controllers
+import { loginUser } from './authMiddleware.js';
 
 const app = express();
 const port = 3000;
+app.use(express.json());
 
-app.use(cors());
+// Routes
+app.post('/api/login', loginUser); // User login and JWT token generation
+app.use('/api/user', authenticateJWT, userController); // Protect the user route
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
 // Add this to ensure Express can parse JSON requests
 app.use(express.json());
 
-// POST endpoint to add new stock
-app.post('/api/stocks', express.json(), (req, res) => {
+// GET ENDPOINT to get user data
+app.get('/api/user', authenticateJWT, async (req, res) => {
+  try {
+    const user = await getUserDetails(req.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({
+      username: user.username,
+      email: user.email,
+      role: user.role // Include role in the response
+    });
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/api/logout', (req, res) => {
+  // Invalidate the session or token if needed
+  res.status(200).send({ message: 'Logged out successfully' });
+});
+
+// POST ENDPOINT to add new stock
+app.post('/api/stocks', express.json(), async (req, res) => {
   const {
     id_produk,
     id_supplier,
@@ -21,32 +57,33 @@ app.post('/api/stocks', express.json(), (req, res) => {
     tgl_masuk,
     tgl_exp,
   } = req.body;
+
   const query = `
     INSERT INTO stock (id_produk, id_supplier, id_unit, id_kategori, jumlah_stock, tgl_masuk, tgl_exp)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
-  connection.query(
-    query,
-    [
-      id_produk,
-      id_supplier,
-      id_unit,
-      id_kategori,
-      jumlah_stock,
-      tgl_masuk,
-      tgl_exp,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error('Error inserting data: ', err);
-        res.status(500).send('Server error');
-      } else {
-        res
-          .status(201)
-          .json({ message: 'Stock added successfully', id: result.insertId });
-      }
-    }
-  );
+
+  try {
+    // Use the promise version of connection
+    const [result] = await connection
+      .promise()
+      .execute(query, [
+        id_produk,
+        id_supplier,
+        id_unit,
+        id_kategori,
+        jumlah_stock,
+        tgl_masuk,
+        tgl_exp,
+      ]);
+
+    res
+      .status(201)
+      .json({ message: 'Stock added successfully', id: result.insertId });
+  } catch (err) {
+    console.error('Error inserting data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // PUT endpoint to update stock
@@ -101,7 +138,7 @@ app.put('/api/stocks/:id', async (req, res) => {
 });
 
 // GET endpoint to fetch stock by ID
-app.get('/api/stocks/:id', (req, res) => {
+app.get('/api/stocks/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
@@ -124,60 +161,70 @@ app.get('/api/stocks/:id', (req, res) => {
     JOIN kategori k ON s.id_kategori = k.id_kategori
     WHERE s.id_stock = ?
   `;
-  connection.query(query, [id], (err, results) => {
-    if (err) {
-      console.error('Error fetching stock data: ', err);
-      res.status(500).send('Server error');
-    } else if (results.length === 0) {
-      res.status(404).send('Stock not found');
-    } else {
-      res.json(results[0]); // Return the first result (there should only be one)
+
+  try {
+    // Execute the query using promise API
+    const [results] = await connection.promise().execute(query, [id]);
+
+    if (results.length === 0) {
+      return res.status(404).send('Stock not found');
     }
-  });
+
+    res.json(results[0]); // Return the first result (there should only be one)
+  } catch (err) {
+    console.error('Error fetching stock data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // DELETE endpoint to delete stock
-app.delete('/api/stocks/:id', (req, res) => {
+app.delete('/api/stocks/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
     DELETE FROM stock
     WHERE id_stock = ?
   `;
-  connection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json({ message: 'Stock deleted successfully' });
+
+  try {
+    // Execute the delete query using promise API
+    const [result] = await connection.promise().execute(query, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).send('Stock not found');
     }
-  });
+
+    res.json({ message: 'Stock deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // Endpoint to get stock data
-app.get('/api/stocks', (req, res) => {
+app.get('/api/stocks', async (req, res) => {
   const query = `
-  SELECT produk.nama_produk, kategori.nama_kategori, suppliers.nama_supplier, produk.stock_minimum, stock.jumlah_stock,
-    (stock.jumlah_stock / produk.stock_minimum) * 100 AS percentage
-  FROM produk
-  JOIN kategori ON produk.id_kategori = kategori.id_kategori
-  JOIN stock ON produk.id_produk = stock.id_produk
-  JOIN suppliers ON stock.id_supplier = suppliers.id_supplier
-  WHERE stock.jumlah_stock < produk.stock_minimum
-  ORDER BY percentage ASC
-`;
+    SELECT produk.nama_produk, kategori.nama_kategori, suppliers.nama_supplier, produk.stock_minimum, stock.jumlah_stock,
+      (stock.jumlah_stock / produk.stock_minimum) * 100 AS percentage
+    FROM produk
+    JOIN kategori ON produk.id_kategori = kategori.id_kategori
+    JOIN stock ON produk.id_produk = stock.id_produk
+    JOIN suppliers ON stock.id_supplier = suppliers.id_supplier
+    WHERE stock.jumlah_stock < produk.stock_minimum
+    ORDER BY percentage ASC
+  `;
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json(results);
-    }
-  });
+  try {
+    // Execute the query using the promise-based connection
+    const [results] = await connection.query(query); // No need for `.execute()`
+    res.json(results); // Return the results as JSON
+  } catch (err) {
+    console.error('Error fetching data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // POST endpoint to add new product
-app.post('/api/products', express.json(), (req, res) => {
+app.post('/api/products', express.json(), async (req, res) => {
   const {
     nama_produk,
     id_supplier,
@@ -186,26 +233,35 @@ app.post('/api/products', express.json(), (req, res) => {
     harga_beli,
     harga_jual,
   } = req.body;
+
   const query = `
-    INSERT INTO produk (nama_produk,id_supplier,id_unit,id_kategori,harga_beli,harga_jual)
-    VALUES (?,?,?,?,?,?)
+    INSERT INTO produk (nama_produk, id_supplier, id_unit, id_kategori, harga_beli, harga_jual)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
-  connection.query(
-    query,
-    [nama_produk, id_supplier, id_unit, id_kategori, harga_beli, harga_jual],
-    (err, result) => {
-      if (err) {
-        console.error('Error inserting data: ', err);
-        res.status(500).send('Server error');
-      } else {
-        res
-          .status(201)
-          .json({ message: 'Product added successfully', id: result.insertId });
-      }
-    }
-  );
+
+  try {
+    // Execute the insert query using promise API
+    const [result] = await connection
+      .promise()
+      .execute(query, [
+        nama_produk,
+        id_supplier,
+        id_unit,
+        id_kategori,
+        harga_beli,
+        harga_jual,
+      ]);
+
+    res
+      .status(201)
+      .json({ message: 'Product added successfully', id: result.insertId });
+  } catch (err) {
+    console.error('Error inserting data: ', err);
+    res.status(500).send('Server error');
+  }
 });
-// PUT endpoint to update product Mcc
+
+// PUT endpoint to update product
 app.put('/api/products/:id', async (req, res) => {
   console.log(req.body); // Log the incoming request body for debugging
   const { id } = req.params;
@@ -220,10 +276,10 @@ app.put('/api/products/:id', async (req, res) => {
 
   try {
     const query = `
-    UPDATE product
-    SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?, 
-    WHERE id_produk = ?
-  `;
+      UPDATE produk
+      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?
+      WHERE id_produk = ?
+    `;
     const values = [
       nama_produk,
       id_supplier,
@@ -234,7 +290,7 @@ app.put('/api/products/:id', async (req, res) => {
       id,
     ];
 
-    // Use the correct connection object
+    // Execute the update query using promise API
     const [result] = await connection.promise().execute(query, values);
 
     if (result.affectedRows === 0) {
@@ -249,24 +305,30 @@ app.put('/api/products/:id', async (req, res) => {
 });
 
 // DELETE endpoint to delete product
-app.delete('/api/products/:id', (req, res) => {
+app.delete('/api/products/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
     DELETE FROM produk
     WHERE id_produk = ?
   `;
-  connection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json({ message: 'Product deleted successfully' });
+
+  try {
+    // Execute the delete query using promise API
+    const [result] = await connection.promise().execute(query, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Product not found.' });
     }
-  });
+
+    res.status(200).json({ message: 'Product deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting product: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // GET endpoint to fetch product by ID
-app.get('/api/products/:id', (req, res) => {
+app.get('/api/products/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
@@ -287,20 +349,24 @@ app.get('/api/products/:id', (req, res) => {
     JOIN kategori k ON s.id_kategori = k.id_kategori
     WHERE s.id_produk = ?
   `;
-  connection.query(query, [id], (err, results) => {
-    if (err) {
-      console.error('Error fetching product data: ', err);
-      res.status(500).send('Server error');
-    } else if (results.length === 0) {
-      res.status(404).send('Product not found');
-    } else {
-      res.json(results[0]); // Return the first result (there should only be one)
+
+  try {
+    // Execute the query using promise API
+    const [results] = await connection.promise().execute(query, [id]);
+
+    if (results.length === 0) {
+      return res.status(404).send('Product not found');
     }
-  });
+
+    res.status(200).json(results[0]); // Return the first result (there should only be one)
+  } catch (err) {
+    console.error('Error fetching product data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // Endpoint to get all stock data from MySQL (for the stock page)
-app.get('/api/all-stocks', (req, res) => {
+app.get('/api/all-stocks', async (req, res) => {
   const query = `
     SELECT stock.id_stock, produk.nama_produk, suppliers.nama_supplier, units.nama_unit, kategori.nama_kategori, 
            stock.jumlah_stock, stock.tgl_masuk, stock.tgl_exp
@@ -312,40 +378,42 @@ app.get('/api/all-stocks', (req, res) => {
     ORDER BY id_stock ASC
   `;
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching stock data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json(results);
-    }
-  });
+  try {
+    // Execute the query using promise API
+    const [results] = await connection.promise().execute(query);
+
+    res.status(200).json(results); // Return the results
+  } catch (err) {
+    console.error('Error fetching stock data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // POST endpoint to add new supplier
-app.post('/api/suppliers', express.json(), (req, res) => {
+app.post('/api/suppliers', express.json(), async (req, res) => {
   const { nama_supplier, alamat, email, no_hp } = req.body;
   const query = `
-    INSERT INTO suppliers (nama_supplier,alamat,email,no_hp)
-    VALUES (?,?,?,?)
+    INSERT INTO suppliers (nama_supplier, alamat, email, no_hp)
+    VALUES (?, ?, ?, ?)
   `;
-  connection.query(
-    query,
-    [nama_supplier, alamat, email, no_hp],
-    (err, result) => {
-      if (err) {
-        console.error('Error inserting data: ', err);
-        res.status(500).send('Server error');
-      } else {
-        res.status(201).json({
-          message: 'Supplier added successfully',
-          id: result.insertId,
-        });
-      }
-    }
-  );
+
+  try {
+    // Execute the query using promise API
+    const [result] = await connection
+      .promise()
+      .execute(query, [nama_supplier, alamat, email, no_hp]);
+
+    res.status(201).json({
+      message: 'Supplier added successfully',
+      id: result.insertId,
+    });
+  } catch (err) {
+    console.error('Error inserting data: ', err);
+    res.status(500).send('Server error');
+  }
 });
-// PUT endpoint to update supplier Mcc
+
+// PUT endpoint to update supplier
 app.put('/api/suppliers/:id', async (req, res) => {
   console.log(req.body); // Log the incoming request body for debugging
   const { id } = req.params;
@@ -353,10 +421,10 @@ app.put('/api/suppliers/:id', async (req, res) => {
 
   try {
     const query = `
-    UPDATE suppliers
-    SET nama_supplier = ?, alamat = ?, email = ?, no_hp = ?
-    WHERE id_supplier = ?
-  `;
+      UPDATE suppliers
+      SET nama_supplier = ?, alamat = ?, email = ?, no_hp = ?
+      WHERE id_supplier = ?
+    `;
     const values = [nama_supplier, alamat, email, no_hp, id];
 
     // Use the correct connection object
@@ -373,25 +441,30 @@ app.put('/api/suppliers/:id', async (req, res) => {
   }
 });
 
-// DELETE endpoint to delete product
-app.delete('/api/suppliers/:id', (req, res) => {
+// DELETE endpoint to delete supplier
+app.delete('/api/suppliers/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
     DELETE FROM suppliers
     WHERE id_supplier = ?
   `;
-  connection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json({ message: 'Supplier deleted successfully' });
+
+  try {
+    const [result] = await connection.promise().execute(query, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Supplier not found.' });
     }
-  });
+
+    res.status(200).json({ message: 'Supplier deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting supplier: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // GET endpoint to fetch supplier by ID
-app.get('/api/suppliers/:id', (req, res) => {
+app.get('/api/suppliers/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
@@ -402,68 +475,70 @@ app.get('/api/suppliers/:id', (req, res) => {
     FROM suppliers s
     WHERE s.id_supplier = ?
   `;
-  connection.query(query, [id], (err, results) => {
-    if (err) {
-      console.error('Error fetching supplier data: ', err);
-      res.status(500).send('Server error');
-    } else if (results.length === 0) {
-      res.status(404).send('Supplier not found');
-    } else {
-      res.json(results[0]); // Return the first result (there should only be one)
+
+  try {
+    const [results] = await connection.promise().execute(query, [id]);
+
+    if (results.length === 0) {
+      return res.status(404).send('Supplier not found');
     }
-  });
+
+    res.json(results[0]); // Return the first result (there should only be one)
+  } catch (err) {
+    console.error('Error fetching supplier data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // Endpoint to get suppliers data from MySQL
-app.get('/api/suppliers', (req, res) => {
+app.get('/api/suppliers', async (req, res) => {
   const query = `
     SELECT id_supplier, nama_supplier, alamat, no_hp, email
     FROM suppliers
   `;
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching suppliers: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json(results);
-    }
-  });
+  try {
+    const [results] = await connection.promise().execute(query);
+    res.json(results);
+  } catch (err) {
+    console.error('Error fetching suppliers: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // POST endpoint to add new unit
-app.post('/api/units', express.json(), (req, res) => {
+app.post('/api/units', express.json(), async (req, res) => {
   const { nama_unit } = req.body;
   const query = `
     INSERT INTO units (nama_unit)
     VALUES (?)
   `;
-  connection.query(query, [nama_unit], (err, result) => {
-    if (err) {
-      console.error('Error inserting data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res
-        .status(201)
-        .json({ message: 'Unit added successfully', id: result.insertId });
-    }
-  });
+
+  try {
+    const [result] = await connection.promise().execute(query, [nama_unit]);
+    res
+      .status(201)
+      .json({ message: 'Unit added successfully', id: result.insertId });
+  } catch (err) {
+    console.error('Error inserting data: ', err);
+    res.status(500).send('Server error');
+  }
 });
-// PUT endpoint to update unit Mcc
+
+// PUT endpoint to update unit
 app.put('/api/units/:id', async (req, res) => {
-  console.log(req.body); // Log the incoming request body for debugging
   const { id } = req.params;
   const { nama_unit } = req.body;
 
   try {
     const query = `
-    UPDATE unit
-    SET nama_unit = ?
-    WHERE id_unit = ?
-  `;
+      UPDATE units
+      SET nama_unit = ?
+      WHERE id_unit = ?
+    `;
     const values = [nama_unit, id];
 
-    // Use the correct connection object
+    // Use the correct connection object with promise-based execution
     const [result] = await connection.promise().execute(query, values);
 
     if (result.affectedRows === 0) {
@@ -478,24 +553,27 @@ app.put('/api/units/:id', async (req, res) => {
 });
 
 // DELETE endpoint to delete unit
-app.delete('/api/units/:id', (req, res) => {
+app.delete('/api/units/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
-    DELETE FROM unit
+    DELETE FROM units
     WHERE id_unit = ?
   `;
-  connection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json({ message: 'Unit deleted successfully' });
+
+  try {
+    const [result] = await connection.execute(query, [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Unit not found' });
     }
-  });
+    res.json({ message: 'Unit deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // GET endpoint to fetch unit by ID
-app.get('/api/units/:id', (req, res) => {
+app.get('/api/units/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
@@ -504,58 +582,59 @@ app.get('/api/units/:id', (req, res) => {
     FROM units s
     WHERE s.id_unit = ?
   `;
-  connection.query(query, [id], (err, results) => {
-    if (err) {
-      console.error('Error fetching unit data: ', err);
-      res.status(500).send('Server error');
-    } else if (results.length === 0) {
-      res.status(404).send('Unit not found');
-    } else {
-      res.json(results[0]); // Return the first result (there should only be one)
+
+  try {
+    const [results] = await connection.execute(query, [id]);
+    if (results.length === 0) {
+      return res.status(404).send('Unit not found');
     }
-  });
+    res.json(results[0]); // Return the first result (there should only be one)
+  } catch (err) {
+    console.error('Error fetching unit data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // Endpoint to get units data from MySQL
-app.get('/api/units', (req, res) => {
+app.get('/api/units', async (req, res) => {
   const query = `
     SELECT id_unit, nama_unit
     FROM units
   `;
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching units: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json(results);
-    }
-  });
+  try {
+    const [results] = await connection.execute(query);
+    res.json(results);
+  } catch (err) {
+    console.error('Error fetching units: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // POST endpoint to add new category
-app.post('/api/categories', express.json(), (req, res) => {
+app.post('/api/categories', express.json(), async (req, res) => {
   const { nama_kategori } = req.body;
   const query = `
     INSERT INTO kategori (nama_kategori)
     VALUES (?)
   `;
-  connection.query(query, [nama_kategori], (err, result) => {
-    if (err) {
-      console.error('Error inserting data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res
-        .status(201)
-        .json({ message: 'Category added successfully', id: result.insertId });
-    }
-  });
+
+  try {
+    const [result] = await connection.execute(query, [nama_kategori]);
+    res
+      .status(201)
+      .json({ message: 'Category added successfully', id: result.insertId });
+  } catch (err) {
+    console.error('Error inserting data: ', err);
+    res.status(500).send('Server error');
+  }
 });
-// PUT endpoint to update category Mcc
+
+// PUT endpoint to update category
 app.put('/api/categories/:id', async (req, res) => {
   console.log(req.body); // Log the incoming request body for debugging
   const { id } = req.params;
-  const { nama_unit } = req.body;
+  const { nama_kategori } = req.body; // Corrected variable name here
 
   try {
     const query = `
@@ -580,80 +659,86 @@ app.put('/api/categories/:id', async (req, res) => {
 });
 
 // DELETE endpoint to delete category
-app.delete('/api/categories/:id', (req, res) => {
+app.delete('/api/categories/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
     DELETE FROM kategori
     WHERE id_kategori = ?
   `;
-  connection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json({ message: 'Category deleted successfully' });
+
+  try {
+    const [result] = await connection.execute(query, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Category not found' });
     }
-  });
+
+    res.json({ message: 'Category deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
-// GET endpoint to fetch unit by ID
-app.get('/api/categories/:id', (req, res) => {
+// GET endpoint to fetch category by ID
+app.get('/api/categories/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
-      s.id_kategori, 
-      s.nama_kategori
-    FROM kategori s
-    WHERE s.id_kategori = ?
+      id_kategori, 
+      nama_kategori
+    FROM kategori
+    WHERE id_kategori = ?
   `;
-  connection.query(query, [id], (err, results) => {
-    if (err) {
-      console.error('Error fetching category data: ', err);
-      res.status(500).send('Server error');
-    } else if (results.length === 0) {
-      res.status(404).send('Category not found');
-    } else {
-      res.json(results[0]); // Return the first result (there should only be one)
+
+  try {
+    const [results] = await connection.execute(query, [id]);
+
+    if (results.length === 0) {
+      return res.status(404).send('Category not found');
     }
-  });
+
+    res.json(results[0]); // Return the first result (there should only be one)
+  } catch (err) {
+    console.error('Error fetching category data: ', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // Endpoint to get categories data from MySQL
-app.get('/api/categories', (req, res) => {
+app.get('/api/categories', async (req, res) => {
   const query = `
     SELECT id_kategori, nama_kategori
     FROM kategori
   `;
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching categories: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json(results);
-    }
-  });
+  try {
+    const [results] = await connection.execute(query); // Use execute for promise-based query execution
+    res.status(200).json(results); // Explicit 200 status for successful response
+  } catch (err) {
+    console.error('Error fetching categories: ', err);
+    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+  }
 });
 
 // Endpoint to get products data from MySQL
-app.get('/api/products', (req, res) => {
+app.get('/api/products', async (req, res) => {
   const query = `
     SELECT id_produk, nama_produk, harga_jual
     FROM produk
   `;
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching produk: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json(results);
-    }
-  });
+  try {
+    const [results] = await connection.execute(query); // Use execute for promise-based query execution
+    res.status(200).json(results); // Explicit 200 status for successful response
+  } catch (err) {
+    console.error('Error fetching products: ', err);
+    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+  }
 });
 
-// Endpoint to get products data from MySQL
-app.get('/api/all-products', (req, res) => {
+// Endpoint to get all products data from MySQL
+app.get('/api/all-products', async (req, res) => {
   const query = `
     SELECT produk.id_produk, produk.nama_produk, suppliers.nama_supplier, units.nama_unit, kategori.nama_kategori, 
            produk.harga_beli, produk.harga_jual
@@ -661,17 +746,16 @@ app.get('/api/all-products', (req, res) => {
     JOIN suppliers ON suppliers.id_supplier = produk.id_supplier
     JOIN units ON units.id_unit = produk.id_unit
     JOIN kategori ON kategori.id_kategori = produk.id_kategori
-    ORDER BY id_produk ASC
+    ORDER BY produk.id_produk ASC
   `;
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching all-produk: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json(results);
-    }
-  });
+  try {
+    const [results] = await connection.execute(query); // Use execute for promise-based query execution
+    res.status(200).json(results); // Explicit 200 status for successful response
+  } catch (err) {
+    console.error('Error fetching all-products: ', err);
+    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+  }
 });
 
 // PUT endpoint to update product
@@ -679,54 +763,46 @@ app.put('/api/products/:id', async (req, res) => {
   console.log(req.body); // Log the incoming request body for debugging
   const { id } = req.params;
   const {
-    id_produk,
     id_supplier,
     id_unit,
     id_kategori,
-    jumlah_stock,
-    tgl_masuk,
-    tgl_exp,
+    nama_produk,
+    harga_beli,
+    harga_jual,
   } = req.body;
 
   try {
-    // Convert ISO dates to MySQL-compatible date strings
-    const formattedTglMasuk = new Date(tgl_masuk).toLocaleDateString('en-CA'); // yyyy-MM-dd
-    const formattedTglExp = tgl_exp
-      ? new Date(tgl_exp).toLocaleDateString('en-CA')
-      : null;
-
     const query = `
-    UPDATE stock
-    SET id_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, jumlah_stock = ?, tgl_masuk = ?, tgl_exp = ?
-    WHERE id_stock = ?
-  `;
+      UPDATE produk
+      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?
+      WHERE id_produk = ?
+    `;
     const values = [
-      id_produk,
+      nama_produk,
       id_supplier,
       id_unit,
       id_kategori,
-      jumlah_stock,
-      formattedTglMasuk,
-      formattedTglExp,
+      harga_beli,
+      harga_jual,
       id,
     ];
 
     // Use the correct connection object
-    const [result] = await connection.promise().execute(query, values);
+    const [result] = await connection.query().execute(query, values);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Stock not found.' });
+      return res.status(404).json({ error: 'Product not found.' });
     }
 
-    res.status(200).json({ message: 'Stock updated successfully.' });
+    res.status(200).json({ message: 'Product updated successfully.' });
   } catch (error) {
-    console.error('Error updating stock:', error);
-    res.status(500).json({ error: 'Failed to update stock.' });
+    console.error('Error updating product:', error);
+    res.status(500).json({ error: 'Failed to update product.' });
   }
 });
 
 // Endpoint to get pembelian data from MySQL
-app.get('/api/all-pembelian', (req, res) => {
+app.get('/api/all-pembelian', async (req, res) => {
   const query = `
     SELECT pembelian.id_pembelian, pembelian.tanggal_pembelian, suppliers.nama_supplier, produk.nama_produk, pembelian.jumlah_produk, units.nama_unit
     FROM pembelian
@@ -736,18 +812,17 @@ app.get('/api/all-pembelian', (req, res) => {
     ORDER BY id_pembelian ASC
   `;
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching all-produk: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json(results);
-    }
-  });
+  try {
+    const [results] = await connection.execute(query); // Use execute for promise-based query execution
+    res.status(200).json(results); // Explicit 200 status for successful response
+  } catch (err) {
+    console.error('Error fetching pembelian data: ', err);
+    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+  }
 });
 
 // Endpoint to get all sales data (penjualan)
-app.get('/api/all-penjualan', (req, res) => {
+app.get('/api/all-penjualan', async (req, res) => {
   const query = `
     SELECT 
       penjualan.id_penjualan, 
@@ -757,18 +832,17 @@ app.get('/api/all-penjualan', (req, res) => {
     ORDER BY id_penjualan ASC
   `;
 
-  connection.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching all sales data: ', err);
-      res.status(500).send('Server error');
-    } else {
-      res.json(results);
-    }
-  });
+  try {
+    const [results] = await connection.execute(query); // Use execute for promise-based query execution
+    res.status(200).json(results); // Explicit 200 status for successful response
+  } catch (err) {
+    console.error('Error fetching all sales data: ', err);
+    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+  }
 });
 
 // Endpoint to get details of a specific penjualan
-app.get('/api/penjualan/:id/details', (req, res) => {
+app.get('/api/penjualan/:id/details', async (req, res) => {
   const { id } = req.params;
 
   // Validate the ID
@@ -791,47 +865,48 @@ app.get('/api/penjualan/:id/details', (req, res) => {
     ORDER BY detailpenjualan.id_detail_penjualan ASC
   `;
 
-  connection.query(query, [id], (error, results) => {
-    if (error) {
-      console.error('Error fetching penjualan details:', error);
-      return res.status(500).json({ message: 'Internal server error.' });
-    }
-
+  try {
+    const [results] = await connection.execute(query, [id]); // Use execute for promise-based query execution
     if (results.length === 0) {
       return res
         .status(404)
         .json({ message: 'No details found for this penjualan ID.' });
     }
-
     return res.json({ success: true, data: results });
-  });
+  } catch (error) {
+    console.error('Error fetching penjualan details:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
 });
 
 // POST endpoint to add new sales (penjualan)
-app.post('/api/penjualan', (req, res) => {
+app.post('/api/penjualan', async (req, res) => {
   const { items, total_harga, tanggal_penjualan } = req.body;
 
   if (!items || items.length === 0) {
-    return res.status(400).send('Invoice items are required.');
+    return res.status(400).json({ message: 'Invoice items are required.' });
   }
-
-  // Insert into `penjualan` table
-  const insertPenjualanQuery = `
-    INSERT INTO penjualan (total_harga, tanggal_penjualan)
-    VALUES (?, ?)
-  `;
 
   // Use current date if tanggal_penjualan is not provided
   const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
   const date = tanggal_penjualan || currentDate;
 
-  connection.query(insertPenjualanQuery, [total_harga, date], (err, result) => {
-    if (err) {
-      console.error('Error inserting into penjualan:', err);
-      return res.status(500).send('Failed to create invoice.');
-    }
+  // Prepare the insert query for `penjualan` table
+  const insertPenjualanQuery = `
+    INSERT INTO penjualan (total_harga, tanggal_penjualan)
+    VALUES (?, ?)
+  `;
 
-    const id_penjualan = result.insertId;
+  try {
+    // Start a transaction using the correct method
+    await connection.beginTransaction(); // Fix: use beginTransaction(), not startTransaction()
+
+    // Insert into `penjualan` table
+    const [penjualanResult] = await connection.execute(insertPenjualanQuery, [
+      total_harga,
+      date,
+    ]);
+    const id_penjualan = penjualanResult.insertId;
 
     // Prepare data for `detailpenjualan` table
     const detailItems = items.map((item) => [
@@ -843,109 +918,278 @@ app.post('/api/penjualan', (req, res) => {
 
     // Insert into `detailpenjualan` table
     const insertDetailQuery = `
-        INSERT INTO detailpenjualan (id_penjualan, id_produk, jumlah_produk, harga)
-        VALUES ?
-      `;
+      INSERT INTO detailpenjualan (id_penjualan, id_produk, jumlah_produk, harga)
+      VALUES ?
+    `;
+    await connection.query(insertDetailQuery, [detailItems]);
 
-    connection.query(insertDetailQuery, [detailItems], (err) => {
-      if (err) {
-        console.error('Error inserting into detailpenjualan:', err);
-        return res.status(500).send('Failed to add items to the invoice.');
-      }
+    // Commit the transaction if both inserts succeed
+    await connection.commit();
 
-      res.status(201).json({
-        message: 'Sale added successfully',
-        id_penjualan,
-      });
+    res.status(201).json({
+      message: 'Sale added successfully',
+      id_penjualan,
     });
-  });
+  } catch (err) {
+    // Rollback the transaction in case of error
+    await connection.rollback();
+    console.error('Error adding sale:', err);
+    res.status(500).json({ message: 'Failed to create sale.' });
+  } finally {
+    // Always end the connection
+    await connection.end();
+  }
 });
 
 // PUT endpoint to update sales (penjualan)
-app.put('/api/penjualan/:id', (req, res) => {
+app.put('/api/penjualan/:id', async (req, res) => {
   const { id } = req.params;
-  const {
-    id_produk,
-    id_supplier,
-    id_unit,
-    jumlah_produk,
-    total_harga,
-    tanggal_penjualan,
-  } = req.body;
+  const { items, total_harga, tanggal_penjualan } = req.body;
 
-  const query = `
-    UPDATE penjualan
-    SET id_produk = ?, id_supplier = ?, id_unit = ?, jumlah_produk = ?, total_harga = ?, tanggal_penjualan = ?
-    WHERE id_penjualan = ?
-  `;
+  // Validate input
+  if (!items || items.length === 0) {
+    return res.status(400).json({ message: 'Invoice items are required.' });
+  }
 
-  connection.query(
-    query,
-    [
-      id_produk,
-      id_supplier,
-      id_unit,
-      jumlah_produk,
+  // Format date
+  const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
+  const date = tanggal_penjualan || currentDate;
+
+  const connection = await mysql.createConnection({
+    host: '127.0.0.1',
+    user: 'root',
+    password: 'your_password',
+    database: 'your_database',
+  });
+
+  try {
+    // Start a transaction
+    await connection.beginTransaction();
+
+    // Update the `penjualan` table
+    const updatePenjualanQuery = `
+      UPDATE penjualan
+      SET total_harga = ?, tanggal_penjualan = ?
+      WHERE id_penjualan = ?
+    `;
+    const [updateResult] = await connection.execute(updatePenjualanQuery, [
       total_harga,
-      tanggal_penjualan,
+      date,
       id,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error('Error updating sale: ', err);
-        res.status(500).send('Server error');
-      } else if (result.affectedRows === 0) {
-        res.status(404).send('Sale not found');
-      } else {
-        res.status(200).json({ message: 'Sale updated successfully' });
-      }
+    ]);
+
+    if (updateResult.affectedRows === 0) {
+      return res.status(404).json({ message: 'Sale not found.' });
     }
-  );
+
+    // Prepare data for `detailpenjualan` table
+    const detailItems = items.map((item) => [
+      item.id_produk,
+      item.jumlah_produk,
+      item.harga,
+      id, // Foreign key to `penjualan`
+    ]);
+
+    // First, delete existing details before inserting new ones
+    const deleteDetailsQuery = `DELETE FROM detailpenjualan WHERE id_penjualan = ?`;
+    await connection.execute(deleteDetailsQuery, [id]);
+
+    // Insert new details into `detailpenjualan` table
+    const insertDetailQuery = `
+      INSERT INTO detailpenjualan (id_produk, jumlah_produk, harga, id_penjualan)
+      VALUES ?
+    `;
+    await connection.execute(insertDetailQuery, [detailItems]);
+
+    // Commit the transaction if all queries succeed
+    await connection.commit();
+
+    res.status(200).json({ message: 'Sale updated successfully.' });
+  } catch (err) {
+    // Rollback the transaction in case of error
+    await connection.rollback();
+    console.error('Error updating sale:', err);
+    res.status(500).json({ message: 'Failed to update sale.' });
+  } finally {
+    // Close the connection
+    await connection.end();
+  }
 });
 
 // DELETE endpoint to delete a sale (penjualan)
-app.delete('/api/penjualan/:id', (req, res) => {
+app.delete('/api/penjualan/:id', async (req, res) => {
   const { id } = req.params;
 
-  const query = `
-    DELETE FROM penjualan
-    WHERE id_penjualan = ?
-  `;
-
-  connection.query(query, [id], (err, result) => {
-    if (err) {
-      console.error('Error deleting sale: ', err);
-      res.status(500).send('Server error');
-    } else if (result.affectedRows === 0) {
-      res.status(404).send('Sale not found');
-    } else {
-      res.json({ message: 'Sale deleted successfully' });
-    }
+  const connection = await mysql.createConnection({
+    host: '127.0.0.1',
+    user: 'root',
+    password: 'your_password',
+    database: 'your_database',
   });
+
+  try {
+    // Start a transaction
+    await connection.beginTransaction();
+
+    // First, delete related details from `detailpenjualan`
+    const deleteDetailsQuery = `
+      DELETE FROM detailpenjualan
+      WHERE id_penjualan = ?
+    `;
+    await connection.execute(deleteDetailsQuery, [id]);
+
+    // Then, delete the sale itself from `penjualan`
+    const deleteSaleQuery = `
+      DELETE FROM penjualan
+      WHERE id_penjualan = ?
+    `;
+    const [result] = await connection.execute(deleteSaleQuery, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Sale not found.' });
+    }
+
+    // Commit the transaction if both queries succeed
+    await connection.commit();
+
+    res.json({
+      message: 'Sale and related details deleted successfully',
+    });
+  } catch (err) {
+    // Rollback the transaction in case of error
+    await connection.rollback();
+    console.error('Error deleting sale:', err);
+    res.status(500).json({ message: 'Failed to delete sale.' });
+  } finally {
+    // Close the connection
+    await connection.end();
+  }
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
-
-// GET endpoint to fetch penjualan by ID
-app.get('/api/penjualans/:id', (req, res) => {
+// GET endpoint to fetch penjualan by ID along with its details
+app.get('/api/penjualans/:id', async (req, res) => {
   const { id } = req.params;
+
+  // Query to get the penjualan details along with associated items
   const query = `
     SELECT 
-      s.total_harga,
-      s.tanggal_penjualan
-    FROM penjualan s
-    WHERE s.id_penjualan = ?
+      p.id_penjualan,
+      p.total_harga,
+      p.tanggal_penjualan,
+      dp.id_detail_penjualan,
+      pr.nama_produk,
+      dp.jumlah_produk,
+      dp.harga
+    FROM penjualan p
+    LEFT JOIN detailpenjualan dp ON dp.id_penjualan = p.id_penjualan
+    LEFT JOIN produk pr ON pr.id_produk = dp.id_produk
+    WHERE p.id_penjualan = ?
   `;
-  connection.query(query, [id], (err, results) => {
-    if (err) {
-      console.error('Error fetching penjualan data: ', err);
-      res.status(500).send('Server error');
-    } else if (results.length === 0) {
-      res.status(404).send('Penjualan not found');
-    } else {
-      res.json(results[0]); // Return the first result (there should only be one)
+
+  try {
+    const [rows] = await connection.execute(query, [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Penjualan not found' });
     }
-  });
+
+    // Structure response to return sale data with its details
+    const saleData = {
+      id_penjualan: rows[0].id_penjualan,
+      total_harga: rows[0].total_harga,
+      tanggal_penjualan: rows[0].tanggal_penjualan,
+      items: rows.map((row) => ({
+        id_detail_penjualan: row.id_detail_penjualan,
+        nama_produk: row.nama_produk,
+        jumlah_produk: row.jumlah_produk,
+        harga: row.harga,
+      })),
+    };
+
+    res.json(saleData);
+  } catch (err) {
+    console.error('Error fetching penjualan data: ', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET endpoint to fetch pendapatan (progress of sales)
+app.get('/api/progress-pendapatan', async (req, res) => {
+  const query = `
+    SELECT
+      p.tanggal_penjualan,
+      p.total_harga
+    FROM penjualan p
+  `;
+
+  try {
+    // Execute the query using the existing connection
+    const [rows] = await connection.execute(query);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No data found' });
+    }
+
+    res.json(rows); // Send the result as JSON
+  } catch (err) {
+    console.error('Error fetching progress-pendapatan: ', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET endpoint to fetch total sum of total_harga (from penjualan)
+app.get('/api/total-harga-sum', async (req, res) => {
+  const query = 'SELECT SUM(total_harga) AS total_harga_sum FROM penjualan';
+
+  try {
+    const [rows] = await connection.execute(query); // Using execute() for promise-based queries
+
+    // Check if there's a result and send the sum
+    if (rows && rows.length > 0) {
+      res.json({ total_harga_sum: rows[0].total_harga_sum });
+    } else {
+      res.status(404).json({ message: 'No sales data found' });
+    }
+  } catch (error) {
+    console.error('Error fetching total harga sum:', error);
+    res.status(500).json({ message: 'Error fetching total harga sum' });
+  }
+});
+
+// GET endpoint to fetch total sum of jumlah_produk (from detailpenjualan)
+app.get('/api/total-produk-sum', async (req, res) => {
+  const query =
+    'SELECT SUM(jumlah_produk) AS total_produk_sum FROM detailpenjualan';
+
+  try {
+    const [rows] = await connection.execute(query); // Using execute() for promise-based query execution
+
+    // Check if the result exists and return the sum
+    if (rows && rows.length > 0) {
+      res.json({ total_produk_sum: rows[0].total_produk_sum });
+    } else {
+      res.status(404).json({ message: 'No product data found' });
+    }
+  } catch (error) {
+    console.error('Error fetching total produk sum:', error);
+    res.status(500).json({ message: 'Error fetching total produk sum' });
+  }
+});
+
+// Get total count of penjualan (sales)
+app.get('/api/total-penjualan', async (req, res) => {
+  const query = 'SELECT COUNT(*) AS total_penjualan FROM penjualan';
+
+  try {
+    const [rows] = await connection.execute(query); // Use execute() for promise-based queries
+    res.json({ total_penjualan: rows[0].total_penjualan }); // Return total sales count
+  } catch (error) {
+    console.error('Error fetching total penjualan:', error);
+    res.status(500).json({ message: 'Error fetching total penjualan' });
+  }
+});
+
+// INI LISTEN HARUS PALING BAWAH!
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });

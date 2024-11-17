@@ -5,8 +5,6 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import * as echarts from 'echarts';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/firebase'; // Adjust the import based on your firebase configuration
 
 const chart = ref(null);
 

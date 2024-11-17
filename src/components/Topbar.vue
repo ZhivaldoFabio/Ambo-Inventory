@@ -1,39 +1,39 @@
 <script setup>
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import logo from '@/assets/logo.png';
-import { auth } from '@/firebase';
 import { ref, onMounted } from 'vue';
-import { onAuthStateChanged } from 'firebase/auth';
-
-const isActiveLink = (routePath) => {
-  const route = useRoute();
-  return route.path === routePath;
-};
+import axios from 'axios';
 
 const username = ref('');
 const email = ref('');
+const token = localStorage.getItem('authToken'); // Get JWT token from localStorage
+const router = useRouter();
 
-onMounted(() => {
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      email.value = user.email; // Get email from Firebase Authentication
+// Fetch user data on mount
+onMounted(async () => {
+  if (!token) {
+    console.error('No token found. Redirecting to login.');
+    return router.push('/'); // Redirect to login if no token is found
+  }
 
-      // Option 1: If using `displayName` from Firebase Auth
-      if (user.displayName) {
-        username.value = user.displayName; // Get username from Firebase Auth
-      }
-    } else {
-      // If user is not logged in, reset values
-      username.value = '';
-      email.value = '';
-
-      // Option 2: If using Firestore to store username
-      // const userDoc = await getDoc(doc(db, 'users', user.uid));
-      // if (userDoc.exists()) {
-      //   username.value = userDoc.data().username; // Get username from Firestore
-      // }
+  try {
+    const response = await axios.get('/api/user', {
+      headers: {
+        Authorization: `Bearer ${token}`, // Send the token in the Authorization header
+      },
+    });
+    username.value = response.data.username || 'Unknown User';
+    email.value = response.data.email || 'No Email';
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Redirect to login if the token is invalid or expired
+      localStorage.removeItem('authToken'); // Clear invalid token
+      return router.push('/');
     }
-  });
+    username.value = '';
+    email.value = '';
+  }
 });
 </script>
 
@@ -54,35 +54,12 @@ onMounted(() => {
           </RouterLink>
           <div class="md:ml-auto">
             <div class="flex space-x-2">
-              <div class="rounded-lg p-2">
-                <i class="pi pi-search"></i>
-              </div>
-              <div class="rounded-lg p-2">
-                <button class="">
-                  <i class="pi pi-bell"></i>
-                </button>
-              </div>
-
               <div>
                 <RouterLink to="/useredit">
-                  <p>{{ username }}</p>
-                  <p>{{ email }}</p>
+                  <p>{{ username || 'Guest' }}</p>
+                  <p>{{ email || 'Guest@email.com' }}</p>
                 </RouterLink>
               </div>
-
-              <!-- <RouterLink
-                to="/home"
-                :class="[
-                  isActiveLink('/home')
-                    ? 'bg-accent-500'
-                    : 'hover:bg-text-800 hover:text-text-50',
-                  'text-text-50',
-                  'px-3',
-                  'py-2',
-                  'rounded-md',
-                ]"
-                >Home
-              </RouterLink> -->
             </div>
           </div>
         </div>
