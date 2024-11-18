@@ -1,16 +1,24 @@
-<script setup>
-import { ref, onMounted } from "vue";
-import axios from "axios";
+<!-- DataStock.vue -->
 
-// Reactive variable to store Pembelian data
+<script setup>
+import { RouterLink, useRoute } from 'vue-router';
+import axios from 'axios';
+import { ref, onMounted } from 'vue';
+import { useToast } from 'vue-toastification';
+
+const toast = useToast(); // Initialize Vue Toastification
+
+// Reactive variable to store suppliers data
 const pembelians = ref([]);
 
+// Fetch the penjualan list from the API
 onMounted(async () => {
   try {
-    const response = await axios.get("/api/all-pembelian");
+    const response = await axios.get('api/laporan-pembelian');
     pembelians.value = response.data;
   } catch (error) {
-    console.error("Error fetching products data:", error);
+    console.error('Error fetching data:', error);
+    toast.error('Failed to fetch data.');
   }
 });
 
@@ -19,36 +27,48 @@ function formatTimestamp(timestamp) {
   const date = new Date(timestamp);
   return date.toLocaleDateString();
 }
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+  }).format(value);
+};
 </script>
 
 <template>
   <div class="container mx-auto p-4">
-    <h2 class="text-2xl font-semibold mb-4">Pembelian List</h2>
+    <div class="flex justify-between">
+      <h2 class="text-2xl font-semibold mb-4">Laporan Pembelian</h2>
+    </div>
+
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">No Pembelian</th>
+          <th class="px-4 py-2 border-b">Kode Pemesanan</th>
           <th class="px-4 py-2 border-b">Tanggal</th>
           <th class="px-4 py-2 border-b">Total Harga</th>
           <th class="px-4 py-2 border-b">Action</th>
-
         </tr>
       </thead>
       <tbody>
         <tr
           v-for="(pembelian, index) in pembelians"
-          :key="pembelian.id"
-          class="hover:bg-gray-50 text-left"
+          :key="pembelian.id_pembelian"
+          class="hover:bg-gray-50"
         >
+          <!-- Main Row -->
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-          <th class="px-4 py-2 border-b">{{ pembelian.id_pembelian }}</th>
-          <th class="px-4 py-2 border-b">{{ formatTimestamp(pembelian.tanggal_pembelian) }}</th>
-          <th class="px-4 py-2 border-b">{{ pembelian.total_harga }}</th>
+          <td class="px-4 py-2 border-b">{{ pembelian.id_pembelian }}</td>
+          <td class="px-4 py-2 border-b">{{ formatCurrency(pembelian.total_harga) }}</td>
+          <td class="px-4 py-2 border-b">
+            {{ formatTimestamp(penembelian.tanggal_pembelian) }}
+          </td>
           <td class="px-4 py-2 border-b">
             <RouterLink
               :to="{
-                name: 'detail-data-pembelian',
+                name: 'detail-laporan-pembelian',
                 params: { id: pembelian.id_pembelian },
               }"
               class=" p-2 px-4 bg-primary-500 text-white-50 rounded-md hover:shadow-md"
@@ -56,8 +76,6 @@ function formatTimestamp(timestamp) {
               View
             </RouterLink>
           </td>
-
-
         </tr>
       </tbody>
     </table>
