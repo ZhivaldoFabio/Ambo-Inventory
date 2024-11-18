@@ -103,54 +103,56 @@ app.post('/api/stocks', express.json(), async (req, res) => {
   }
 });
 
-// PUT endpoint to update stock
-app.put('/api/stocks/:id', async (req, res) => {
-  console.log(req.body); // Log the incoming request body for debugging
-  const { id } = req.params;
-  const {
-    id_produk,
-    id_supplier,
-    id_unit,
-    id_kategori,
-    jumlah_stock,
-    tgl_masuk,
-    tgl_exp,
-  } = req.body;
+// Endpoint untuk menambah penjualan
+app.post('/api/penjualan', async (req, res) => {
+  const { items, total_harga, tanggal_penjualan } = req.body;
+  if (!items || items.length === 0) {
+    return res.status(400).json({ message: 'Invoice items are required.' });
+  }
 
+  const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
+  const date = tanggal_penjualan || currentDate;
+
+  const connection = await pool.getConnection();
   try {
-    // Convert ISO dates to MySQL-compatible date strings
-    const formattedTglMasuk = new Date(tgl_masuk).toLocaleDateString('en-CA'); // yyyy-MM-dd
-    const formattedTglExp = tgl_exp
-      ? new Date(tgl_exp).toLocaleDateString('en-CA')
-      : null;
+    await connection.beginTransaction();
 
-    const query = `
-    UPDATE stock
-    SET id_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, jumlah_stock = ?, tgl_masuk = ?, tgl_exp = ?
-    WHERE id_stock = ?
-  `;
-    const values = [
-      id_produk,
-      id_supplier,
-      id_unit,
-      id_kategori,
-      jumlah_stock,
-      formattedTglMasuk,
-      formattedTglExp,
-      id,
-    ];
+    // Insert ke tabel penjualan
+    const [penjualanResult] = await connection.execute(
+      'INSERT INTO penjualan (total_harga, tanggal_penjualan) VALUES (?, ?)',
+      [total_harga, date]
+    );
+    const id_penjualan = penjualanResult.insertId;
 
-    // Use the correct connection object
-    const [result] = await pool.execute(query, values);
+    // Insert ke tabel detailpenjualan
+    const detailItems = items.map((item) => [
+      id_penjualan,
+      item.id_produk,
+      item.jumlah_produk,
+      item.harga,
+    ]);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Stock not found.' });
+    await connection.query(
+      'INSERT INTO detailpenjualan (id_penjualan, id_produk, jumlah_produk, harga) VALUES ?',
+      [detailItems]
+    );
+
+    // Update stok produk di tabel stock
+    for (let item of items) {
+      await connection.execute(
+        'UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_produk = ?',
+        [item.jumlah_produk, item.id_produk]
+      );
     }
 
-    res.status(200).json({ message: 'Stock updated successfully.' });
-  } catch (error) {
-    console.error('Error updating stock:', error);
-    res.status(500).json({ error: 'Failed to update stock.' });
+    await connection.commit();
+    res.status(201).json({ message: 'Sale added successfully', id_penjualan });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Error adding sale:', err);
+    res.status(500).json({ message: 'Failed to create sale.' });
+  } finally {
+    connection.release();
   }
 });
 

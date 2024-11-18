@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 
-// Reactive variable to store Produk data
+// Reactive variables
 const products = ref([]);
+const searchQuery = ref(''); // Query untuk search
 
 // Fetch products on mount
 onMounted(async () => {
@@ -14,6 +15,13 @@ onMounted(async () => {
     console.error('Error fetching products data:', error);
   }
 });
+
+// Computed property untuk memfilter produk berdasarkan searchQuery
+const filteredProducts = computed(() =>
+  products.value.filter((product) =>
+    product.nama_produk.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+);
 
 // Delete confirmation and delete function
 const confirmDelete = (productId) => {
@@ -36,14 +44,24 @@ const deleteProduct = async (productId) => {
 
 <template>
   <div class="container mx-auto p-4">
-    <div class="flex justify-between">
-      <h2 class="text-2xl font-semibold mb-4">Product List</h2>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-semibold">Product List</h2>
       <RouterLink
         :to="{ name: 'add-data-produk' }"
-        class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
+        class="max-h-10 py-2 px-3 rounded-md text-white bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         Add New
       </RouterLink>
+    </div>
+
+    <!-- Search Input -->
+    <div class="mb-4">
+      <input
+        type="text"
+        v-model="searchQuery"
+        class="w-64 h-12 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-primary-500"
+        placeholder="Search by product name..."
+      />
     </div>
 
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
@@ -61,7 +79,7 @@ const deleteProduct = async (productId) => {
       </thead>
       <tbody>
         <tr
-          v-for="(produk, index) in products"
+          v-for="(produk, index) in filteredProducts"
           :key="produk.id_produk"
           class="hover:bg-gray-50"
         >
@@ -78,9 +96,8 @@ const deleteProduct = async (productId) => {
                 name: 'edit-data-produk',
                 params: { id: produk.id_produk },
               }"
-              class="bg-primary-500 p-2 rounded-md pi pi-pen-to-square flex text-white-50 hover:drop-shadow-lg hover:bg-secondary-500"
-            >
-            </RouterLink>
+              class="bg-primary-500 p-2 rounded-md pi pi-pen-to-square flex text-white hover:drop-shadow-lg hover:bg-secondary-500"
+            ></RouterLink>
 
             <button
               @click="confirmDelete(produk.id_produk)"
