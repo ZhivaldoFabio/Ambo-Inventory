@@ -1278,8 +1278,29 @@ app.get('/api/penjualans/:id', async (req, res) => {
   }
 });
 
-// GET endpoint to fetch pendapatan (progress of sales)
+// ENDPOINT for PROGRESS PENDAPATAN
+async function calculateCOGS(tanggal_penjualan) {
+  // You may need to adjust this query based on your business rules
+  const query = `
+    SELECT SUM(produk.harga_beli * d.jumlah_produk) AS total_cogs
+    FROM detailpenjualan d
+    JOIN produk ON produk.id_produk = d.id_produk
+    JOIN penjualan p ON p.id_penjualan = d.id_penjualan
+    WHERE p.tanggal_penjualan = ?
+
+  `;
+
+  try {
+    const [rows] = await pool.execute(query, [tanggal_penjualan]);
+    return rows.length > 0 ? rows[0].total_cogs || 0 : 0; // Return COGS or 0
+  } catch (err) {
+    console.error('Error calculating COGS:', err);
+    return 0;
+  }
+}
+
 app.get('/api/progress-pendapatan', async (req, res) => {
+  // Define the query
   const query = `
     SELECT
       p.tanggal_penjualan,
@@ -1288,14 +1309,27 @@ app.get('/api/progress-pendapatan', async (req, res) => {
   `;
 
   try {
-    // Execute the query using the existing connection
     const [rows] = await pool.execute(query);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: 'No data found' });
     }
 
-    res.json(rows); // Send the result as JSON
+    // Fetch COGS for each sale and calculate profit
+    const result = await Promise.all(
+      rows.map(async (row) => {
+        const cogs = await calculateCOGS(row.tanggal_penjualan); // Await the COGS calculation
+        const profit = row.total_harga - cogs;
+        return {
+          tanggal_penjualan: row.tanggal_penjualan,
+          total_harga: row.total_harga,
+          profit: profit, // Profit calculated
+        };
+      })
+    );
+
+    // Send the result with profit calculations
+    res.json(result);
   } catch (err) {
     console.error('Error fetching progress-pendapatan: ', err);
     res.status(500).json({ message: 'Server error' });
