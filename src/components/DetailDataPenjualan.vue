@@ -1,4 +1,4 @@
-<!-- DetailDataStock.vue -->
+<!-- DetailDataPenjualan.vue -->
 
 <script setup>
 import { RouterLink, useRoute } from 'vue-router';

@@ -1,24 +1,23 @@
-<!-- DataStock.vue -->
+<!-- DataLaporanPembelian.vue -->
 
 <script setup>
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink } from 'vue-router';
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
 import { useToast } from 'vue-toastification';
 
 const toast = useToast(); // Initialize Vue Toastification
 
-// Reactive variable to store suppliers data
+// Reactive variable to store Pembelian data
 const pembelians = ref([]);
 
-// Fetch the penjualan list from the API
 onMounted(async () => {
   try {
-    const response = await axios.get('api/laporan-pembelian');
+    const response = await axios.get('/api/all-pembelian');
     pembelians.value = response.data;
   } catch (error) {
-    console.error('Error fetching data:', error);
-    toast.error('Failed to fetch data.');
+    console.error('Error fetching pembelian data:', error);
+    toast.error('Failed to fetch pembelian data.');
   }
 });
 
@@ -39,14 +38,21 @@ const formatCurrency = (value) => {
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between">
-      <h2 class="text-2xl font-semibold mb-4">Laporan Pembelian</h2>
+      <h2 class="text-2xl font-heading mb-4">Pembelian List</h2>
+      <RouterLink
+        :to="{ name: 'home' }"
+        class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
+      >
+        Home
+      </RouterLink>
     </div>
 
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Kode Pemesanan</th>
+          <th class="px-4 py-2 border-b">No Pembelian</th>
+          <th class="px-4 py-2 border-b">Nama Supplier</th>
           <th class="px-4 py-2 border-b">Tanggal</th>
           <th class="px-4 py-2 border-b">Total Harga</th>
           <th class="px-4 py-2 border-b">Action</th>
@@ -58,12 +64,14 @@ const formatCurrency = (value) => {
           :key="pembelian.id_pembelian"
           class="hover:bg-gray-50"
         >
-          <!-- Main Row -->
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
           <td class="px-4 py-2 border-b">{{ pembelian.id_pembelian }}</td>
-          <td class="px-4 py-2 border-b">{{ formatCurrency(pembelian.total_harga) }}</td>
+          <td class="px-4 py-2 border-b">{{ pembelian.nama_supplier }}</td>
           <td class="px-4 py-2 border-b">
-            {{ formatTimestamp(penembelian.tanggal_pembelian) }}
+            {{ formatTimestamp(pembelian.tanggal_pembelian) }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            {{ formatCurrency(pembelian.total_harga) }}
           </td>
           <td class="px-4 py-2 border-b">
             <RouterLink
@@ -71,7 +79,7 @@ const formatCurrency = (value) => {
                 name: 'detail-laporan-pembelian',
                 params: { id: pembelian.id_pembelian },
               }"
-              class=" p-2 px-4 bg-primary-500 text-white-50 rounded-md hover:shadow-md"
+              class="p-2 px-4 bg-primary-500 text-white-50 rounded-md hover:shadow-md"
             >
               View
             </RouterLink>

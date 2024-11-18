@@ -1,238 +1,287 @@
 <!-- AddDataPembelian.vue -->
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, watch, computed } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
-import { RouterLink } from 'vue-router';
 
 const toast = useToast();
 
-// Form state
-const newStock = ref({
-  tanggal_pembelian: '',
-  id_supplier: '',
-  id_produk: '',
-  jumlah_produk: 0,
-  id_unit: '',
-});
+// Initialize reactive invoice items array
+const invoiceItems = ref([{ id_produk: '', jumlah_produk: 1, harga: 0 }]);
 
-// Options for dropdowns, fetched from the API
+// To store available products
 const products = ref([]);
-const suppliers = ref([]);
-const units = ref([]);
+const units = ref([]); // For units
+const suppliers = ref([]); // For suppliers
+const selectedSupplier = ref(''); // For storing selected supplier ID
 
-// Fetch data for dropdowns on component mount
-onMounted(async () => {
-  try {
-    const productResponse = await axios.get(
-      'http://localhost:3000/api/products'
-    );
-    const supplierResponse = await axios.get(
-      'http://localhost:3000/api/suppliers'
-    );
+// Watch for changes in product selection and update price
+watch(
+  () => invoiceItems.value,
+  () => {
+    invoiceItems.value.forEach(async (item) => {
+      if (item.id_produk) {
+        const product = products.value.find(
+          (p) => p.id_produk === item.id_produk
+        );
+        if (product) {
+          item.harga = product.harga_jual || 0; // Set price from the selected product
+        }
+      }
+    });
+  },
+  { deep: true }
+);
 
-    products.value = productResponse.data;
-    suppliers.value = supplierResponse.data;
-    units.value = unitResponse.data;
-  } catch (error) {
-    console.error('Error fetching dropdown data:', error);
+watch(
+  () => selectedSupplier.value,
+  (newValue) => {
   }
-});
+);
 
-// Handle form submission
-const addPembelian = async () => {
-  try {
-    await axios.post('http://localhost:3000/api/stocks', newStock.value);
-    toast.success('Stock added successfully!');
-    resetForm();
-  } catch (error) {
-    toast.error('Error adding stock.');
-    console.error('Error adding stock:', error);
+// Computed property for total price of each item (harga * qty)
+// const itemTotalPrice = computed(() => {
+//   return invoiceItems.value.map((item) => ({
+//     ...item,
+//     total: item.harga * item.jumlah_produk,
+//   }));
+// });
+
+// Computed property for total price
+const totalPrice = computed(() =>
+  invoiceItems.value.reduce(
+    (sum, item) => sum + item.harga * item.jumlah_produk,
+    0
+  )
+);
+
+// Add a new empty item to the table
+function addItem() {
+  invoiceItems.value.push({ id_produk: '', jumlah_produk: 1, harga: 0 });
+}
+
+// Remove an item from the table
+function removeItem(index) {
+  invoiceItems.value.splice(index, 1);
+}
+
+// Format currency for display
+function formatCurrency(value) {
+  if (value == null || isNaN(value)) {
+    return '-'; // Return a placeholder if value is invalid
   }
-};
+  return value.toLocaleString('en-US', { style: 'currency', currency: 'IDR' });
+}
+
+// Fetch products data from MySQL
+async function fetchProducts() {
+  try {
+    const response = await axios.get('/api/products'); // Endpoint to fetch products
+    products.value = response.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    toast.error('Failed to fetch product data. Please refresh the page.');
+  }
+}
+
+// Fetch units
+async function fetchUnits() {
+  try {
+    const response = await axios.get('/api/units'); // Replace with your endpoint
+    units.value = response.data;
+  } catch (error) {
+    console.error('Error fetching units:', error);
+    toast.error('Failed to fetch units. Please refresh the page.');
+  }
+}
+
+// Fetch suppliers
+async function fetchSuppliers() {
+  try {
+    const response = await axios.get('/api/suppliers'); // Replace with your endpoint
+    suppliers.value = response.data;
+  } catch (error) {
+    console.error('Error fetching suppliers:', error);
+    toast.error('Failed to fetch suppliers. Please refresh the page.');
+  }
+}
+
+// Submit invoice to MySQL through the Express API
+async function submitInvoice() {
+  if (invoiceItems.value.length === 0) {
+    toast.error('Please add at least one item before submitting.');
+    return;
+  }
+
+  if (
+    invoiceItems.value.some(
+      (item) => !item.id_produk || item.jumlah_produk <= 0
+    )
+  ) {
+    toast.error('Ensure all items have valid products and quantities.');
+    return;
+  }
+
+  try {
+    const invoiceData = {
+      id_supplier: selectedSupplier.value,
+      total_harga: totalPrice.value,
+      tanggal: new Date().toISOString(),
+      items: invoiceItems.value.map((item) => ({
+        id_produk: item.id_produk,
+        id_unit: item.id_unit,
+        jumlah_produk: item.jumlah_produk,
+        harga: item.harga,
+      })),
+    };
+
+
+    const response = await axios.post('/api/pembelian', invoiceData);
+
+    if (response.status === 201) {
+      toast.success('Invoice submitted successfully!');
+      resetForm();
+    }
+  } catch (error) {
+    console.error('Error submitting invoice:', error);
+    toast.error('Failed to submit invoice. Please try again.');
+  }
+}
+
+// Call fetch functions on mount
+fetchProducts();
+fetchUnits();
+fetchSuppliers();
 
 // Reset form fields
 const resetForm = () => {
-  newStock.value = {
-    id_produk: '',
-    id_supplier: '',
-    id_unit: '',
-    id_kategori: '',
-    jumlah_stock: 0,
-    tgl_masuk: '',
-    tgl_exp: '',
-  };
+  selectedSupplier.value = ''; // Clear supplier selection
+  invoiceItems.value = [
+    { id_produk: '', id_unit: '', jumlah_produk: 1, harga: 0 },
+  ]; // Reset to initial state
 };
 </script>
 
 <template>
-  <div class="min-w-[50rem] max-w-full mx-auto p-4">
-    <div class="flex justify-between items-center mb-4">
-      <div class="flex items-center space-x-2">
-        <i class="pi pi-file-plus text-2xl"></i>
-        <h2 class="text-2xl font-heading">Add Stock</h2>
-      </div>
-      <RouterLink
-        :to="{ name: 'stock' }"
-        class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
-        ><i
-          class="pi pi-angle-left text-primary-700"
-          style="font-size: 1.3rem"
-        ></i
-      ></RouterLink>
+  <div class="container mx-auto p-4">
+    <h2 class="text-2xl font-semibold mb-4">Tambah Nota Pembelian</h2>
+    <!-- Supplier Dropdown -->
+    <div class="mb-4 max-w-52">
+      <label for="supplier" class="block text-sm font-body text-gray-800">
+        Supplier
+      </label>
+      <select
+        v-model="selectedSupplier"
+        id="supplier"
+        class="border rounded p-2 w-full"
+      >
+        <option value="" disabled>Select Supplier</option>
+        <option
+          v-for="supplier in suppliers"
+          :key="supplier.id_supplier"
+          :value="supplier.id_supplier"
+        >
+          {{ supplier.nama_supplier }}
+        </option>
+      </select>
+    </div>
+    <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+      <thead>
+        <tr class="bg-gray-100">
+          <th class="px-4 py-2 border-b">Product Name</th>
+          <th class="px-4 py-2 border-b">Unit</th>
+          <th class="px-4 py-2 border-b">Quantity</th>
+          <th class="px-4 py-2 border-b">Price</th>
+          <th class="px-4 py-2 border-b">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(item, index) in invoiceItems"
+          :key="index"
+          class="hover:bg-gray-50"
+        >
+          <td class="px-4 py-2 border-b">
+            <select v-model="item.id_produk" class="border rounded p-1 w-full">
+              <option value="" disabled>Select Product</option>
+              <option
+                v-for="product in products"
+                :key="product.id_produk"
+                :value="product.id_produk"
+              >
+                {{ product.nama_produk }}
+              </option>
+            </select>
+          </td>
+          <td class="px-4 py-2 border-b max-w-16">
+            <select v-model="item.id_unit" class="border rounded p-1 w-full">
+              <option value="" disabled>Select Unit</option>
+              <option
+                v-for="unit in units"
+                :key="unit.id_unit"
+                :value="unit.id_unit"
+              >
+                {{ unit.nama_unit }}
+              </option>
+            </select>
+          </td>
+          <td class="px-4 py-2 border-b max-w-20">
+            <input
+              v-model.number="item.jumlah_produk"
+              type="number"
+              class="border rounded p-1 w-full"
+              placeholder="Quantity"
+            />
+          </td>
+          <td class="px-4 py-2 border-b max-w-full">
+            <span class="border rounded p-1 w-full">{{
+              formatCurrency(item.harga * item.jumlah_produk)
+            }}</span>
+          </td>
+          <td class="px-4 py-2 border-b">
+            <button
+              @click="removeItem(index)"
+              class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="flex w-full justify-end">
+      <button
+        @click="addItem"
+        class="mt-4 px-4 py-2 bg-secondary-500 text-white rounded"
+      >
+        Add Item
+      </button>
     </div>
 
-    <form @submit.prevent="addPembelian">
-      <div class="font-body w-full">
-        <div class="space-y-5">
-          <!-- Product Dropdown -->
-          <div>
-            <label for="id_produk">Product</label>
-            <div class="mt-2">
-              <select
-                class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
-                v-model="newStock.id_produk"
-                id="id_produk"
-                required
-              >
-                <option value="" disabled>Select Product</option>
-                <option
-                  v-for="product in products"
-                  :key="product.id_produk"
-                  :value="product.id_produk"
-                >
-                  {{ product.nama_produk }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Supplier Dropdown -->
-          <div>
-            <label for="id_supplier">Supplier</label>
-            <div class="mt-2">
-              <select
-                class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
-                v-model="newStock.id_supplier"
-                id="id_supplier"
-                required
-              >
-                <option value="" disabled>Select Supplier</option>
-                <option
-                  v-for="supplier in suppliers"
-                  :key="supplier.id_supplier"
-                  :value="supplier.id_supplier"
-                >
-                  {{ supplier.nama_supplier }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Unit Dropdown -->
-          <div>
-            <label for="id_unit">Unit</label>
-            <div class="mt-2">
-              <select
-                class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
-                v-model="newStock.id_unit"
-                id="id_unit"
-                required
-              >
-                <option value="" disabled>Select Unit</option>
-                <option
-                  v-for="unit in units"
-                  :key="unit.id_unit"
-                  :value="unit.id_unit"
-                >
-                  {{ unit.nama_unit }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Category Dropdown -->
-          <div>
-            <label for="id_kategori">Category</label>
-            <div class="mt-2">
-              <select
-                class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
-                v-model="newStock.id_kategori"
-                id="id_kategori"
-                required
-              >
-                <option value="" disabled>Select Category</option>
-                <option
-                  v-for="category in categories"
-                  :key="category.id_kategori"
-                  :value="category.id_kategori"
-                >
-                  {{ category.nama_kategori }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Stock Amount -->
-          <div>
-            <label class="" for="jumlah_stock">Stock Amount</label>
-            <div class="mt-2">
-              <input
-                class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
-                type="number"
-                v-model="newStock.jumlah_stock"
-                id="jumlah_stock"
-                required
-                min="1"
-              />
-            </div>
-          </div>
-
-          <!-- Entry Date -->
-          <div>
-            <label for="tgl_masuk">Entry Date</label>
-            <div class="mt-2">
-              <input
-                class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
-                type="date"
-                v-model="newStock.tgl_masuk"
-                id="tgl_masuk"
-                required
-              />
-            </div>
-          </div>
-
-          <!-- Expiry Date -->
-          <div>
-            <label for="tgl_exp">Expiry Date</label>
-            <div class="mt-2">
-              <input
-                class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
-                type="date"
-                v-model="newStock.tgl_exp"
-                id="tgl_exp"
-              />
-            </div>
-          </div>
-          <div class="flex justify-center">
-            <!-- Submit Button -->
-            <button
-              type="submit"
-              class="w-96 px-4 py-2 bg-primary-500 text-white rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
-            >
-              <i class="pi pi-plus self-center"></i>
-              Add Stock
-            </button>
-          </div>
-        </div>
+    <div class="mt-6">
+      <h3 class="text-xl font-semibold">
+        Total: {{ formatCurrency(totalPrice) }}
+      </h3>
+      <div class="flex justify-end w-full">
+        <button
+          @click="submitInvoice"
+          class="mt-4 px-4 py-2 bg-primary-500 text-white rounded"
+        >
+          Submit Invoice
+        </button>
       </div>
-    </form>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.background-primary {
-  background-color: hsla(144, 46%, 53%, 0.2);
+table {
+  width: 100%;
+}
+th,
+td {
+  text-align: left;
+  padding: 8px;
 }
 </style>

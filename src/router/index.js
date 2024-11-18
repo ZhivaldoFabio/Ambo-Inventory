@@ -5,29 +5,29 @@ import HomeView from '@/views/HomeView.vue';
 import LoginView from '@/views/LoginView.vue';
 import NotFoundView from '@/views/NotFoundView.vue';
 import UserEditView from '@/views/UserEditView.vue';
-import LaporanPembelianView from '@/views/LaporanPembelianView.vue';
-import LaporanPenjualanView from '@/views/LaporanPenjualanView.vue';
+import DataLaporanPembelian from '@/components/DataLaporanPembelian.vue';
+import DataLaporanPenjualan from '@/components/DataLaporanPenjualan.vue';
 import DataPenjualan from '@/components/DataPenjualan.vue';
 import DataProduk from '@/components/DataProduk.vue';
-import AddDataProduct from '@/components/AddDataProduct.vue';
 import DataUnit from '@/components/DataUnit.vue';
-import AddDataUnit from '@/components/AddDataUnit.vue';
 import DataKategori from '@/components/DataKategori.vue';
+import DataPembelian from '@/components/DataPembelian.vue';
+import DataSupplier from '@/components/DataSupplier.vue';
+import DataStock from '@/components/DataStock.vue';
+import AddDataProduct from '@/components/AddDataProduct.vue';
+import AddDataUnit from '@/components/AddDataUnit.vue';
+import AddDataSupplier from '@/components/AddDataSupplier.vue';
 import AddDataCategory from '@/components/AddDataCategory.vue';
+import AddDataStock from '@/components/AddDataStock.vue';
+import AddDataPembelian from '@/components/AddDataPembelian.vue';
 import EditDataProduct from '@/components/EditDataProduct.vue';
 import EditDataUnit from '@/components/EditDataUnit.vue';
 import EditDataCategory from '@/components/EditDataCategory.vue';
 import EditDataSupplier from '@/components/EditDataSupplier.vue';
-import DataPembelian from '@/components/DataPembelian.vue';
-import DataSupplier from '@/components/DataSupplier.vue';
-import AddDataSupplier from '@/components/AddDataSupplier.vue';
-import DataStock from '@/components/DataStock.vue';
-import AddDataStock from '@/components/AddDataStock.vue';
 import EditDataStock from '@/components/EditDataStock.vue';
 import DetailDataPenjualan from '@/components/DetailDataPenjualan.vue';
-import DataLaporanPenjualan from '@/components/DataLaporanPenjualan.vue';
-import DetailLaporanPenjualan from '@/components/DetailLaporanPenjualan.vue';
 import DetailDataPembelian from '@/components/DetailDataPembelian.vue';
+import DetailLaporanPenjualan from '@/components/DetailLaporanPenjualan.vue';
 import DetailLaporanPembelian from '@/components/DetailLaporanPembelian.vue';
 
 const router = createRouter({
@@ -61,8 +61,8 @@ const router = createRouter({
     },
     {
       path: '/laporanpembelian',
-      name: 'laporan-pembelian',
-      component: LaporanPembelianView,
+      name: 'data-laporan-pembelian',
+      component: DataLaporanPembelian,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
         allowedRoles: ['Admin'],
@@ -70,11 +70,27 @@ const router = createRouter({
     },
     {
       path: '/laporanpenjualan',
-      name: 'laporan-penjualan',
-      component: LaporanPenjualanView,
+      name: 'data-laporan-penjualan',
+      component: DataLaporanPenjualan,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
         allowedRoles: ['Admin'],
+      },
+    },
+    {
+      path: '/detaillaporanpenjualan/:id',
+      name: 'detail-laporan-penjualan',
+      component: DetailLaporanPenjualan,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/detaillaporanpembelian/:id',
+      name: 'detail-laporan-pembelian',
+      component: DetailLaporanPembelian,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
       },
     },
     // -------------------- BAGIAN GUDANG --------------------
@@ -169,23 +185,6 @@ const router = createRouter({
       },
     },
     {
-      path: '/detaillaporanpenjualan/:id',
-      name: 'detail-laporan-penjualan',
-      component: DetailLaporanPenjualan,
-      meta: {
-        requiresAuth: true, // This metadata marks the route as requiring authentication
-      },
-    },
-    {
-      path: '/detaillaporanpembelian/:id',
-      name: 'detail-laporan-pembelian',
-      component: DetailLaporanPembelian,
-      meta: {
-        requiresAuth: true, // This metadata marks the route as requiring authentication
-      },
-    },
-    
-    {
       path: '/unit',
       name: 'unit',
       component: DataUnit,
@@ -243,6 +242,15 @@ const router = createRouter({
       path: '/pembelian',
       name: 'data-pembelian',
       component: DataPembelian,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
+      },
+    },
+    {
+      path: '/add-data-pembelian',
+      name: 'add-data-pembelian',
+      component: AddDataPembelian,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
         allowedRoles: ['Gudang'],

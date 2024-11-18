@@ -1,7 +1,7 @@
-<!-- DataStock.vue -->
+<!-- DataPenjualan.vue -->
 
 <script setup>
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink } from 'vue-router';
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
 import { useToast } from 'vue-toastification';
@@ -39,7 +39,7 @@ const formatCurrency = (value) => {
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between">
-      <h2 class="text-2xl font-semibold mb-4">Penjualan List</h2>
+      <h2 class="text-2xl font-heading mb-4">Penjualan List</h2>
       <RouterLink
         :to="{ name: 'home' }"
         class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
@@ -67,7 +67,9 @@ const formatCurrency = (value) => {
           <!-- Main Row -->
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
           <td class="px-4 py-2 border-b">{{ penjualan.id_penjualan }}</td>
-          <td class="px-4 py-2 border-b">{{ formatCurrency(penjualan.total_harga) }}</td>
+          <td class="px-4 py-2 border-b">
+            {{ formatCurrency(penjualan.total_harga) }}
+          </td>
           <td class="px-4 py-2 border-b">
             {{ formatTimestamp(penjualan.tanggal_penjualan) }}
           </td>
@@ -77,7 +79,7 @@ const formatCurrency = (value) => {
                 name: 'detail-data-penjualan',
                 params: { id: penjualan.id_penjualan },
               }"
-              class=" p-2 px-4 bg-primary-500 text-white-50 rounded-md hover:shadow-md"
+              class="p-2 px-4 bg-primary-500 text-white-50 rounded-md hover:shadow-md"
             >
               View
             </RouterLink>

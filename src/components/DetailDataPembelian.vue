@@ -1,4 +1,5 @@
-<!-- DetailDataStock.vue -->
+<!-- DetailDataPembelian.vue -->
+
 <script setup>
 import { RouterLink, useRoute } from 'vue-router';
 import axios from 'axios';
@@ -66,7 +67,9 @@ const formatCurrency = (value) => {
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
           <th class="px-4 py-2 border-b">Nama Produk</th>
+          <th class="px-4 py-2 border-b">Unit</th>
           <th class="px-4 py-2 border-b">Jumlah Produk</th>
+          <th class="px-4 py-2 border-b">Harga</th>
           <th class="px-4 py-2 border-b">Total Harga</th>
         </tr>
       </thead>
@@ -76,10 +79,24 @@ const formatCurrency = (value) => {
           :key="detail.id_detail_pembelian"
           class="hover:bg-gray-100"
         >
-          <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-          <td class="px-4 py-2 border-b">{{ detail.nama_produk }}</td>
-          <td class="px-4 py-2 border-b">{{ detail.jumlah_produk }}</td>
-          <td class="px-4 py-2 border-b">{{ formatCurrency(detail.total_harga) }}</td>
+          <td class="px-4 py-2 border-b">
+            {{ index + 1 }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            {{ detail.nama_produk }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            {{ detail.nama_unit }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            {{ detail.jumlah_produk }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            {{ formatCurrency(detail.harga) }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            {{ formatCurrency(detail.harga * detail.jumlah_produk) }}
+          </td>
         </tr>
       </tbody>
     </table>
