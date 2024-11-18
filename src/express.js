@@ -82,17 +82,15 @@ app.post('/api/stocks', express.json(), async (req, res) => {
 
   try {
     // Use the promise version of connection
-    const [result] = await pool
-      
-      .execute(query, [
-        id_produk,
-        id_supplier,
-        id_unit,
-        id_kategori,
-        jumlah_stock,
-        tgl_masuk,
-        tgl_exp,
-      ]);
+    const [result] = await pool.execute(query, [
+      id_produk,
+      id_supplier,
+      id_unit,
+      id_kategori,
+      jumlah_stock,
+      tgl_masuk,
+      tgl_exp,
+    ]);
 
     res
       .status(201)
@@ -260,16 +258,14 @@ app.post('/api/products', express.json(), async (req, res) => {
 
   try {
     // Execute the insert query using promise API
-    const [result] = await pool
-      
-      .execute(query, [
-        nama_produk,
-        id_supplier,
-        id_unit,
-        id_kategori,
-        harga_beli,
-        harga_jual,
-      ]);
+    const [result] = await pool.execute(query, [
+      nama_produk,
+      id_supplier,
+      id_unit,
+      id_kategori,
+      harga_beli,
+      harga_jual,
+    ]);
 
     res
       .status(201)
@@ -418,9 +414,12 @@ app.post('/api/suppliers', express.json(), async (req, res) => {
 
   try {
     // Execute the query using promise API
-    const [result] = await pool
-      
-      .execute(query, [nama_supplier, alamat, email, no_hp]);
+    const [result] = await pool.execute(query, [
+      nama_supplier,
+      alamat,
+      email,
+      no_hp,
+    ]);
 
     res.status(201).json({
       message: 'Supplier added successfully',
@@ -823,11 +822,13 @@ app.put('/api/products/:id', async (req, res) => {
 // Endpoint to get pembelian data from MySQL
 app.get('/api/all-pembelian', async (req, res) => {
   const query = `
-    SELECT pembelian.id_pembelian, pembelian.tanggal_pembelian, suppliers.nama_supplier, produk.nama_produk, pembelian.jumlah_produk, units.nama_unit
-    FROM pembelian
-    JOIN suppliers ON suppliers.id_supplier = pembelian.id_supplier
-    JOIN units ON units.id_unit = pembelian.id_unit
-    JOIN produk on produk.id_produk = pembelian.id_produk
+    SELECT 
+      p.id_pembelian, 
+      s.nama_supplier, 
+      p.tanggal_pembelian, 
+      p.total_harga
+    FROM pembelian p
+    JOIN suppliers s ON s.id_supplier = p.id_supplier
     ORDER BY id_pembelian ASC
   `;
 
@@ -837,6 +838,112 @@ app.get('/api/all-pembelian', async (req, res) => {
   } catch (err) {
     console.error('Error fetching pembelian data: ', err);
     res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+  }
+});
+
+// POST endpoint to add new buys (pembelian)
+app.post('/api/pembelian', async (req, res) => {
+  const { items, id_supplier, total_harga, tanggal_pembelian } = req.body;
+
+  if (!items || items.length === 0) {
+    return res.status(400).json({ message: 'Invoice items are required.' });
+  }
+
+  // Use current date if tanggal_pembelian is not provided
+  const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
+  const date = tanggal_pembelian || currentDate;
+
+  // Prepare the insert query for `pembelian` table
+  const insertPembelianQuery = `
+    INSERT INTO pembelian (id_supplier, total_harga, tanggal_pembelian)
+    VALUES (?, ?, ?)
+  `;
+
+  const connection = await pool.getConnection(); // Get a connection from the pool
+
+  try {
+    // Start a transaction using the correct method
+    await connection.beginTransaction(); // Fix: use beginTransaction(), not startTransaction()
+
+    // Insert into `pembelian` table
+    const [pembelianResult] = await connection.execute(insertPembelianQuery, [
+      id_supplier,
+      total_harga,
+      date,
+    ]);
+    const id_pembelian = pembelianResult.insertId;
+
+    // Prepare data for `detailpembelian` table
+    const detailItems = items.map((item) => [
+      id_pembelian, // Foreign key to `pembelian`
+      item.id_produk,
+      item.id_unit,
+      item.jumlah_produk,
+      item.harga,
+    ]);
+
+    // Insert into `detailpembelian` table
+    const insertDetailQuery = `
+      INSERT INTO detailpembelian (id_pembelian, id_produk, id_unit, jumlah_produk, harga)
+      VALUES ?
+    `;
+    await connection.query(insertDetailQuery, [detailItems]);
+
+    // Commit the transaction if both inserts succeed
+    await connection.commit();
+
+    res.status(201).json({
+      message: 'Sale added successfully',
+      id_pembelian,
+    });
+  } catch (err) {
+    // Rollback the transaction in case of error
+    await connection.rollback();
+    console.error('Error adding sale:', err);
+    res.status(500).json({ message: 'Failed to create sale.' });
+  } finally {
+    // Release the connection back to the pool
+    connection.release();
+  }
+});
+
+// Endpoint to get details of a specific penjualan
+app.get('/api/pembelian/:id/details', async (req, res) => {
+  const { id } = req.params;
+
+  // Validate the ID
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ message: 'Invalid pembelian ID.' });
+  }
+
+  const query = `
+    SELECT 
+      dp.id_detail_pembelian, 
+      dp.id_pembelian, 
+      produk.nama_produk, 
+      units.nama_unit,
+      dp.jumlah_produk,
+      dp.harga,
+      pembelian.total_harga
+    FROM detailpembelian dp
+    JOIN produk ON produk.id_produk = dp.id_produk
+    JOIN units ON units.id_unit = dp.id_unit
+    JOIN pembelian ON pembelian.id_pembelian = dp.id_pembelian
+    WHERE dp.id_pembelian = ?
+    ORDER BY dp.id_detail_pembelian ASC
+  `;
+
+  try {
+    const [results] = await pool.execute(query, [id]); // Use execute for promise-based query execution
+    if (results.length === 0) {
+      return res
+        .status(404)
+        .json({ message: 'No details found for this penjualan ID.' });
+    }
+    return res.json({ success: true, data: results });
+  } catch (error) {
+    console.error('Error fetching penjualan details:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
   }
 });
 
@@ -864,10 +971,10 @@ app.get('/api/laporan-penjualan', (req, res) => {
 app.get('/api/all-penjualan', async (req, res) => {
   const query = `
     SELECT 
-      penjualan.id_penjualan, 
-      penjualan.total_harga,
-      penjualan.tanggal_penjualan
-    FROM penjualan
+      p.id_penjualan, 
+      p.total_harga,
+      p.tanggal_penjualan
+    FROM penjualan p
     ORDER BY id_penjualan ASC
   `;
 
@@ -879,6 +986,7 @@ app.get('/api/all-penjualan', async (req, res) => {
     res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
   }
 });
+
 // Endpoint to get details of a specific penjualan
 app.get('/api/penjualan/:id/details', async (req, res) => {
   const { id } = req.params;
@@ -1172,8 +1280,29 @@ app.get('/api/penjualans/:id', async (req, res) => {
   }
 });
 
-// GET endpoint to fetch pendapatan (progress of sales)
+// ENDPOINT for PROGRESS PENDAPATAN
+async function calculateCOGS(tanggal_penjualan) {
+  // You may need to adjust this query based on your business rules
+  const query = `
+    SELECT SUM(produk.harga_beli * d.jumlah_produk) AS total_cogs
+    FROM detailpenjualan d
+    JOIN produk ON produk.id_produk = d.id_produk
+    JOIN penjualan p ON p.id_penjualan = d.id_penjualan
+    WHERE p.tanggal_penjualan = ?
+
+  `;
+
+  try {
+    const [rows] = await pool.execute(query, [tanggal_penjualan]);
+    return rows.length > 0 ? rows[0].total_cogs || 0 : 0; // Return COGS or 0
+  } catch (err) {
+    console.error('Error calculating COGS:', err);
+    return 0;
+  }
+}
+
 app.get('/api/progress-pendapatan', async (req, res) => {
+  // Define the query
   const query = `
     SELECT
       p.tanggal_penjualan,
@@ -1182,14 +1311,27 @@ app.get('/api/progress-pendapatan', async (req, res) => {
   `;
 
   try {
-    // Execute the query using the existing connection
     const [rows] = await pool.execute(query);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: 'No data found' });
     }
 
-    res.json(rows); // Send the result as JSON
+    // Fetch COGS for each sale and calculate profit
+    const result = await Promise.all(
+      rows.map(async (row) => {
+        const cogs = await calculateCOGS(row.tanggal_penjualan); // Await the COGS calculation
+        const profit = row.total_harga - cogs;
+        return {
+          tanggal_penjualan: row.tanggal_penjualan,
+          total_harga: row.total_harga,
+          profit: profit, // Profit calculated
+        };
+      })
+    );
+
+    // Send the result with profit calculations
+    res.json(result);
   } catch (err) {
     console.error('Error fetching progress-pendapatan: ', err);
     res.status(500).json({ message: 'Server error' });

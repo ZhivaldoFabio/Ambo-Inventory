@@ -12,6 +12,9 @@ const invoiceItems = ref([{ id_produk: '', jumlah_produk: 1, harga: 0 }]);
 
 // To store available products
 const products = ref([]);
+const units = ref([]); // For units
+const suppliers = ref([]); // For suppliers
+const selectedSupplier = ref(''); // For storing selected supplier ID
 
 // Watch for changes in product selection and update price
 watch(
@@ -31,13 +34,19 @@ watch(
   { deep: true }
 );
 
+watch(
+  () => selectedSupplier.value,
+  (newValue) => {
+  }
+);
+
 // Computed property for total price of each item (harga * qty)
-const itemTotalPrice = computed(() => {
-  return invoiceItems.value.map((item) => ({
-    ...item,
-    total: item.harga * item.jumlah_produk,
-  }));
-});
+// const itemTotalPrice = computed(() => {
+//   return invoiceItems.value.map((item) => ({
+//     ...item,
+//     total: item.harga * item.jumlah_produk,
+//   }));
+// });
 
 // Computed property for total price
 const totalPrice = computed(() =>
@@ -76,6 +85,28 @@ async function fetchProducts() {
   }
 }
 
+// Fetch units
+async function fetchUnits() {
+  try {
+    const response = await axios.get('/api/units'); // Replace with your endpoint
+    units.value = response.data;
+  } catch (error) {
+    console.error('Error fetching units:', error);
+    toast.error('Failed to fetch units. Please refresh the page.');
+  }
+}
+
+// Fetch suppliers
+async function fetchSuppliers() {
+  try {
+    const response = await axios.get('/api/suppliers'); // Replace with your endpoint
+    suppliers.value = response.data;
+  } catch (error) {
+    console.error('Error fetching suppliers:', error);
+    toast.error('Failed to fetch suppliers. Please refresh the page.');
+  }
+}
+
 // Submit invoice to MySQL through the Express API
 async function submitInvoice() {
   if (invoiceItems.value.length === 0) {
@@ -94,16 +125,19 @@ async function submitInvoice() {
 
   try {
     const invoiceData = {
+      id_supplier: selectedSupplier.value,
       total_harga: totalPrice.value,
       tanggal: new Date().toISOString(),
       items: invoiceItems.value.map((item) => ({
         id_produk: item.id_produk,
+        id_unit: item.id_unit,
         jumlah_produk: item.jumlah_produk,
         harga: item.harga,
       })),
     };
 
-    const response = await axios.post('/api/penjualan', invoiceData);
+
+    const response = await axios.post('/api/pembelian', invoiceData);
 
     if (response.status === 201) {
       toast.success('Invoice submitted successfully!');
@@ -115,22 +149,48 @@ async function submitInvoice() {
   }
 }
 
-// Fetch products when the component is mounted
+// Call fetch functions on mount
 fetchProducts();
+fetchUnits();
+fetchSuppliers();
 
 // Reset form fields
 const resetForm = () => {
-  invoiceItems.value = [{ id_produk: '', jumlah_produk: 1, harga: 0 }]; // Reset to initial state
+  selectedSupplier.value = ''; // Clear supplier selection
+  invoiceItems.value = [
+    { id_produk: '', id_unit: '', jumlah_produk: 1, harga: 0 },
+  ]; // Reset to initial state
 };
 </script>
 
 <template>
   <div class="container mx-auto p-4">
-    <h2 class="text-2xl font-semibold mb-4">POS System</h2>
+    <h2 class="text-2xl font-semibold mb-4">Tambah Nota Pembelian</h2>
+    <!-- Supplier Dropdown -->
+    <div class="mb-4 max-w-52">
+      <label for="supplier" class="block text-sm font-body text-gray-800">
+        Supplier
+      </label>
+      <select
+        v-model="selectedSupplier"
+        id="supplier"
+        class="border rounded p-2 w-full"
+      >
+        <option value="" disabled>Select Supplier</option>
+        <option
+          v-for="supplier in suppliers"
+          :key="supplier.id_supplier"
+          :value="supplier.id_supplier"
+        >
+          {{ supplier.nama_supplier }}
+        </option>
+      </select>
+    </div>
     <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
       <thead>
         <tr class="bg-gray-100">
-          <th class="px-4 py-2 border-b">Product ID</th>
+          <th class="px-4 py-2 border-b">Product Name</th>
+          <th class="px-4 py-2 border-b">Unit</th>
           <th class="px-4 py-2 border-b">Quantity</th>
           <th class="px-4 py-2 border-b">Price</th>
           <th class="px-4 py-2 border-b">Actions</th>
@@ -154,7 +214,19 @@ const resetForm = () => {
               </option>
             </select>
           </td>
-          <td class="px-4 py-2 border-b">
+          <td class="px-4 py-2 border-b max-w-16">
+            <select v-model="item.id_unit" class="border rounded p-1 w-full">
+              <option value="" disabled>Select Unit</option>
+              <option
+                v-for="unit in units"
+                :key="unit.id_unit"
+                :value="unit.id_unit"
+              >
+                {{ unit.nama_unit }}
+              </option>
+            </select>
+          </td>
+          <td class="px-4 py-2 border-b max-w-20">
             <input
               v-model.number="item.jumlah_produk"
               type="number"
@@ -162,8 +234,7 @@ const resetForm = () => {
               placeholder="Quantity"
             />
           </td>
-          <td class="px-4 py-2 border-b">
-            <!-- Display the price as non-editable -->
+          <td class="px-4 py-2 border-b max-w-full">
             <span class="border rounded p-1 w-full">{{
               formatCurrency(item.harga * item.jumlah_produk)
             }}</span>

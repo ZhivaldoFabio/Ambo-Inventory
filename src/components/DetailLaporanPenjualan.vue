@@ -1,4 +1,4 @@
-<!-- DetailDataStock.vue -->
+<!-- DetailDataPenjualan.vue -->
 
 <script setup>
 import { RouterLink, useRoute } from 'vue-router';
@@ -20,7 +20,6 @@ onMounted(async () => {
   try {
     // Fetch detail penjualan data based on id_penjualan
     const response = await axios.get(`/api/penjualan/${id}/details`);
-    console.log('Fetched detail penjualan:', response.data);
 
     if (response.data.success && Array.isArray(response.data.data)) {
       detailpenjualan.value = response.data.data; // Assign fetched data
@@ -48,9 +47,9 @@ const formatCurrency = (value) => {
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between">
-      <h2 class="text-2xl font-semibold mb-4">Detail Laporan Penjualan {{ id }}</h2>
+      <h2 class="text-2xl font-semibold mb-4">Detail Penjualan {{ id }}</h2>
       <RouterLink
-        :to="{ name: 'laporan-penjualan' }"
+        :to="{ name: 'data-laporan-penjualan' }"
         class="max-h-10 py-2 px-3 rounded-md self-center text-text-500 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         <i class="pi pi-angle-left text-white-50"></i>

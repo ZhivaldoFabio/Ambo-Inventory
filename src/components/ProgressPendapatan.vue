@@ -4,7 +4,6 @@
 import { ref, onMounted, watch } from 'vue';
 import { use } from 'echarts/core';
 import axios from 'axios';
-import { toRaw } from 'vue';
 
 // Import core echarts modules required for bar charts
 import { BarChart } from 'echarts/charts';
@@ -15,8 +14,11 @@ use([BarChart, TooltipComponent, TitleComponent, CanvasRenderer]);
 
 const dates = ref([]);
 const prices = ref([]);
+const profits = ref([]);
 const filteredDates = ref([]);
 const filteredPrices = ref([]);
+const filteredProfits = ref([]);
+const viewType = ref('revenue'); // 'revenue' or 'profit'
 
 // Dropdown options for filters
 const filterType = ref('all'); // Default to "all"
@@ -38,8 +40,8 @@ const years = ref([]); // Populate dynamically based on data
 
 const option = ref({
   title: {
-    text: 'Pendapatan',
-    subtext: 'Progres Pendapatan',
+    text: viewType.value === 'revenue' ? 'Pendapatan' : 'Profit',
+    subtext: 'Progres Pendapatan/Keuntungan',
     left: 'center',
     textStyle: {
       fontFamily: 'LXGW WenKai TC, sans-serif',
@@ -53,14 +55,14 @@ const option = ref({
   yAxis: { type: 'value' },
   series: [
     {
-      name: 'Total Harga',
+      name: viewType.value === 'revenue' ? 'Total Harga' : 'Profit',
       type: 'line',
       data: [],
       smooth: true,
       label: {
-        show: true, // Enable labels
-        position: 'top', // Position labels above the line points
-        formatter: '{c}', // Display the value at each point
+        show: true,
+        position: 'top',
+        formatter: '{c}',
       },
     },
   ],
@@ -108,27 +110,37 @@ async function fetchInvoiceData() {
       ),
     ];
 
-    // Extract dates and prices
+    // Process and update chart
     dates.value = dataEntries.map((entry) =>
       formatTimestamp(entry.tanggal_penjualan)
     );
     prices.value = dataEntries.map((entry) => entry.total_harga);
+    profits.value = dataEntries.map((entry) => entry.profit); // Include the profit
 
     // Set initial filtered data
     filteredDates.value = [...dates.value];
     filteredPrices.value = [...prices.value];
+    filteredProfits.value = [...profits.value];
 
     // Update chart option
-    updateChart(filteredDates.value, filteredPrices.value);
+    updateChart(
+      filteredDates.value,
+      filteredPrices.value,
+      filteredProfits.value
+    );
   } catch (error) {
     console.error('Error fetching invoice data:', error);
   }
 }
 
-// Update chart dynamically
-function updateChart(dates, prices) {
+// Update chart data based on viewType
+function updateChart(dates, prices, profits) {
   option.value.xAxis.data = dates;
-  option.value.series[0].data = prices;
+  if (viewType.value === 'revenue') {
+    option.value.series[0].data = prices;
+  } else if (viewType.value === 'profit') {
+    option.value.series[0].data = profits; // Directly use profits here
+  }
 }
 
 // Apply filters
@@ -137,6 +149,7 @@ function applyFilter() {
     // Show all data
     filteredDates.value = [...dates.value];
     filteredPrices.value = [...prices.value];
+    filteredProfits.value = [...profits.value]; // Include filtered profits
   } else if (filterType.value.startsWith('month-')) {
     // Filter by month
     const month = filterType.value.split('-')[1];
@@ -145,6 +158,9 @@ function applyFilter() {
     );
     filteredPrices.value = filteredDates.value.map(
       (date) => prices.value[dates.value.indexOf(date)]
+    );
+    filteredProfits.value = filteredDates.value.map(
+      (date) => profits.value[dates.value.indexOf(date)]
     );
   } else if (filterType.value.startsWith('year-')) {
     // Filter by year
@@ -155,14 +171,21 @@ function applyFilter() {
     filteredPrices.value = filteredDates.value.map(
       (date) => prices.value[dates.value.indexOf(date)]
     );
+    filteredProfits.value = filteredDates.value.map(
+      (date) => profits.value[dates.value.indexOf(date)]
+    );
   }
 
   // Update the chart with filtered data
-  updateChart(filteredDates.value, filteredPrices.value);
+  updateChart(filteredDates.value, filteredPrices.value, filteredProfits.value);
 }
 
 // Watch filter type for changes
 watch(filterType, applyFilter);
+// Watch for changes in viewType
+watch(viewType, () => {
+  updateChart(filteredDates.value, filteredPrices.value, filteredProfits.value);
+});
 
 onMounted(async () => {
   await fetchInvoiceData();
@@ -171,29 +194,49 @@ onMounted(async () => {
 
 <template>
   <div>
-    <!-- Filters -->
-    <div class="mb-4 flex space-x-4">
-      <select v-model="filterType" class="p-2 border rounded">
-        <option value="all">All</option>
-        <optgroup label="Monthly">
-          <option
-            v-for="month in months"
-            :key="month.value"
-            :value="'month-' + month.value"
+    <div class="flex justify-between">
+      <!-- Filters -->
+      <div class="mb-4 flex space-x-4">
+        <select v-model="filterType" class="p-2 border rounded">
+          <option value="all">All</option>
+          <optgroup label="Monthly">
+            <option
+              v-for="month in months"
+              :key="month.value"
+              :value="'month-' + month.value"
+            >
+              {{ month.label }}
+            </option>
+          </optgroup>
+          <optgroup label="Yearly">
+            <option
+              v-for="year in years"
+              :key="year || 'default-key'"
+              :value="'year-' + year"
+            >
+              {{ year }}
+            </option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="TOMBOLGANTI">
+        <div class="mb-4 flex space-x-4">
+          <button
+            @click="viewType = 'revenue'"
+            class="p-2 rounded bg-primary-500 shadow-md hover:bg-primary-400 active:shadow-inner"
+            :class="{ 'bg-primary-500': viewType === 'revenue' }"
           >
-            {{ month.label }}
-          </option>
-        </optgroup>
-        <optgroup label="Yearly">
-          <option
-            v-for="year in years"
-            :key="year || 'default-key'"
-            :value="'year-' + year"
+            Revenue
+          </button>
+          <button
+            @click="viewType = 'profit'"
+            class="p-2 rounded bg-secondary-500 shadow-md hover:bg-secondary-400 active:shadow-inner"
+            :class="{ 'bg-secondary-500': viewType === 'profit' }"
           >
-            {{ year }}
-          </option>
-        </optgroup>
-      </select>
+            Profit
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Chart -->
