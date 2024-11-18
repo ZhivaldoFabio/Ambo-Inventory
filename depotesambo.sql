@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS `suppliers` (
   PRIMARY KEY (`id_supplier`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table depotesambo.suppliers: ~9 rows (approximately)
+-- Dumping data for table depotesambo.suppliers: ~7 rows (approximately)
 DELETE FROM `suppliers`;
 INSERT INTO `suppliers` (`id_supplier`, `nama_supplier`, `alamat`, `email`, `no_hp`) VALUES
 	(1, 'Valdo Ganteng', 'Jl jalan di hatimu', 'valdoganteng@gmail.com', '088233562800'),
