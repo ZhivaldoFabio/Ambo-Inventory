@@ -5,7 +5,6 @@ import { RouterLink, useRoute } from 'vue-router';
 import axios from 'axios';
 import { ref, onMounted } from 'vue';
 import { useToast } from 'vue-toastification';
-import DetailDataPenjualan from './DetailDataPenjualan.vue';
 
 const toast = useToast(); // Initialize Vue Toastification
 

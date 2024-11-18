@@ -746,6 +746,26 @@ app.get('/api/all-pembelian', (req, res) => {
   });
 });
 
+// Endpoint to get all sales data (Laporan penjualan)
+app.get('/api/laporan-penjualan', (req, res) => {
+  const query = `
+    SELECT 
+      penjualan.id_penjualan, 
+      penjualan.total_harga,
+      penjualan.tanggal_penjualan
+    FROM penjualan
+    ORDER BY id_penjualan ASC
+  `;
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching all sales data: ', err);
+      res.status(500).send('Server error');
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 // Endpoint to get all sales data (penjualan)
 app.get('/api/all-penjualan', (req, res) => {
   const query = `
@@ -766,7 +786,6 @@ app.get('/api/all-penjualan', (req, res) => {
     }
   });
 });
-
 // Endpoint to get details of a specific penjualan
 app.get('/api/penjualan/:id/details', (req, res) => {
   const { id } = req.params;

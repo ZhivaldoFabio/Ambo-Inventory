@@ -27,6 +27,10 @@ import DataStock from '@/components/DataStock.vue';
 import AddDataStock from '@/components/AddDataStock.vue';
 import EditDataStock from '@/components/EditDataStock.vue';
 import DetailDataPenjualan from '@/components/DetailDataPenjualan.vue';
+import DataLaporanPenjualan from '@/components/DataLaporanPenjualan.vue';
+import DetailLaporanPenjualan from '@/components/DetailLaporanPenjualan.vue';
+import DetailDataPembelian from '@/components/DetailDataPembelian.vue';
+import DetailLaporanPembelian from '@/components/DetailLaporanPembelian.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -113,6 +117,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/detail-data-pembelian/:id',
+      name: 'detail-data-pembelian',
+      component: DetailDataPembelian,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
       path: '/add-stock',
       name: 'add-data-stock',
       component: AddDataStock,
@@ -152,6 +164,23 @@ const router = createRouter({
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
     },
+    {
+      path: '/detaillaporanpenjualan/:id',
+      name: 'detail-laporan-penjualan',
+      component: DetailLaporanPenjualan,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    {
+      path: '/detaillaporanpembelian/:id',
+      name: 'detail-laporan-pembelian',
+      component: DetailLaporanPembelian,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+      },
+    },
+    
     {
       path: '/unit',
       name: 'unit',
@@ -210,7 +239,7 @@ const router = createRouter({
     },
     {
       path: '/pembelian',
-      name: 'pembelian',
+      name: 'data-pembelian',
       component: DataPembelian,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
@@ -231,7 +260,7 @@ const router = createRouter({
     {
       path: '/laporanpenjualan',
       name: 'laporan-penjualan',
-      component: LaporanPenjualanView,
+      component: DataLaporanPenjualan,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
       },
