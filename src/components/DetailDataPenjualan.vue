@@ -20,7 +20,6 @@ onMounted(async () => {
   try {
     // Fetch detail penjualan data based on id_penjualan
     const response = await axios.get(`/api/penjualan/${id}/details`);
-    console.log('Fetched detail penjualan:', response.data);
 
     if (response.data.success && Array.isArray(response.data.data)) {
       detailpenjualan.value = response.data.data; // Assign fetched data

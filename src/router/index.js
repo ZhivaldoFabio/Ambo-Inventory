@@ -1,8 +1,6 @@
 // src/router/index.js
 
 import { createRouter, createWebHistory } from 'vue-router';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/firebase';
 import HomeView from '@/views/HomeView.vue';
 import LoginView from '@/views/LoginView.vue';
 import NotFoundView from '@/views/NotFoundView.vue';
@@ -49,6 +47,7 @@ const router = createRouter({
       component: HomeView,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Admin', 'Gudang', 'Kasir'],
       },
     },
     {
@@ -57,6 +56,7 @@ const router = createRouter({
       component: UserEditView,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Admin', 'Gudang', 'Kasir'],
       },
     },
     {
@@ -65,6 +65,16 @@ const router = createRouter({
       component: LaporanPembelianView,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Admin'],
+      },
+    },
+    {
+      path: '/laporanpenjualan',
+      name: 'laporan-penjualan',
+      component: LaporanPenjualanView,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Admin'],
       },
     },
     // -------------------- BAGIAN GUDANG --------------------
@@ -74,6 +84,7 @@ const router = createRouter({
       component: DataSupplier,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -82,6 +93,7 @@ const router = createRouter({
       component: AddDataSupplier,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -90,6 +102,7 @@ const router = createRouter({
       component: EditDataSupplier,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -98,24 +111,10 @@ const router = createRouter({
       component: DataStock,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
-    {
-      path: '/data-penjualan',
-      name: 'data-penjualan',
-      component: DataPenjualan,
-      meta: {
-        requiresAuth: true, // This metadata marks the route as requiring authentication
-      },
-    },
-    {
-      path: '/detail-data-penjualan/:id',
-      name: 'detail-data-penjualan',
-      component: DetailDataPenjualan,
-      meta: {
-        requiresAuth: true, // This metadata marks the route as requiring authentication
-      },
-    },
+
     {
       path: '/detail-data-pembelian/:id',
       name: 'detail-data-pembelian',
@@ -130,6 +129,7 @@ const router = createRouter({
       component: AddDataStock,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -138,6 +138,7 @@ const router = createRouter({
       component: EditDataStock,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -146,6 +147,7 @@ const router = createRouter({
       component: DataProduk,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -154,6 +156,7 @@ const router = createRouter({
       component: AddDataProduct,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -162,6 +165,7 @@ const router = createRouter({
       component: EditDataProduct,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -187,6 +191,7 @@ const router = createRouter({
       component: DataUnit,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -195,6 +200,7 @@ const router = createRouter({
       component: AddDataUnit,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -203,6 +209,7 @@ const router = createRouter({
       component: EditDataUnit,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -211,6 +218,7 @@ const router = createRouter({
       component: DataKategori,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -219,6 +227,7 @@ const router = createRouter({
       component: AddDataCategory,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -227,14 +236,7 @@ const router = createRouter({
       component: EditDataCategory,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
-      },
-    },
-    {
-      path: '/edit-kategori/:id',
-      name: 'edit-data-kategori',
-      component: EditDataUnit,
-      meta: {
-        requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
     {
@@ -243,31 +245,34 @@ const router = createRouter({
       component: DataPembelian,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
       },
     },
-    // -------------------- BAGIAN KARYAWAN --------------------
+    // -------------------- BAGIAN Kasir --------------------
 
-    // {
-    //   path: '/home',
-    //   name: 'tambah-unit',
-    //   component: TambahUnitView,
-    //   meta: { requiresAuth: true },
-    // },
+    {
+      path: '/data-penjualan',
+      name: 'data-penjualan',
+      component: DataPenjualan,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Kasir'],
+      },
+    },
+    {
+      path: '/detail-data-penjualan/:id',
+      name: 'detail-data-penjualan',
+      component: DetailDataPenjualan,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Kasir'],
+      },
+    },
 
     // -------------------- BAGIAN Belom --------------------
 
-    
     {
-      path: '/laporanpenjualan',
-      name: 'laporan-penjualan',
-      component: DataLaporanPenjualan,
-      meta: {
-        requiresAuth: true, // This metadata marks the route as requiring authentication
-      },
-    },
-
-    {
-      path: '/:catchAll(.*)',
+      path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFoundView,
     },
@@ -276,29 +281,22 @@ const router = createRouter({
 
 // Global navigation guard
 router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+  setTimeout(() => {
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+    const requiresAuth = to.meta.requiresAuth;
+    const allowedRoles = to.meta.allowedRoles;
 
-  // Wait for Firebase to check auth state
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // If the user is already logged in and tries to access the login page ('/'), redirect to '/home'
-      if (to.path === '/') {
-        next('/home');
-      } else {
-        // If authenticated and not accessing '/', allow access to the requested route
-        next();
-      }
-    } else {
-      // If the route requires authentication and the user is not logged in, redirect to login ('/')
-      if (requiresAuth) {
-        next('/');
-      } else {
-        // For routes that don't require authentication, allow access
-        next();
-      }
+    if (requiresAuth && !token) {
+      return next('/'); // Redirect to login if no token
     }
-    unsubscribe(); // Stop the listener once we get the auth state
-  });
+
+    if (allowedRoles && !allowedRoles.includes(userRole)) {
+      return next('/unauthorized'); // Redirect if role is not allowed
+    }
+
+    next();
+  }, 100); // Adding a small delay to ensure `localStorage` is available
 });
 
 export default router;

@@ -1,25 +1,55 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import axios from 'axios';
 
 const currentUser = ref(null); // Track the current logged-in User.
 const userRole = ref(null); // Track the user's role
+const isLoading = ref(true); // Track loading state
 
-// On mount, fetch the logged-in user's info
-onMounted(() => {
-  onAuthStateChanged(auth, async (user) => {
-    currentUser.value = user || null;
-    if (user) {
-      // Fetch user doc from Firestore here
-      const userDoc = await getDoc(doc(db, 'user', user.uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        userRole.value = userData.role; // Get the user's role from Firestore
+// Function to fetch user data
+const fetchUserData = async () => {
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) throw new Error('No token found');
+
+    // Only fetch role if it is not set in localStorage
+    if (!localStorage.getItem('userRole')) {
+      const response = await axios.get('/api/user', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.role) {
+        userRole.value = response.data.role;
+        localStorage.setItem('userRole', response.data.role); // Store role in localStorage
+      } else {
+        console.error('Role is missing in the response');
+        localStorage.removeItem('userRole'); // Remove role if response is invalid
       }
+    } else {
+      // If the role is already in localStorage, use it
+      userRole.value = localStorage.getItem('userRole');
     }
-  });
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    currentUser.value = null;
+    userRole.value = null;
+    localStorage.removeItem('userRole'); // Ensure role is removed if there's an error
+  } finally {
+    // Mark loading as finished after the role is fetched or error is handled
+    isLoading.value = false;
+  }
+};
+
+// Fetch user data only after user logs in (not immediately on page load)
+onMounted(() => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    fetchUserData(); // Proceed to fetch user data only if token exists
+  } else {
+    isLoading.value = false; // No need to load anything if no token
+  }
 });
 </script>
 
@@ -29,9 +59,11 @@ onMounted(() => {
     class="m-2"
   >
     <div>
-      <!-- ADMIN -->
-      <ul v-if="currentUser && userRole === 'Admin'" class="p-4 rounded-md">
-        <!-- SIDEBAR TITLE -->
+      <!-- Wait until userRole is fetched before rendering the sidebar -->
+      <div v-if="isLoading">Loading...</div>
+
+      <!-- Admin Role Sidebar -->
+      <ul v-if="!isLoading && userRole === 'Admin'" class="p-4 rounded-md">
         <li class="text-primary-300 flex items-center space-x-2">
           <i class="pi pi-user"></i>
           <span class="text-background-300"> Admin </span>
@@ -62,10 +94,8 @@ onMounted(() => {
         </li>
       </ul>
 
-      <!-- GUDANG -->
-
-      <ul v-if="currentUser && userRole === 'Gudang'" class="p-4 rounded-md">
-        <!-- SIDEBAR TITLE -->
+      <!-- Gudang Role Sidebar -->
+      <ul v-if="!isLoading && userRole === 'Gudang'" class="p-4 rounded-md">
         <li class="text-primary-300 flex items-center space-x-2 mt-5">
           <i class="pi pi-warehouse"></i>
           <span class="text-background-300"> Gudang </span>
@@ -107,13 +137,11 @@ onMounted(() => {
         </li>
       </ul>
 
-      <!-- Karyawan -->
-
-      <ul v-if="currentUser && userRole === 'Karyawan'" class="p-4 rounded-md">
-        <!-- SIDEBAR TITLE -->
+      <!-- Kasir Role Sidebar -->
+      <ul v-if="!isLoading && userRole === 'Kasir'" class="p-4 rounded-md">
         <li class="text-primary-300 flex items-center space-x-2 mt-5">
           <i class="pi pi-warehouse"></i>
-          <span class="text-background-300"> Karyawan </span>
+          <span class="text-background-300"> Kasir </span>
         </li>
         <li class="p-1 ml-5">
           <RouterLink to="/home" class="flex items-center space-x-2">
@@ -121,7 +149,10 @@ onMounted(() => {
           </RouterLink>
         </li>
         <li class="p-1 ml-5">
-          <RouterLink :to="{ name:'data-penjualan' }" class="flex items-center space-x-2">
+          <RouterLink
+            :to="{ name: 'data-penjualan' }"
+            class="flex items-center space-x-2"
+          >
             <span>History Penjualan</span>
           </RouterLink>
         </li>
@@ -129,5 +160,3 @@ onMounted(() => {
     </div>
   </nav>
 </template>
-
-<style scoped></style>
