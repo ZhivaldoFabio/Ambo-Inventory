@@ -154,6 +154,24 @@ app.post('/api/penjualan', async (req, res) => {
   }
 });
 
+// Endpoint to get available stock data for each product
+app.get('/api/jumlah-stock', async (req, res) => {
+  const query = `
+    SELECT id_produk, SUM(jumlah_stock) AS available_stock
+    FROM stock
+    GROUP BY id_produk
+  `;
+
+  try {
+    const [results] = await pool.execute(query); // Fetch stock data grouped by product
+    res.status(200).json(results); // Respond with stock data
+  } catch (err) {
+    console.error('Error fetching stock data: ', err);
+    res.status(500).json({ error: 'Failed to fetch stock data.' });
+  }
+});
+
+
 // GET endpoint to fetch stock by ID
 app.get('/api/stocks/:id', async (req, res) => {
   const { id } = req.params;
@@ -1032,21 +1050,59 @@ app.post('/api/penjualan', async (req, res) => {
     return res.status(400).json({ message: 'Invoice items are required.' });
   }
 
-  // Use current date if tanggal_penjualan is not provided
   const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
   const date = tanggal_penjualan || currentDate;
 
-  // Prepare the insert query for `penjualan` table
   const insertPenjualanQuery = `
     INSERT INTO penjualan (total_harga, tanggal_penjualan)
     VALUES (?, ?)
   `;
 
-  const connection = await pool.getConnection(); // Get a connection from the pool
+  const connection = await pool.getConnection();
 
   try {
-    // Start a transaction using the correct method
-    await connection.beginTransaction(); // Fix: use beginTransaction(), not startTransaction()
+    await connection.beginTransaction();
+
+    // Validate and update stock for each item
+    for (const item of items) {
+      // Fetch all stock entries for the product
+      const [stockEntries] = await connection.query(
+        'SELECT id_stock, jumlah_stock, tgl_exp FROM stock WHERE id_produk = ? ORDER BY tgl_exp ASC',
+        [item.id_produk]
+      );
+
+      if (!stockEntries.length) {
+        throw new Error(
+          `Product with ID ${item.id_produk} does not exist in stock.`
+        );
+      }
+
+      // Calculate total available stock
+      const totalStock = stockEntries.reduce(
+        (sum, stock) => sum + stock.jumlah_stock,
+        0
+      );
+
+      if (item.jumlah_produk > totalStock) {
+        throw new Error(
+          `Insufficient stock for product ID ${item.id_produk}. Available: ${totalStock}, Requested: ${item.jumlah_produk}`
+        );
+      }
+
+      // Deduct stock from earliest-expiring entries
+      let remainingQuantity = item.jumlah_produk;
+      for (const stock of stockEntries) {
+        if (remainingQuantity <= 0) break;
+
+        const deduction = Math.min(stock.jumlah_stock, remainingQuantity);
+        remainingQuantity -= deduction;
+
+        await connection.query(
+          'UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_stock = ?',
+          [deduction, stock.id_stock]
+        );
+      }
+    }
 
     // Insert into `penjualan` table
     const [penjualanResult] = await connection.execute(insertPenjualanQuery, [
@@ -1057,20 +1113,19 @@ app.post('/api/penjualan', async (req, res) => {
 
     // Prepare data for `detailpenjualan` table
     const detailItems = items.map((item) => [
-      id_penjualan, // Foreign key to `penjualan`
+      id_penjualan,
       item.id_produk,
       item.jumlah_produk,
       item.harga,
     ]);
 
-    // Insert into `detailpenjualan` table
     const insertDetailQuery = `
       INSERT INTO detailpenjualan (id_penjualan, id_produk, jumlah_produk, harga)
       VALUES ?
     `;
     await connection.query(insertDetailQuery, [detailItems]);
 
-    // Commit the transaction if both inserts succeed
+    // Commit the transaction
     await connection.commit();
 
     res.status(201).json({
@@ -1078,32 +1133,10 @@ app.post('/api/penjualan', async (req, res) => {
       id_penjualan,
     });
   } catch (err) {
-    // Rollback the transaction in case of error
     await connection.rollback();
     console.error('Error adding sale:', err);
-    res.status(500).json({ message: 'Failed to create sale.' });
+    res.status(400).json({ message: err.message || 'Failed to create sale.' });
   } finally {
-    // Release the connection back to the pool
-    connection.release();
-  }
-});
-
-// Endpoint to get products data from MySQL
-app.get('/api/products', async (req, res) => {
-  const query = `
-    SELECT id_produk, nama_produk, harga_jual
-    FROM produk
-  `;
-  const connection = await pool.getConnection(); // Get a connection from the pool
-
-  try {
-    const [results] = await connection.execute(query); // Use execute for promise-based query execution
-    res.status(200).json(results); // Explicit 200 status for successful response
-  } catch (err) {
-    console.error('Error fetching products: ', err);
-    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
-  } finally {
-    // Release the connection back to the pool
     connection.release();
   }
 });
