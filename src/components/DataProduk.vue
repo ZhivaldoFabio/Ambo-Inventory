@@ -1,10 +1,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { RouterLink } from 'vue-router';
 import axios from 'axios';
 
 // Reactive variables
-const products = ref([]);
-const searchQuery = ref(''); // Query untuk search
+const products = ref([]); // Daftar produk
+const searchQuery = ref(''); // Query pencarian
 
 // Fetch products on mount
 onMounted(async () => {
@@ -44,6 +45,7 @@ const deleteProduct = async (productId) => {
 
 <template>
   <div class="container mx-auto p-4">
+    <!-- Header Section -->
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-semibold">Product List</h2>
       <RouterLink
@@ -64,6 +66,7 @@ const deleteProduct = async (productId) => {
       />
     </div>
 
+    <!-- Table Section -->
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
       <thead>
         <tr class="bg-gray-200 text-left">
@@ -78,6 +81,7 @@ const deleteProduct = async (productId) => {
         </tr>
       </thead>
       <tbody>
+        <!-- Products List -->
         <tr
           v-for="(produk, index) in filteredProducts"
           :key="produk.id_produk"
@@ -92,10 +96,7 @@ const deleteProduct = async (productId) => {
           <td class="px-4 py-2 border-b">{{ produk.harga_jual }}</td>
           <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
-              :to="{
-                name: 'edit-data-produk',
-                params: { id: produk.id_produk },
-              }"
+              :to="{ name: 'edit-data-produk', params: { id: produk.id_produk } }"
               class="bg-primary-500 p-2 rounded-md pi pi-pen-to-square flex text-white hover:drop-shadow-lg hover:bg-secondary-500"
             ></RouterLink>
 
@@ -103,6 +104,12 @@ const deleteProduct = async (productId) => {
               @click="confirmDelete(produk.id_produk)"
               class="pi pi-trash flex text-red-800 hover:drop-shadow-lg hover:text-red-100"
             ></button>
+          </td>
+        </tr>
+        <!-- Message if no products match -->
+        <tr v-if="filteredProducts.length === 0">
+          <td colspan="8" class="text-center py-4 text-gray-500">
+            No products found with the given name.
           </td>
         </tr>
       </tbody>

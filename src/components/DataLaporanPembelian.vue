@@ -1,15 +1,15 @@
-<!-- DataLaporanPembelian.vue -->
-
 <script setup>
 import { RouterLink } from 'vue-router';
 import axios from 'axios';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'vue-toastification';
 
 const toast = useToast(); // Initialize Vue Toastification
 
-// Reactive variable to store Pembelian data
+// Reactive variables
 const pembelians = ref([]);
+const startDate = ref(''); // Tanggal awal
+const endDate = ref(''); // Tanggal akhir
 
 onMounted(async () => {
   try {
@@ -33,18 +33,49 @@ const formatCurrency = (value) => {
     currency: 'IDR',
   }).format(value);
 };
+
+// Filtered pembelians based on date range
+const filteredPembelians = computed(() => {
+  if (!startDate.value && !endDate.value) {
+    return pembelians.value;
+  }
+
+  const start = new Date(startDate.value);
+  const end = new Date(endDate.value);
+
+  return pembelians.value.filter((pembelian) => {
+    const pembelianDate = new Date(pembelian.tanggal_pembelian);
+    return pembelianDate >= start && pembelianDate <= end;
+  });
+});
 </script>
 
 <template>
   <div class="container mx-auto p-4">
-    <div class="flex justify-between">
-      <h2 class="text-2xl font-heading mb-4">Pembelian List</h2>
+    <div class="flex justify-between mb-4">
+      <h2 class="text-2xl font-heading">Pembelian List</h2>
       <RouterLink
         :to="{ name: 'home' }"
         class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         Home
       </RouterLink>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="flex items-center mb-4 space-x-4">
+      <input
+        v-model="startDate"
+        type="date"
+        class="border border-gray-300 rounded-lg px-4 py-2"
+        placeholder="Start Date"
+      />
+      <input
+        v-model="endDate"
+        type="date"
+        class="border border-gray-300 rounded-lg px-4 py-2"
+        placeholder="End Date"
+      />
     </div>
 
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
@@ -60,7 +91,7 @@ const formatCurrency = (value) => {
       </thead>
       <tbody>
         <tr
-          v-for="(pembelian, index) in pembelians"
+          v-for="(pembelian, index) in filteredPembelians"
           :key="pembelian.id_pembelian"
           class="hover:bg-gray-50"
         >
@@ -75,10 +106,7 @@ const formatCurrency = (value) => {
           </td>
           <td class="px-4 py-2 border-b">
             <RouterLink
-              :to="{
-                name: 'detail-laporan-pembelian',
-                params: { id: pembelian.id_pembelian },
-              }"
+              :to="{ name: 'detail-laporan-pembelian', params: { id: pembelian.id_pembelian } }"
               class="p-2 px-4 bg-primary-500 text-white-50 rounded-md hover:shadow-md"
             >
               View

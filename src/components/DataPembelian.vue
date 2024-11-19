@@ -1,16 +1,17 @@
-<!-- DataPembelian.vue -->
-
 <script setup>
 import { RouterLink } from 'vue-router';
 import axios from 'axios';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'vue-toastification';
 
 const toast = useToast(); // Initialize Vue Toastification
 
-// Reactive variable to store Pembelian data
+// Reactive variables
 const pembelians = ref([]);
+const startDate = ref(''); // Start date for filtering
+const endDate = ref(''); // End date for filtering
 
+// Fetch data from the API
 onMounted(async () => {
   try {
     const response = await axios.get('/api/all-pembelian');
@@ -27,24 +28,55 @@ function formatTimestamp(timestamp) {
   return date.toLocaleDateString();
 }
 
+// Helper function to format currency
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
   }).format(value);
 };
+
+// Computed property to filter pembelians based on the date range
+const filteredPembelians = computed(() => {
+  if (!startDate.value && !endDate.value) {
+    return pembelians.value;
+  }
+  return pembelians.value.filter((pembelian) => {
+    const pembelianDate = new Date(pembelian.tanggal_pembelian);
+    const start = startDate.value ? new Date(startDate.value) : null;
+    const end = endDate.value ? new Date(endDate.value) : null;
+    return (!start || pembelianDate >= start) && (!end || pembelianDate <= end);
+  });
+});
 </script>
 
 <template>
   <div class="container mx-auto p-4">
-    <div class="flex justify-between">
-      <h2 class="text-2xl font-heading mb-4">Pembelian List</h2>
-      <RouterLink
-        :to="{ name: 'add-data-pembelian' }"
-        class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
-      >
-        Add New
-      </RouterLink>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-heading">Pembelian List</h2>
+      <div class="flex items-center gap-4">
+        <!-- Input for start and end date -->
+        <div class="flex gap-2">
+          <input
+            v-model="startDate"
+            type="date"
+            class="border rounded px-3 py-2"
+            placeholder="Start date"
+          />
+          <input
+            v-model="endDate"
+            type="date"
+            class="border rounded px-3 py-2"
+            placeholder="End date"
+          />
+        </div>
+        <RouterLink
+          :to="{ name: 'add-data-pembelian' }"
+          class="max-h-10 py-2 px-3 rounded-md text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
+        >
+          Add New
+        </RouterLink>
+      </div>
     </div>
 
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
@@ -60,7 +92,7 @@ const formatCurrency = (value) => {
       </thead>
       <tbody>
         <tr
-          v-for="(pembelian, index) in pembelians"
+          v-for="(pembelian, index) in filteredPembelians"
           :key="pembelian.id_pembelian"
           class="hover:bg-gray-50"
         >
@@ -83,6 +115,12 @@ const formatCurrency = (value) => {
             >
               View
             </RouterLink>
+          </td>
+        </tr>
+        <!-- Show message if no data is found -->
+        <tr v-if="filteredPembelians.length === 0">
+          <td colspan="6" class="px-4 py-2 text-center text-gray-500">
+            No data found for the selected date range.
           </td>
         </tr>
       </tbody>

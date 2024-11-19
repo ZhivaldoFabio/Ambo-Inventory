@@ -1,15 +1,15 @@
-<!-- DataPenjualan.vue -->
-
 <script setup>
 import { RouterLink } from 'vue-router';
 import axios from 'axios';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useToast } from 'vue-toastification';
 
 const toast = useToast(); // Initialize Vue Toastification
 
-// Reactive variable to store suppliers data
+// Reactive variables
 const penjualans = ref([]);
+const startDate = ref(''); // Tanggal awal
+const endDate = ref(''); // Tanggal akhir
 
 // Fetch the penjualan list from the API
 onMounted(async () => {
@@ -17,7 +17,7 @@ onMounted(async () => {
     const response = await axios.get('api/all-penjualan');
     penjualans.value = response.data;
   } catch (error) {
-    console.error('Error fetching stock data:', error);
+    console.error('Error fetching penjualan data:', error);
     toast.error('Failed to fetch penjualan data.');
   }
 });
@@ -28,24 +28,56 @@ function formatTimestamp(timestamp) {
   return date.toLocaleDateString();
 }
 
+// Helper function to format currency
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
   }).format(value);
 };
+
+// Filtered penjualans based on date range
+const filteredPenjualans = computed(() => {
+  if (!startDate.value && !endDate.value) {
+    return penjualans.value;
+  }
+
+  const start = new Date(startDate.value);
+  const end = new Date(endDate.value);
+
+  return penjualans.value.filter((penjualan) => {
+    const penjualanDate = new Date(penjualan.tanggal_penjualan);
+    return penjualanDate >= start && penjualanDate <= end;
+  });
+});
 </script>
 
 <template>
   <div class="container mx-auto p-4">
-    <div class="flex justify-between">
-      <h2 class="text-2xl font-heading mb-4">Penjualan List</h2>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-heading">Penjualan List</h2>
       <RouterLink
         :to="{ name: 'home' }"
         class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
       >
         Add New
       </RouterLink>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="flex items-center space-x-4 mb-4">
+      <input
+        v-model="startDate"
+        type="date"
+        class="border border-gray-300 rounded-lg px-4 py-2"
+        placeholder="Start Date"
+      />
+      <input
+        v-model="endDate"
+        type="date"
+        class="border border-gray-300 rounded-lg px-4 py-2"
+        placeholder="End Date"
+      />
     </div>
 
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
@@ -60,7 +92,7 @@ const formatCurrency = (value) => {
       </thead>
       <tbody>
         <tr
-          v-for="(penjualan, index) in penjualans"
+          v-for="(penjualan, index) in filteredPenjualans"
           :key="penjualan.id_penjualan"
           class="hover:bg-gray-50"
         >
