@@ -1287,14 +1287,16 @@ async function calculateCOGS(tanggal_penjualan) {
     SELECT SUM(produk.harga_beli * d.jumlah_produk) AS total_cogs
     FROM detailpenjualan d
     JOIN produk ON produk.id_produk = d.id_produk
-    JOIN penjualan p ON p.id_penjualan = d.id_penjualan
-    WHERE p.tanggal_penjualan = ?
-
+    WHERE d.id_penjualan = ?
   `;
 
   try {
+    // Execute the query
     const [rows] = await pool.execute(query, [tanggal_penjualan]);
-    return rows.length > 0 ? rows[0].total_cogs || 0 : 0; // Return COGS or 0
+
+   
+    // Return the calculated COGS or 0 if no result
+    return rows.length > 0 ? rows[0].total_cogs || 0 : 0;
   } catch (err) {
     console.error('Error calculating COGS:', err);
     return 0;
@@ -1302,9 +1304,9 @@ async function calculateCOGS(tanggal_penjualan) {
 }
 
 app.get('/api/progress-pendapatan', async (req, res) => {
-  // Define the query
   const query = `
     SELECT
+      p.id_penjualan,
       p.tanggal_penjualan,
       p.total_harga
     FROM penjualan p
@@ -1317,20 +1319,27 @@ app.get('/api/progress-pendapatan', async (req, res) => {
       return res.status(404).json({ message: 'No data found' });
     }
 
-    // Fetch COGS for each sale and calculate profit
+    console.log('Fetched rows from penjualan:', rows);
+
+    // Calculate profit for each sale
     const result = await Promise.all(
       rows.map(async (row) => {
-        const cogs = await calculateCOGS(row.tanggal_penjualan); // Await the COGS calculation
+        const cogs = await calculateCOGS(row.id_penjualan); // Use id_penjualan
         const profit = row.total_harga - cogs;
+
+        console.log(
+          `ID: ${row.id_penjualan}, Date: ${row.tanggal_penjualan}, Revenue: ${row.total_harga}, COGS: ${cogs}, Profit: ${profit}`
+        );
+
         return {
+          id_penjualan: row.id_penjualan,
           tanggal_penjualan: row.tanggal_penjualan,
           total_harga: row.total_harga,
-          profit: profit, // Profit calculated
+          profit: profit,
         };
       })
     );
 
-    // Send the result with profit calculations
     res.json(result);
   } catch (err) {
     console.error('Error fetching progress-pendapatan: ', err);
