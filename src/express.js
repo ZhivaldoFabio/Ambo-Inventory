@@ -1294,7 +1294,6 @@ async function calculateCOGS(tanggal_penjualan) {
     // Execute the query
     const [rows] = await pool.execute(query, [tanggal_penjualan]);
 
-   
     // Return the calculated COGS or 0 if no result
     return rows.length > 0 ? rows[0].total_cogs || 0 : 0;
   } catch (err) {
@@ -1319,17 +1318,11 @@ app.get('/api/progress-pendapatan', async (req, res) => {
       return res.status(404).json({ message: 'No data found' });
     }
 
-    console.log('Fetched rows from penjualan:', rows);
-
     // Calculate profit for each sale
     const result = await Promise.all(
       rows.map(async (row) => {
         const cogs = await calculateCOGS(row.id_penjualan); // Use id_penjualan
         const profit = row.total_harga - cogs;
-
-        console.log(
-          `ID: ${row.id_penjualan}, Date: ${row.tanggal_penjualan}, Revenue: ${row.total_harga}, COGS: ${cogs}, Profit: ${profit}`
-        );
 
         return {
           id_penjualan: row.id_penjualan,
