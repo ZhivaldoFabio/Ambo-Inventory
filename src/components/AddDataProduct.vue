@@ -5,6 +5,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
 import { RouterLink } from 'vue-router';
+import { toRaw } from 'vue';
 
 const toast = useToast();
 
@@ -16,30 +17,23 @@ const newProduct = ref({
   id_kategori: '',
   harga_beli: '',
   harga_jual: '',
-  
 });
 
 // Options for dropdowns, fetched from the API
-const products = ref([]);
+const products = ref([]); // Already existing products to check for duplicates
 const suppliers = ref([]);
 const units = ref([]);
 const categories = ref([]);
 
-// Fetch data for dropdowns on component mount
+// Fetch data for dropdowns and existing products on component mount
 onMounted(async () => {
   try {
-    const productResponse = await axios.get(
-      'http://localhost:3000/api/products'
-    );
-    const supplierResponse = await axios.get(
-      'http://localhost:3000/api/suppliers'
-    );
-    const unitResponse = await axios.get('http://localhost:3000/api/units');
-    const categoryResponse = await axios.get(
-      'http://localhost:3000/api/categories'
-    );
+    const productResponse = await axios.get('/api/products');
+    const supplierResponse = await axios.get('/api/suppliers');
+    const unitResponse = await axios.get('/api/units');
+    const categoryResponse = await axios.get('/api/categories');
 
-    products.value = productResponse.data;
+    products.value = productResponse.data; // List of existing products to check against
     suppliers.value = supplierResponse.data;
     units.value = unitResponse.data;
     categories.value = categoryResponse.data;
@@ -48,10 +42,32 @@ onMounted(async () => {
   }
 });
 
-// Handle form submission
-const addProduct = async () => {
+// Check if a product already exists in the database
+const checkDuplicateProduct = (product) => {
+  return products.value.some((existingProduct) => {
+    const rawExistingProduct = toRaw(existingProduct); // Unwrap the reactive proxy
+
+    // Ensure correct type comparison and check each property individually
+    return (
+      rawExistingProduct.nama_produk === product.nama_produk &&
+      rawExistingProduct.harga_beli === product.harga_beli &&
+      rawExistingProduct.harga_jual === product.harga_jual &&
+      rawExistingProduct.id_kategori === product.id_kategori &&
+      rawExistingProduct.id_unit === product.id_unit &&
+      rawExistingProduct.id_supplier === product.id_supplier
+    );
+  });
+};
+
+// Handle adding the product
+const handleAddProduct = async () => {
+  if (checkDuplicateProduct(newProduct.value)) {
+    toast.error('Product already exists with the same details.');
+    return; // Don't submit the form if it's a duplicate
+  }
+
   try {
-    await axios.post('http://localhost:3000/api/products', newProduct.value);
+    await axios.post('/api/products', newProduct.value);
     toast.success('Product added successfully!');
     resetForm();
   } catch (error) {
@@ -63,7 +79,7 @@ const addProduct = async () => {
 // Reset form fields
 const resetForm = () => {
   newProduct.value = {
-    nama_produk:'',
+    nama_produk: '',
     id_supplier: '',
     id_unit: '',
     id_kategori: '',
@@ -90,7 +106,7 @@ const resetForm = () => {
       ></RouterLink>
     </div>
 
-    <form @submit.prevent="addProduct">
+    <form @submit.prevent="handleAddProduct">
       <div class="font-body w-full">
         <div class="space-y-5">
           <!-- New Product  -->
@@ -181,12 +197,11 @@ const resetForm = () => {
                 type="number"
                 v-model="newProduct.harga_beli"
                 id="harga_beli"
-
               />
             </div>
           </div>
-           <!-- Harga Jual -->
-           <div>
+          <!-- Harga Jual -->
+          <div>
             <label class="" for="harga_jual">Selling Price</label>
             <div class="mt-2">
               <input
@@ -194,12 +209,10 @@ const resetForm = () => {
                 type="number"
                 v-model="newProduct.harga_jual"
                 id="harga_jual"
-
               />
             </div>
           </div>
 
-          
           <div class="flex justify-center">
             <!-- Submit Button -->
             <button

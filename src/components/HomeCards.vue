@@ -106,7 +106,7 @@ function formatCurrency(value) {
         <!-- 5 -->
         <Card>
           <div>
-            <ProdukTerjual />
+            <ProdukTerjual class="overflow-hidden z-10" />
           </div>
         </Card>
 

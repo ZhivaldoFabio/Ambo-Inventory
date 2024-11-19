@@ -12,6 +12,7 @@ const invoiceItems = ref([{ id_produk: '', jumlah_produk: 1, harga: 0 }]);
 
 // To store available products
 const products = ref([]);
+const jumlahStock = ref([]);
 
 // Watch for changes in product selection and update price
 watch(
@@ -65,6 +66,35 @@ function formatCurrency(value) {
   return value.toLocaleString('en-US', { style: 'currency', currency: 'IDR' });
 }
 
+// Validate stock before submitting the invoice
+function validateStock(items) {
+  for (const item of items) {
+    const availableStock = jumlahStock.value[item.id_produk] || 0;
+    if (item.jumlah_produk > availableStock) {
+      toast.error(
+        `Insufficient stock for product ${item.id_produk}. Available: ${availableStock}, Requested: ${item.jumlah_produk}`
+      );
+      return false; // Prevent submission
+    }
+  }
+  return true; // Allow submission
+}
+
+// Fetch stock data from the new endpoint
+async function fetchJumlahStock() {
+  try {
+    const response = await axios.get('/api/jumlah-stock');
+    // Transform the response into a key-value map for quick lookups
+    jumlahStock.value = response.data.reduce((acc, stock) => {
+      acc[stock.id_produk] = stock.available_stock;
+      return acc;
+    }, {});
+  } catch (error) {
+    console.error('Error fetching stock data:', error);
+    toast.error('Failed to fetch stock data. Please try again.');
+  }
+}
+
 // Fetch products data from MySQL
 async function fetchProducts() {
   try {
@@ -78,20 +108,11 @@ async function fetchProducts() {
 
 // Submit invoice to MySQL through the Express API
 async function submitInvoice() {
-  if (invoiceItems.value.length === 0) {
-    toast.error('Please add at least one item before submitting.');
-    return;
+  if (!validateStock(invoiceItems.value)) {
+    return; // Stop submission if validation fails
   }
 
-  if (
-    invoiceItems.value.some(
-      (item) => !item.id_produk || item.jumlah_produk <= 0
-    )
-  ) {
-    toast.error('Ensure all items have valid products and quantities.');
-    return;
-  }
-
+  // Proceed with the API request
   try {
     const invoiceData = {
       total_harga: totalPrice.value,
@@ -108,6 +129,7 @@ async function submitInvoice() {
     if (response.status === 201) {
       toast.success('Invoice submitted successfully!');
       resetForm();
+      fetchJumlahStock(); // Refresh stock data after submission
     }
   } catch (error) {
     console.error('Error submitting invoice:', error);
@@ -116,6 +138,7 @@ async function submitInvoice() {
 }
 
 // Fetch products when the component is mounted
+fetchJumlahStock();
 fetchProducts();
 
 // Reset form fields
