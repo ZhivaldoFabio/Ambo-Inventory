@@ -17,12 +17,18 @@ onMounted(async () => {
   }
 });
 
-// Computed property untuk memfilter produk berdasarkan searchQuery
-const filteredProducts = computed(() =>
-  products.value.filter((product) =>
-    product.nama_produk.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
+const filteredProducts = computed(() => 
+  products.value.filter((product) => {
+    const query = searchQuery.value.toLowerCase();
+    return (
+      product.nama_produk.toLowerCase().includes(query) ||
+      product.nama_supplier.toLowerCase().includes(query) ||
+      product.nama_unit.toLowerCase().includes(query) ||
+      product.nama_kategori.toLowerCase().includes(query)
+    );
+  })
 );
+
 
 // Delete confirmation and delete function
 const confirmDelete = (productId) => {
@@ -62,7 +68,7 @@ const deleteProduct = async (productId) => {
         type="text"
         v-model="searchQuery"
         class="w-64 h-12 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-primary-500"
-        placeholder="Search by product name..."
+        placeholder="Search by..."
       />
     </div>
 
