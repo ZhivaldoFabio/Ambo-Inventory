@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `detailpembelian` (
   CONSTRAINT `FK_detailpembelian_units` FOREIGN KEY (`id_unit`) REFERENCES `units` (`id_unit`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table depotesambo.detailpembelian: ~2 rows (approximately)
+-- Dumping data for table depotesambo.detailpembelian: ~11 rows (approximately)
 DELETE FROM `detailpembelian`;
 INSERT INTO `detailpembelian` (`id_detail_pembelian`, `id_pembelian`, `id_produk`, `id_unit`, `jumlah_produk`, `harga`) VALUES
 	(1, 1, 1, 1, 5, 14000),
@@ -60,14 +60,33 @@ CREATE TABLE IF NOT EXISTS `detailpenjualan` (
   KEY `id_penjualan` (`id_penjualan`) USING BTREE,
   CONSTRAINT `detailpenjualan_ibfk_1` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`) ON UPDATE CASCADE,
   CONSTRAINT `detailpenjualan_ibfk_2` FOREIGN KEY (`id_penjualan`) REFERENCES `penjualan` (`id_penjualan`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=latin1;
 
--- Dumping data for table depotesambo.detailpenjualan: ~3 rows (approximately)
+-- Dumping data for table depotesambo.detailpenjualan: ~14 rows (approximately)
 DELETE FROM `detailpenjualan`;
 INSERT INTO `detailpenjualan` (`id_detail_penjualan`, `id_penjualan`, `id_produk`, `jumlah_produk`, `harga`) VALUES
 	(1, 1, 1, 1, 22000),
 	(2, 2, 2, 3, 28000),
-	(3, 2, 5, 2, 5000);
+	(3, 2, 5, 2, 5000),
+	(4, 3, 1, 2, 22000),
+	(5, 3, 3, 2, 14000),
+	(6, 4, 3, 1, 14000),
+	(7, 5, 4, 1, 13500),
+	(8, 6, 5, 1, 5000),
+	(9, 7, 6, 1, 5000),
+	(10, 8, 7, 1, 17000),
+	(11, 9, 1, 1, 22000),
+	(12, 9, 2, 1, 28000),
+	(13, 9, 5, 1, 5000),
+	(14, 9, 6, 1, 5000),
+	(15, 10, 3, 1, 14000),
+	(16, 11, 3, 8, 14000),
+	(17, 12, 3, 1, 14000),
+	(18, 13, 3, 11, 14000),
+	(19, 14, 3, 1, 14000),
+	(20, 15, 3, 1, 14000),
+	(21, 16, 3, 1, 14000),
+	(22, 17, 1, 1, 22000);
 
 -- Dumping structure for table depotesambo.kategori
 DROP TABLE IF EXISTS `kategori`;
@@ -100,7 +119,7 @@ CREATE TABLE IF NOT EXISTS `pembelian` (
   CONSTRAINT `FK_pembelian_suppliers` FOREIGN KEY (`id_supplier`) REFERENCES `suppliers` (`id_supplier`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1;
 
--- Dumping data for table depotesambo.pembelian: ~3 rows (approximately)
+-- Dumping data for table depotesambo.pembelian: ~7 rows (approximately)
 DELETE FROM `pembelian`;
 INSERT INTO `pembelian` (`id_pembelian`, `id_supplier`, `tanggal_pembelian`, `total_harga`) VALUES
 	(1, 4, '2024-11-06 16:56:14', 10000),
@@ -118,13 +137,28 @@ CREATE TABLE IF NOT EXISTS `penjualan` (
   `total_harga` int NOT NULL,
   `tanggal_penjualan` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_penjualan`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=latin1;
 
--- Dumping data for table depotesambo.penjualan: ~2 rows (approximately)
+-- Dumping data for table depotesambo.penjualan: ~8 rows (approximately)
 DELETE FROM `penjualan`;
 INSERT INTO `penjualan` (`id_penjualan`, `total_harga`, `tanggal_penjualan`) VALUES
 	(1, 22000, '2024-11-12 17:00:00'),
-	(2, 94000, '2024-11-17 17:00:00');
+	(2, 94000, '2024-11-17 17:00:00'),
+	(3, 72000, '2024-11-17 17:00:00'),
+	(4, 14000, '2024-11-17 17:00:00'),
+	(5, 13500, '2024-11-17 17:00:00'),
+	(6, 5000, '2024-11-17 17:00:00'),
+	(7, 5000, '2024-11-17 17:00:00'),
+	(8, 17000, '2024-11-17 17:00:00'),
+	(9, 60000, '2024-11-17 17:00:00'),
+	(10, 14000, '2024-11-18 17:00:00'),
+	(11, 112000, '2024-11-18 17:00:00'),
+	(12, 14000, '2024-11-18 17:00:00'),
+	(13, 154000, '2024-11-18 17:00:00'),
+	(14, 14000, '2024-11-18 17:00:00'),
+	(15, 14000, '2024-11-18 17:00:00'),
+	(16, 14000, '2024-11-18 17:00:00'),
+	(17, 22000, '2024-11-18 17:00:00');
 
 -- Dumping structure for table depotesambo.produk
 DROP TABLE IF EXISTS `produk`;
@@ -145,7 +179,7 @@ CREATE TABLE IF NOT EXISTS `produk` (
   CONSTRAINT `produk_ibfk_1` FOREIGN KEY (`id_kategori`) REFERENCES `kategori` (`id_kategori`) ON UPDATE CASCADE,
   CONSTRAINT `produk_ibfk_2` FOREIGN KEY (`id_unit`) REFERENCES `units` (`id_unit`) ON UPDATE CASCADE,
   CONSTRAINT `produk_ibfk_3` FOREIGN KEY (`id_supplier`) REFERENCES `suppliers` (`id_supplier`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.produk: ~7 rows (approximately)
 DELETE FROM `produk`;
@@ -183,10 +217,10 @@ CREATE TABLE IF NOT EXISTS `stock` (
 -- Dumping data for table depotesambo.stock: ~4 rows (approximately)
 DELETE FROM `stock`;
 INSERT INTO `stock` (`id_stock`, `id_unit`, `id_kategori`, `id_produk`, `id_supplier`, `jumlah_stock`, `tgl_exp`, `tgl_masuk`) VALUES
-	(1, 1, 1, 1, 2, 189, '2026-11-27', '2024-01-10'),
-	(2, 1, 2, 5, 6, 13, '2024-11-11', '2024-11-10'),
-	(3, 1, 2, 6, 5, 14, '2025-11-10', '2024-11-10'),
-	(10, 3, 5, 3, 2, 10, '2025-11-11', '2024-11-11');
+	(1, 1, 1, 1, 2, 185, '2026-11-27', '2024-01-10'),
+	(2, 1, 2, 5, 6, 11, '2024-11-11', '2024-11-10'),
+	(3, 1, 2, 6, 5, 12, '2025-11-10', '2024-11-10'),
+	(10, 3, 5, 3, 2, 4, '2025-11-11', '2024-11-11');
 
 -- Dumping structure for table depotesambo.suppliers
 DROP TABLE IF EXISTS `suppliers`;
@@ -199,7 +233,7 @@ CREATE TABLE IF NOT EXISTS `suppliers` (
   PRIMARY KEY (`id_supplier`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table depotesambo.suppliers: ~7 rows (approximately)
+-- Dumping data for table depotesambo.suppliers: ~9 rows (approximately)
 DELETE FROM `suppliers`;
 INSERT INTO `suppliers` (`id_supplier`, `nama_supplier`, `alamat`, `email`, `no_hp`) VALUES
 	(1, 'Valdo Ganteng', 'Jl jalan di hatimu', 'valdoganteng@gmail.com', '088233562800'),
@@ -243,9 +277,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Dumping data for table depotesambo.users: ~3 rows (approximately)
 DELETE FROM `users`;
 INSERT INTO `users` (`id_user`, `email`, `nama_user`, `role`, `username`, `no_hp`, `password`) VALUES
-	(1, 'michelle.shannen@ti.ukdw.ac.id', 'Michelle Shannen', 'Admin', 'MichelleS', '088212000888', 'password123'),
-	(2, 'audrey.darmawan@ti.ukdw.ac.id', 'Audrey', 'Gudang', 'AudreyD', '088213786556', 'password123'),
-	(3, 'mikael.dante@ti.ukdw.ac.id', 'Mikael', 'Kasir', 'Mikael', '08578895433', 'password123');
+	(1, 'michelle.shannen@ti.ukdw.ac.id', 'Michelle Shannen', 'Admin', 'Michelle Shannen', '088212000888', 'password123'),
+	(2, 'audrey.darmawan@ti.ukdw.ac.id', 'Audrey', 'Gudang', 'Audrey Darmawan', '088213786556', 'password123'),
+	(3, 'mikael.dante@ti.ukdw.ac.id', 'Mikael', 'Kasir', 'Mikael Dante', '08578895433', 'password123');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
