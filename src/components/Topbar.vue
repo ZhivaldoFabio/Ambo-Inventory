@@ -32,7 +32,7 @@ onMounted(async () => {
     }
   } else {
     username.value = 'Guest';
-    role.value = 'Guest@email.com';
+    role.value = 'Guest';
   }
 });
 </script>
