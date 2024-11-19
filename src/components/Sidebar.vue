@@ -81,7 +81,7 @@ onMounted(() => {
             to="/laporanpembelian"
             class="flex items-center space-x-2"
           >
-            <span>Laporan Pembelian</span>
+            <span>Purchase Report</span>
           </RouterLink>
         </li>
         <li class="p-1 ml-5">
@@ -89,7 +89,7 @@ onMounted(() => {
             to="/laporanpenjualan"
             class="flex items-center space-x-2"
           >
-            <span>Laporan Penjualan</span>
+            <span>Selling Report</span>
           </RouterLink>
         </li>
       </ul>
@@ -98,7 +98,7 @@ onMounted(() => {
       <ul v-if="!isLoading && userRole === 'Gudang'" class="p-4 rounded-md">
         <li class="text-primary-300 flex items-center space-x-2 mt-5">
           <i class="pi pi-warehouse"></i>
-          <span class="text-background-300"> Gudang </span>
+          <span class="text-background-300"> Warehouse </span>
         </li>
         <li class="p-1 ml-5">
           <RouterLink to="/home" class="flex items-center space-x-2">
@@ -117,7 +117,7 @@ onMounted(() => {
         </li>
         <li class="p-1 ml-5">
           <RouterLink to="/produk" class="flex items-center space-x-2">
-            <span>Produk</span>
+            <span>Product</span>
           </RouterLink>
         </li>
         <li class="p-1 ml-5">
@@ -127,12 +127,12 @@ onMounted(() => {
         </li>
         <li class="p-1 ml-5">
           <RouterLink to="/kategori" class="flex items-center space-x-2">
-            <span>Kategori</span>
+            <span>Category</span>
           </RouterLink>
         </li>
         <li class="p-1 ml-5">
           <RouterLink to="/pembelian" class="flex items-center space-x-2">
-            <span>Pembelian</span>
+            <span>Purchase</span>
           </RouterLink>
         </li>
       </ul>
@@ -145,7 +145,7 @@ onMounted(() => {
         </li>
         <li class="p-1 ml-5">
           <RouterLink to="/home" class="flex items-center space-x-2">
-            <span>Penjualan</span>
+            <span>Sales</span>
           </RouterLink>
         </li>
         <li class="p-1 ml-5">
@@ -153,7 +153,7 @@ onMounted(() => {
             :to="{ name: 'data-penjualan' }"
             class="flex items-center space-x-2"
           >
-            <span>History Penjualan</span>
+            <span>Sales History</span>
           </RouterLink>
         </li>
       </ul>

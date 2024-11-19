@@ -77,12 +77,12 @@ const deleteProduct = async (productId) => {
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Nama Produk</th>
+          <th class="px-4 py-2 border-b">Product Name</th>
           <th class="px-4 py-2 border-b">Supplier</th>
           <th class="px-4 py-2 border-b">Unit</th>
-          <th class="px-4 py-2 border-b">Kategori</th>
-          <th class="px-4 py-2 border-b">Harga Beli</th>
-          <th class="px-4 py-2 border-b">Harga Jual</th>
+          <th class="px-4 py-2 border-b">Category</th>
+          <th class="px-4 py-2 border-b">Purchase price</th>
+          <th class="px-4 py-2 border-b">Selling Price</th>
           <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>
       </thead>

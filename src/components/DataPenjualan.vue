@@ -55,7 +55,7 @@ const filteredPenjualans = computed(() => {
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-heading">Penjualan List</h2>
+      <h2 class="text-2xl font-heading">Sales List</h2>
       <RouterLink
         :to="{ name: 'home' }"
         class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
@@ -84,9 +84,9 @@ const filteredPenjualans = computed(() => {
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">No Penjualan</th>
-          <th class="px-4 py-2 border-b">Total Harga</th>
-          <th class="px-4 py-2 border-b">Tanggal</th>
+          <th class="px-4 py-2 border-b">Sales Number</th>
+          <th class="px-4 py-2 border-b">Total Price</th>
+          <th class="px-4 py-2 border-b">Date</th>
           <th class="px-4 py-2 border-b">Action</th>
         </tr>
       </thead>

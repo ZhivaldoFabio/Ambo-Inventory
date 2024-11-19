@@ -1,11 +1,11 @@
 <!-- HomeCards.vue -->
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import Card from '@/components/Card.vue';
-import ProdukTerjual from '@/components/ProdukTerjual.vue';
-import ProgressPendapatan from '@/components/ProgressPendapatan.vue';
+import { ref, onMounted } from "vue";
+import axios from "axios";
+import Card from "@/components/Card.vue";
+import ProdukTerjual from "@/components/ProdukTerjual.vue";
+import ProgressPendapatan from "@/components/ProgressPendapatan.vue";
 
 const stocks = ref([]); // Array to hold the fetched stock data
 const totalHargaSum = ref(0);
@@ -15,46 +15,46 @@ const totalProdukSum = ref(0);
 // Fetch stocks from the backend (MySQL)
 onMounted(async () => {
   try {
-    const response = await axios.get('/api/stocks');
+    const response = await axios.get("/api/stocks");
     stocks.value = response.data;
   } catch (error) {
-    console.error('Error fetching stocks:', error);
+    console.error("Error fetching stocks:", error);
   }
 });
 
 // Fetch the total Harga sum from the backend
 onMounted(async () => {
   try {
-    const response = await axios.get('/api/total-harga-sum');
+    const response = await axios.get("/api/total-harga-sum");
     totalHargaSum.value = response.data.total_harga_sum; // Assuming the response contains a `total_harga_sum`
   } catch (error) {
-    console.error('Error fetching totalHargaSum:', error);
+    console.error("Error fetching totalHargaSum:", error);
   }
 });
 
 // Fetch the total Produk sum from the backend
 onMounted(async () => {
   try {
-    const response = await axios.get('/api/total-produk-sum');
+    const response = await axios.get("/api/total-produk-sum");
     totalProdukSum.value = response.data.total_produk_sum; // Assuming the response contains a `total_produk_sum`
   } catch (error) {
-    console.error('Error fetching totalProdukSum:', error);
+    console.error("Error fetching totalProdukSum:", error);
   }
 });
 
 // Fetch total penjualan (transaction count)
 onMounted(async () => {
   try {
-    const response = await axios.get('/api/total-penjualan');
+    const response = await axios.get("/api/total-penjualan");
     totalPenjualan.value = response.data.total_penjualan;
   } catch (error) {
-    console.error('Error fetching totalPenjualan:', error);
+    console.error("Error fetching totalPenjualan:", error);
   }
 });
 
 // Function to format numbers with thousands separator
 function formatCurrency(value) {
-  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 </script>
 
@@ -67,7 +67,7 @@ function formatCurrency(value) {
         <Card bg="bg-primary-200">
           <div class="flex items-center space-x-2">
             <i class="pi pi-money-bill flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Pendapatan</h1>
+            <h1 class="flex text-xl text-heading">Revenue</h1>
           </div>
 
           <div class="text-3xl mt-14 font-bold place-self-center">
@@ -79,7 +79,7 @@ function formatCurrency(value) {
         <Card>
           <div class="flex items-center space-x-2">
             <i class="pi pi-box flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Produk yang Terjual</h1>
+            <h1 class="flex text-xl text-heading">Sold Products</h1>
           </div>
           <div class="text-3xl mt-14 font-bold place-self-center">
             {{ totalProdukSum }}
@@ -89,7 +89,7 @@ function formatCurrency(value) {
         <Card>
           <div class="flex items-center space-x-2">
             <i class="pi pi-receipt flex text-xl text-accent-500"></i>
-            <h1 class="flex text-xl text-heading">Jumlah Transaksi</h1>
+            <h1 class="flex text-xl text-heading">Transaction Total</h1>
           </div>
           <div class="text-3xl mt-14 font-bold place-self-center">
             <!-- Display total penjualan -->
@@ -116,7 +116,7 @@ function formatCurrency(value) {
             <i
               class="pi pi-exclamation-circle flex text-xl text-accent-500"
             ></i>
-            <h1 class="flex text-xl text-heading">Stock Menipis</h1>
+            <h1 class="flex text-xl text-heading">Stock is running low</h1>
           </div>
           <div>
             <table
@@ -125,12 +125,12 @@ function formatCurrency(value) {
               <thead>
                 <tr class="bg-gray-200 text-left">
                   <th class="px-4 py-2 border-b">No</th>
-                  <th class="px-4 py-2 border-b">Nama Produk</th>
-                  <th class="px-4 py-2 border-b">Kategori</th>
+                  <th class="px-4 py-2 border-b">Product Name</th>
+                  <th class="px-4 py-2 border-b">Category</th>
                   <th class="px-4 py-2 border-b">Supplier</th>
                   <th class="px-4 py-2 border-b">Stock Minimum</th>
-                  <th class="px-4 py-2 border-b">Stock Sekarang</th>
-                  <th class="px-4 py-2 border-b">Presentase</th>
+                  <th class="px-4 py-2 border-b">Available stock</th>
+                  <th class="px-4 py-2 border-b">Presentation</th>
                 </tr>
               </thead>
               <tbody>
@@ -144,7 +144,7 @@ function formatCurrency(value) {
                   <td class="px-4 py-2 border-b">{{ stock.nama_kategori }}</td>
                   <td class="px-4 py-2 border-b">{{ stock.nama_supplier }}</td>
                   <td class="px-4 py-2 border-b">
-                    {{ stock.stock_minimum || 'N/A' }}
+                    {{ stock.stock_minimum || "N/A" }}
                   </td>
                   <td class="px-4 py-2 border-b">{{ stock.jumlah_stock }}</td>
                   <td class="px-4 py-2 border-b">
@@ -154,7 +154,7 @@ function formatCurrency(value) {
                             (stock.jumlah_stock / stock.stock_minimum) *
                             100
                           ).toFixed(2)
-                        : 'N/A'
+                        : "N/A"
                     }}%
                   </td>
                 </tr>

@@ -165,7 +165,7 @@ const resetForm = () => {
 
 <template>
   <div class="container mx-auto p-4">
-    <h2 class="text-2xl font-semibold mb-4">Tambah Nota Pembelian</h2>
+    <h2 class="text-2xl font-semibold mb-4">Add Purchase Notes</h2>
     <!-- Supplier Dropdown -->
     <div class="mb-4 max-w-52">
       <label for="supplier" class="block text-sm font-body text-gray-800">

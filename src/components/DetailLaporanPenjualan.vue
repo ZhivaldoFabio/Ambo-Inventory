@@ -47,7 +47,7 @@ const formatCurrency = (value) => {
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between">
-      <h2 class="text-2xl font-semibold mb-4">Detail Penjualan {{ id }}</h2>
+      <h2 class="text-2xl font-semibold mb-4">Sales Detail {{ id }}</h2>
       <RouterLink
         :to="{ name: 'data-laporan-penjualan' }"
         class="max-h-10 py-2 px-3 rounded-md self-center text-text-500 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
@@ -66,10 +66,10 @@ const formatCurrency = (value) => {
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Nama Produk</th>
-          <th class="px-4 py-2 border-b">Jumlah Produk</th>
-          <th class="px-4 py-2 border-b">Harga</th>
-          <th class="px-4 py-2 border-b">Total Harga</th>
+          <th class="px-4 py-2 border-b">Product Name</th>
+          <th class="px-4 py-2 border-b">Product Quantity</th>
+          <th class="px-4 py-2 border-b">Price</th>
+          <th class="px-4 py-2 border-b">Total Price</th>
         </tr>
       </thead>
       <tbody>
@@ -98,6 +98,6 @@ const formatCurrency = (value) => {
       </tbody>
     </table>
     <!-- No Data State -->
-    <p v-else>No details available for this penjualan.</p>
+    <p v-else>No details available for this purchase.</p>
   </div>
 </template>

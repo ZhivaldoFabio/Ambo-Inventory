@@ -82,9 +82,9 @@ const deleteSupplier = async (id) => {
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Nama Supplier</th>
-          <th class="px-4 py-2 border-b">Alamat</th>
-          <th class="px-4 py-2 border-b">No HP</th>
+          <th class="px-4 py-2 border-b">Supplier Name</th>
+          <th class="px-4 py-2 border-b">Address</th>
+          <th class="px-4 py-2 border-b">Phone Number</th>
           <th class="px-4 py-2 border-b">Email</th>
           <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>

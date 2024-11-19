@@ -186,7 +186,7 @@ const updateProduct = async () => {
           <!-- Buying Price -->
           <div class="mb-4">
             <label for="harga_beli" class="block font-medium mb-1"
-              >Buying Price</label
+              >Purchase Price</label
             >
             <input
               id="harga_beli"

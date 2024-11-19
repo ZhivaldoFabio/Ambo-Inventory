@@ -80,12 +80,12 @@ const filteredStocks = computed(() => {
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Nama Supplier</th>
-          <th class="px-4 py-2 border-b">Nama Produk</th>
+          <th class="px-4 py-2 border-b">Supplier Name</th>
+          <th class="px-4 py-2 border-b">Product Name</th>
           <th class="px-4 py-2 border-b">Unit</th>
-          <th class="px-4 py-2 border-b">Kategori</th>
-          <th class="px-4 py-2 border-b">Masuk</th>
-          <th class="px-4 py-2 border-b">Expired</th>
+          <th class="px-4 py-2 border-b">Category</th>
+          <th class="px-4 py-2 border-b">Entry Dade</th>
+          <th class="px-4 py-2 border-b">Expiry Date</th>
           <th class="px-4 py-2 border-b">Stock</th>
           <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>

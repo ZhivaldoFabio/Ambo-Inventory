@@ -21,7 +21,7 @@ onMounted(async () => {
   <div class="container mx-auto p-4">
     <div class="flex items-center space-x-2">
       <i class="pi pi-exclamation-circle flex text-xl text-accent-500"></i>
-      <h1 class="flex text-2xl text-heading">Stock Menipis</h1>
+      <h1 class="flex text-2xl text-heading">Stock is running low</h1>
     </div>
     <div>
       <table
@@ -30,12 +30,12 @@ onMounted(async () => {
         <thead>
           <tr class="bg-gray-200 text-left">
             <th class="px-4 py-2 border-b">No</th>
-            <th class="px-4 py-2 border-b">Nama Produk</th>
-            <th class="px-4 py-2 border-b">Kategori</th>
+            <th class="px-4 py-2 border-b">Product Name</th>
+            <th class="px-4 py-2 border-b">Category</th>
             <th class="px-4 py-2 border-b">Supplier</th>
             <th class="px-4 py-2 border-b">Stock Minimum</th>
-            <th class="px-4 py-2 border-b">Stock Sekarang</th>
-            <th class="px-4 py-2 border-b">Presentase</th>
+            <th class="px-4 py-2 border-b">Available stock</th>
+            <th class="px-4 py-2 border-b">Presentation</th>
           </tr>
         </thead>
         <tbody>

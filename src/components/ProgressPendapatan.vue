@@ -40,8 +40,8 @@ const years = ref([]); // Populate dynamically based on data
 
 const option = ref({
   title: {
-    text: viewType.value === 'revenue' ? 'Pendapatan' : 'Profit',
-    subtext: 'Progres Pendapatan/Keuntungan',
+    text: viewType.value === 'revenue' ? 'Revenue' : 'Profit',
+    subtext: 'Revenue/Profit Progress',
     left: 'center',
     textStyle: {
       fontFamily: 'LXGW WenKai TC, sans-serif',
