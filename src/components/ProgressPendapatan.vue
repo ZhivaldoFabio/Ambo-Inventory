@@ -149,31 +149,37 @@ function applyFilter() {
     // Show all data
     filteredDates.value = [...dates.value];
     filteredPrices.value = [...prices.value];
-    filteredProfits.value = [...profits.value]; // Include filtered profits
+    filteredProfits.value = [...profits.value];
   } else if (filterType.value.startsWith('month-')) {
     // Filter by month
     const month = filterType.value.split('-')[1];
-    filteredDates.value = dates.value.filter((date, index) =>
-      date.startsWith(`${month}/`)
-    );
-    filteredPrices.value = filteredDates.value.map(
-      (date) => prices.value[dates.value.indexOf(date)]
-    );
-    filteredProfits.value = filteredDates.value.map(
-      (date) => profits.value[dates.value.indexOf(date)]
-    );
+    const monthData = dates.value
+      .map((date, index) => ({
+        date,
+        price: prices.value[index],
+        profit: profits.value[index],
+      }))
+      .filter((entry) => entry.date.startsWith(`${month}/`)); // Match month
+
+    // No aggregation, just filter by month and retain multiple data points per day
+    filteredDates.value = monthData.map((entry) => entry.date);
+    filteredPrices.value = monthData.map((entry) => entry.price);
+    filteredProfits.value = monthData.map((entry) => entry.profit);
   } else if (filterType.value.startsWith('year-')) {
     // Filter by year
     const year = filterType.value.split('-')[1];
-    filteredDates.value = dates.value.filter((date, index) =>
-      date.endsWith(`/${year}`)
-    );
-    filteredPrices.value = filteredDates.value.map(
-      (date) => prices.value[dates.value.indexOf(date)]
-    );
-    filteredProfits.value = filteredDates.value.map(
-      (date) => profits.value[dates.value.indexOf(date)]
-    );
+    const yearData = dates.value
+      .map((date, index) => ({
+        date,
+        price: prices.value[index],
+        profit: profits.value[index],
+      }))
+      .filter((entry) => entry.date.endsWith(`/${year}`));
+
+    // No aggregation, just filter by year and retain multiple data points per day
+    filteredDates.value = yearData.map((entry) => entry.date);
+    filteredPrices.value = yearData.map((entry) => entry.price);
+    filteredProfits.value = yearData.map((entry) => entry.profit);
   }
 
   // Update the chart with filtered data
