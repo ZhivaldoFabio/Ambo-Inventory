@@ -5,7 +5,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
 const username = ref('');
-const email = ref('');
+const role = ref('');
 const token = localStorage.getItem('authToken'); // Get JWT token from localStorage
 const router = useRouter();
 
@@ -19,7 +19,7 @@ onMounted(async () => {
         },
       });
       username.value = response.data.username || 'Unknown User';
-      email.value = response.data.email || 'No Email';
+      role.value = response.data.role || 'No Role';
     } catch (error) {
       console.error('Error fetching user data:', error);
       if (error.response?.status === 401 || error.response?.status === 403) {
@@ -28,11 +28,11 @@ onMounted(async () => {
         router.push('/'); // Redirect to login
       }
       username.value = '';
-      email.value = '';
+      role.value = '';
     }
   } else {
     username.value = 'Guest';
-    email.value = 'Guest@email.com';
+    role.value = 'Guest@email.com';
   }
 });
 </script>
@@ -41,22 +41,31 @@ onMounted(async () => {
   <nav class="bg-background-50 sticky top-0">
     <div class="mx-auto max-w-screen px-2 sm:px-6 lg:px-8">
       <div class="flex h-20 items-center justify-between">
-        <div class="flex flex-1 items-center justify-center md:items-stretch md:justify-start">
+        <div
+          class="flex flex-1 items-center justify-center md:items-stretch md:justify-start"
+        >
           <!-- Logo -->
           <RouterLink class="flex flex-shrink-0 items-center mr-4" to="/home">
             <img class="h-10 w-auto" :src="logo" alt="Vue Jobs" />
-            <span class="hidden md:block text-primaryBright text-2xl font-bold ml-2">
+            <span
+              class="hidden md:block text-primaryBright text-2xl font-bold ml-2"
+            >
               Depot Es Ambo
             </span>
           </RouterLink>
           <div class="md:ml-auto">
-            <div class="flex space-x-2">
-              <div>
-                <RouterLink to="/useredit">
-                  <p>{{ username }}</p>
-                  <p>{{ email }}</p>
-                </RouterLink>
-              </div>
+            <div>
+              <RouterLink to="/useredit" class="flex space-x-4 items-center">
+                <div class="text-right">
+                  <p class="font-heading">{{ username }}</p>
+                  <p class="font-body">{{ role }}</p>
+                </div>
+                <div>
+                  <i
+                    class="pi pi-user text-xl rounded-full bg-primary-300 p-4 shadow-md hover:bg-primary-100 active:shadow-inner"
+                  ></i>
+                </div>
+              </RouterLink>
             </div>
           </div>
         </div>

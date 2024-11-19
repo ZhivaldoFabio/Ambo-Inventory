@@ -171,7 +171,6 @@ app.get('/api/jumlah-stock', async (req, res) => {
   }
 });
 
-
 // GET endpoint to fetch stock by ID
 app.get('/api/stocks/:id', async (req, res) => {
   const { id } = req.params;
@@ -760,7 +759,7 @@ app.get('/api/categories', async (req, res) => {
 // Endpoint to get products data from MySQL
 app.get('/api/products', async (req, res) => {
   const query = `
-    SELECT id_produk, nama_produk, harga_jual
+    SELECT *
     FROM produk
   `;
 

@@ -1,5 +1,5 @@
 <template>
-  <div ref="chart" style="width: 100%; min-height: 32rem"></div>
+  <div ref="chart" style="width: 100%; min-height: 32rem; z-index: 2;"></div>
 </template>
 
 <script setup>
@@ -35,13 +35,13 @@ onMounted(async () => {
         },
       },
       legend: {
-        orient: 'horizontal',
-        left: 'left',
-        bottom: '0',
-        type: 'scroll',
+        orient: 'vertical',
+        bottom: '0%',
+        type: 'plain',
         textStyle: {
           fontFamily: 'LXGW WenKai TC, sans-serif',
         },
+        height: '25%',
       },
       series: [
         {

@@ -9,7 +9,7 @@ import Sidebar from '@/components/Sidebar.vue';
 <template>
   <div class="flex flex-col space-y-4 bg-background-50 min-h-screen">
     <!-- <Navigation v-if="!$route.meta.hideNavbar" /> -->
-    <Navbar v-if="!$route.meta.hideNavbar" />
+    <Navbar v-if="!$route.meta.hideNavbar" class="z-0" />
     <div class="flex flex-row">
       <Sidebar v-if="!$route.meta.hideNavbar" />
       <RouterView />
