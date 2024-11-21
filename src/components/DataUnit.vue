@@ -21,7 +21,7 @@ const confirmDelete = (id) => {
 
 const deleteUnit = async (id) => {
   try {
-    await axios.delete(`http://localhost:3000/api/units/${id}`);
+    await axios.delete(`/api/units/${id}`);
     units.value = units.value.filter((unit) => unit.id_unit !== id);
     toast.success('Unit deleted successfully!');
   } catch (error) {
@@ -32,7 +32,7 @@ const deleteUnit = async (id) => {
 
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/units');
+    const response = await axios.get('/api/units');
     units.value = response.data;
   } catch (error) {
     console.error('Error fetching units data:', error);
@@ -74,7 +74,6 @@ const filteredUnits = computed(() =>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
           <th class="px-4 py-2 border-b">Unit Name</th>
-          <th class="px-4 py-2 border-b">Unit ID</th>
           <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>
       </thead>
@@ -86,7 +85,6 @@ const filteredUnits = computed(() =>
         >
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
           <td class="px-4 py-2 border-b">{{ unit.nama_unit }}</td>
-          <td class="px-4 py-2 border-b">{{ unit.id_unit }}</td>
           <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
               :to="{ name: 'edit-data-unit', params: { id: unit.id_unit } }"

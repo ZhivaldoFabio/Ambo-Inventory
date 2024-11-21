@@ -13,7 +13,7 @@ const searchQuery = ref(''); // Query pencarian
 // Fetch data categories on mount
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/categories');
+    const response = await axios.get('/api/categories');
     categories.value = response.data; // Data kategori
   } catch (error) {
     console.error('Error fetching categories data:', error);
@@ -24,7 +24,9 @@ onMounted(async () => {
 // Computed property untuk memfilter kategori berdasarkan searchQuery
 const filteredCategories = computed(() =>
   categories.value.filter((category) =>
-    category.nama_kategori.toLowerCase().includes(searchQuery.value.toLowerCase())
+    category.nama_kategori
+      .toLowerCase()
+      .includes(searchQuery.value.toLowerCase())
   )
 );
 
@@ -41,7 +43,7 @@ const confirmDelete = (id) => {
 // Function to handle deletion
 const deleteCategory = async (id) => {
   try {
-    await axios.delete(`http://localhost:3000/api/categories/${id}`); // Ensure the API path is correct
+    await axios.delete(`/api/categories/${id}`); // Ensure the API path is correct
     // Remove category from the local list
     categories.value = categories.value.filter(
       (category) => category.id_kategori !== id
@@ -84,7 +86,6 @@ const deleteCategory = async (id) => {
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
           <th class="px-4 py-2 border-b">Category Name</th>
-          <th class="px-4 py-2 border-b">Category ID</th>
           <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>
       </thead>
@@ -97,7 +98,6 @@ const deleteCategory = async (id) => {
         >
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
           <td class="px-4 py-2 border-b">{{ category.nama_kategori }}</td>
-          <td class="px-4 py-2 border-b">{{ category.id_kategori }}</td>
           <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
               :to="{

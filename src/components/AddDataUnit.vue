@@ -24,7 +24,7 @@ const isSubmitting = ref(false);
 // Fetch data for dropdowns on component mount
 onMounted(async () => {
   try {
-    const unitResponse = await axios.get('http://localhost:3000/api/units');
+    const unitResponse = await axios.get('/api/units');
     units.value = unitResponse.data;
   } catch (error) {
     toast.error('Failed to fetch units.');
@@ -47,7 +47,7 @@ const addUnit = async () => {
 
   isSubmitting.value = true;
   try {
-    await axios.post('http://localhost:3000/api/units', newUnit.value);
+    await axios.post('/api/units', newUnit.value);
     toast.success('Unit added successfully!');
     resetForm();
   } catch (error) {

@@ -8,7 +8,7 @@ const stocks = ref([]); // Array to hold the fetched stock data
 
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/stocks');
+    const response = await axios.get('/api/stocks');
     stocks.value = response.data;
   } catch (error) {
     console.error('Error fetching stocks:', error);

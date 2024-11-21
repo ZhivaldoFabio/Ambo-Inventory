@@ -19,7 +19,7 @@ const categoryData = ref({
 onMounted(async () => {
   try {
     const categoryResponse = await axios.get(
-      `http://localhost:3000/api/categories/${categoryId}`
+      `/api/categories/${categoryId}`
     );
 
     const category = categoryResponse.data;
@@ -38,7 +38,7 @@ const updateCategory = async () => {
     };
 
     await axios.put(
-      `http://localhost:3000/api/categories/${categoryId}`,
+      `/api/categories/${categoryId}`,
       formattedCategoryData
     );
     toast.success('Category updated successfully!');

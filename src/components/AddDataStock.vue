@@ -29,14 +29,14 @@ const categories = ref([]);
 onMounted(async () => {
   try {
     const productResponse = await axios.get(
-      'http://localhost:3000/api/products'
+      '/api/products'
     );
     const supplierResponse = await axios.get(
-      'http://localhost:3000/api/suppliers'
+      '/api/suppliers'
     );
-    const unitResponse = await axios.get('http://localhost:3000/api/units');
+    const unitResponse = await axios.get('/api/units');
     const categoryResponse = await axios.get(
-      'http://localhost:3000/api/categories'
+      '/api/categories'
     );
 
     products.value = productResponse.data;
@@ -51,7 +51,7 @@ onMounted(async () => {
 // Handle form submission
 const addStock = async () => {
   try {
-    await axios.post('http://localhost:3000/api/stocks', newStock.value);
+    await axios.post('/api/stocks', newStock.value);
     toast.success('Stock added successfully!');
     resetForm();
   } catch (error) {

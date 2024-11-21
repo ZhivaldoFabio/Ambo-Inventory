@@ -30,7 +30,7 @@ onMounted(async () => {
   try {
     // Fetch stock details
     const productResponse = await axios.get(
-      `http://localhost:3000/api/products/${productId}`
+      `/api/products/${productId}`
     );
 
     // Assign formatted stock data
@@ -38,9 +38,9 @@ onMounted(async () => {
 
     // Fetch options for dropdowns
     const [supplierRes, unitRes, categoryRes] = await Promise.all([
-      axios.get('http://localhost:3000/api/suppliers'),
-      axios.get('http://localhost:3000/api/units'),
-      axios.get('http://localhost:3000/api/categories'),
+      axios.get('/api/suppliers'),
+      axios.get('/api/units'),
+      axios.get('/api/categories'),
     ]);
 
     suppliers.value = supplierRes.data;
@@ -67,7 +67,7 @@ const updateProduct = async () => {
     };
 
     await axios.put(
-      `http://localhost:3000/api/products/${productId}`,
+      `/api/products/${productId}`,
       formattedProductData
     );
     toast.success('Product updated successfully!');

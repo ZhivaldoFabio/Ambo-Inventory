@@ -19,18 +19,13 @@ const unitData = ref({
 onMounted(async () => {
   try {
     // Fetch unit details
-    const unitResponse = await axios.get(
-      `http://localhost:3000/api/units/${unitId}`
-    );
+    const unitResponse = await axios.get(`/api/units/${unitId}`);
 
     const unit = unitResponse.data;
     unitData.value = unit;
 
     // Optionally fetch more options for dropdowns if needed
-    const [unitRes] = await Promise.all([
-      axios.get('http://localhost:3000/api/units'),
-    ]);
-
+    const [unitRes] = await Promise.all([axios.get('/api/units')]);
   } catch (error) {
     console.error('Error fetching unit or dropdown data:', error);
     toast.error('Failed to load unit details or options.');
@@ -44,10 +39,7 @@ const updateUnit = async () => {
       ...unitData.value,
     };
 
-    await axios.put(
-      `http://localhost:3000/api/units/${unitId}`,
-      formattedUnitData
-    );
+    await axios.put(`/api/units/${unitId}`, formattedUnitData);
     toast.success('Unit updated successfully!');
     router.push({ name: 'unit' }); // Navigate back to the Unit page
   } catch (error) {
@@ -69,7 +61,10 @@ const updateUnit = async () => {
         :to="{ name: 'unit' }"
         class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
       >
-        <i class="pi pi-angle-left text-primary-700" style="font-size: 1.3rem"></i>
+        <i
+          class="pi pi-angle-left text-primary-700"
+          style="font-size: 1.3rem"
+        ></i>
       </RouterLink>
     </div>
 
@@ -78,7 +73,9 @@ const updateUnit = async () => {
         <div class="space-y-5">
           <!-- Unit Name Input -->
           <div class="mb-4">
-            <label for="nama_unit" class="block font-medium mb-1">Unit Name</label>
+            <label for="nama_unit" class="block font-medium mb-1"
+              >Unit Name</label
+            >
             <input
               id="nama_unit"
               type="text"

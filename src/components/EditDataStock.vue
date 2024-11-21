@@ -74,7 +74,7 @@ const updateStock = async () => {
     };
 
     await axios.put(
-      `http://localhost:3000/api/stocks/${stockId}`,
+      `/api/stocks/${stockId}`,
       formattedStockData
     );
     toast.success('Stock updated successfully!');

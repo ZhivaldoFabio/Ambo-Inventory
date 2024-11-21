@@ -54,7 +54,7 @@ const filteredPenjualans = computed(() => {
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between mb-4">
-      <h2 class="text-2xl font-heading">Penjualan List</h2>
+      <h2 class="text-2xl font-heading">Sales List</h2>
       <RouterLink
         :to="{ name: 'home' }"
         class="max-h-10 py-2 px-3 rounded-md self-center text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
@@ -83,9 +83,8 @@ const filteredPenjualans = computed(() => {
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Sales Number</th>
-          <th class="px-4 py-2 border-b">Total Price</th>
           <th class="px-4 py-2 border-b">Date</th>
+          <th class="px-4 py-2 border-b">Total Price</th>
           <th class="px-4 py-2 border-b">Action</th>
         </tr>
       </thead>
@@ -97,16 +96,18 @@ const filteredPenjualans = computed(() => {
         >
           <!-- Main Row -->
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-          <td class="px-4 py-2 border-b">{{ penjualan.id_penjualan }}</td>
-          <td class="px-4 py-2 border-b">
-            {{ formatCurrency(penjualan.total_harga) }}
-          </td>
           <td class="px-4 py-2 border-b">
             {{ formatTimestamp(penjualan.tanggal_penjualan) }}
           </td>
           <td class="px-4 py-2 border-b">
+            {{ formatCurrency(penjualan.total_harga) }}
+          </td>
+          <td class="px-4 py-2 border-b">
             <RouterLink
-              :to="{ name: 'detail-laporan-penjualan', params: { id: penjualan.id_penjualan } }"
+              :to="{
+                name: 'detail-laporan-penjualan',
+                params: { id: penjualan.id_penjualan },
+              }"
               class="p-2 px-4 bg-primary-500 text-white-50 rounded-md hover:shadow-md"
             >
               View

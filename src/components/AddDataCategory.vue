@@ -24,7 +24,7 @@ const categories = ref([]);
 onMounted(async () => {
   try {
     const categoryResponse = await axios.get(
-      'http://localhost:3000/api/categories'
+      '/api/categories'
     );
     categories.value = categoryResponse.data;
   } catch (error) {
@@ -48,7 +48,7 @@ const addCategory = async () => {
   isSubmitting.value = true;
 
   try {
-    await axios.post('http://localhost:3000/api/categories', newCategory.value);
+    await axios.post('/api/categories', newCategory.value);
     toast.success('Category added successfully!');
     resetForm();
   } catch (error) {

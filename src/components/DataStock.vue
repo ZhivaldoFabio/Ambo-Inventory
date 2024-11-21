@@ -13,7 +13,7 @@ const searchQuery = ref(''); // Query for searching
 // Fetch the stock list from the API
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/all-stocks');
+    const response = await axios.get('/api/all-stocks');
     stocks.value = response.data;
   } catch (error) {
     console.error('Error fetching stock data:', error);
@@ -37,7 +37,7 @@ const confirmDelete = (id) => {
 // Function to handle deletion
 const deleteStock = async (id) => {
   try {
-    await axios.delete(`http://localhost:3000/api/stocks/${id}`);
+    await axios.delete(`/api/stocks/${id}`);
     stocks.value = stocks.value.filter((stock) => stock.id_stock !== id);
     toast.success('Stock deleted successfully!');
   } catch (error) {

@@ -10,25 +10,19 @@ const searchQuery = ref(''); // Query pencarian
 // Fetch products on mount
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/all-products');
+    const response = await axios.get('/api/all-products');
     products.value = response.data;
   } catch (error) {
     console.error('Error fetching products data:', error);
   }
 });
 
-const filteredProducts = computed(() => 
+const filteredProducts = computed(() =>
   products.value.filter((product) => {
     const query = searchQuery.value.toLowerCase();
-    return (
-      product.nama_produk.toLowerCase().includes(query) ||
-      product.nama_supplier.toLowerCase().includes(query) ||
-      product.nama_unit.toLowerCase().includes(query) ||
-      product.nama_kategori.toLowerCase().includes(query)
-    );
+    return product.nama_produk.toLowerCase().includes(query);
   })
 );
-
 
 // Delete confirmation and delete function
 const confirmDelete = (productId) => {
@@ -39,7 +33,7 @@ const confirmDelete = (productId) => {
 
 const deleteProduct = async (productId) => {
   try {
-    await axios.delete(`http://localhost:3000/api/products/${productId}`);
+    await axios.delete(`/api/products/${productId}`);
     products.value = products.value.filter(
       (product) => product.id_produk !== productId
     );
@@ -102,7 +96,10 @@ const deleteProduct = async (productId) => {
           <td class="px-4 py-2 border-b">{{ produk.harga_jual }}</td>
           <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
-              :to="{ name: 'edit-data-produk', params: { id: produk.id_produk } }"
+              :to="{
+                name: 'edit-data-produk',
+                params: { id: produk.id_produk },
+              }"
               class="bg-primary-500 p-2 rounded-md pi pi-pen-to-square flex text-white hover:drop-shadow-lg hover:bg-secondary-500"
             ></RouterLink>
 

@@ -13,7 +13,7 @@ const searchQuery = ref(''); // Query pencarian
 // Fetch data suppliers on mounted
 onMounted(async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/suppliers');
+    const response = await axios.get('/api/suppliers');
     suppliers.value = response.data;
   } catch (error) {
     console.error('Error fetching suppliers:', error);
@@ -40,7 +40,7 @@ const confirmDelete = (id) => {
 // Function to handle deletion
 const deleteSupplier = async (id) => {
   try {
-    await axios.delete(`http://localhost:3000/api/suppliers/${id}`); // Ensure the API path is correct
+    await axios.delete(`/api/suppliers/${id}`); // Ensure the API path is correct
     // Remove supplier from the local list
     suppliers.value = suppliers.value.filter(
       (supplier) => supplier.id_supplier !== id

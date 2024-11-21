@@ -55,8 +55,8 @@ onMounted(() => {
 
 <template>
   <nav
-    :class="['flex', 'min-h-full', 'transition-all', 'duration-300', 'h-full']"
-    class="m-2"
+    :class="['flex', 'min-h-full', 'transition-all', 'duration-300', 'h-full', 'font-body']"
+    class="m-2 min-w-fit"
   >
     <div>
       <!-- Wait until userRole is fetched before rendering the sidebar -->
@@ -70,13 +70,13 @@ onMounted(() => {
         </li>
 
         <li
-          class="p-1 ml-5 hover:shadow-lg hover:shadow-background-200 rounded-lg"
+          class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md"
         >
-          <RouterLink to="/home" class="flex items-center space-x-2">
-            <span>Dashboard</span>
+          <RouterLink to="/home" class="flex items-center space-x-2 ">
+            <span class="">Dashboard</span>
           </RouterLink>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink
             to="/laporanpembelian"
             class="flex items-center space-x-2"
@@ -84,12 +84,12 @@ onMounted(() => {
             <span>Purchase Report</span>
           </RouterLink>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink
             to="/laporanpenjualan"
             class="flex items-center space-x-2"
           >
-            <span>Selling Report</span>
+            <span>Sales Report</span>
           </RouterLink>
         </li>
       </ul>
@@ -100,37 +100,37 @@ onMounted(() => {
           <i class="pi pi-warehouse"></i>
           <span class="text-background-300"> Warehouse </span>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink to="/home" class="flex items-center space-x-2">
             <span>Dashboard</span>
           </RouterLink>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink to="/supplier" class="flex items-center space-x-2">
             <span>Supplier</span>
           </RouterLink>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink to="/stock" class="flex items-center space-x-2">
             <span>Stock</span>
           </RouterLink>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink to="/produk" class="flex items-center space-x-2">
             <span>Product</span>
           </RouterLink>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink to="/unit" class="flex items-center space-x-2">
             <span>Unit</span>
           </RouterLink>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink to="/kategori" class="flex items-center space-x-2">
             <span>Category</span>
           </RouterLink>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink to="/pembelian" class="flex items-center space-x-2">
             <span>Purchase</span>
           </RouterLink>
@@ -143,12 +143,12 @@ onMounted(() => {
           <i class="pi pi-warehouse"></i>
           <span class="text-background-300"> Kasir </span>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink to="/home" class="flex items-center space-x-2">
             <span>Sales</span>
           </RouterLink>
         </li>
-        <li class="p-1 ml-5">
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
           <RouterLink
             :to="{ name: 'data-penjualan' }"
             class="flex items-center space-x-2"

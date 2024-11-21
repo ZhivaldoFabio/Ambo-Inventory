@@ -53,7 +53,7 @@ const filteredPembelians = computed(() => {
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-heading">Purchase listt</h2>
+      <h2 class="text-2xl font-heading">Purchase list</h2>
       <div class="flex items-center gap-4">
         <!-- Input for start and end date -->
         <div class="flex gap-2">
@@ -83,9 +83,8 @@ const filteredPembelians = computed(() => {
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Purchase Number</th>
-          <th class="px-4 py-2 border-b">Supplier Name</th>
           <th class="px-4 py-2 border-b">Date</th>
+          <th class="px-4 py-2 border-b">Supplier Name</th>
           <th class="px-4 py-2 border-b">Total Price</th>
           <th class="px-4 py-2 border-b">Action</th>
         </tr>
@@ -97,11 +96,10 @@ const filteredPembelians = computed(() => {
           class="hover:bg-gray-50"
         >
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-          <td class="px-4 py-2 border-b">{{ pembelian.id_pembelian }}</td>
-          <td class="px-4 py-2 border-b">{{ pembelian.nama_supplier }}</td>
           <td class="px-4 py-2 border-b">
             {{ formatTimestamp(pembelian.tanggal_pembelian) }}
           </td>
+          <td class="px-4 py-2 border-b">{{ pembelian.nama_supplier }}</td>
           <td class="px-4 py-2 border-b">
             {{ formatCurrency(pembelian.total_harga) }}
           </td>
