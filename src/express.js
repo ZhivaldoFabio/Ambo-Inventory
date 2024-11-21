@@ -541,6 +541,33 @@ app.get('/api/suppliers', async (req, res) => {
   }
 });
 
+app.post('/api/suppliers/check-email', async (req, res) => {
+  const { email, id_supplier } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    let query = 'SELECT COUNT(*) AS count FROM suppliers WHERE email = ?';
+    const params = [email];
+
+    // If `id_supplier` is provided, exclude it from the check
+    if (id_supplier) {
+      query += ' AND id_supplier != ?';
+      params.push(id_supplier);
+    }
+
+    const [rows] = await pool.query(query, params);
+    const emailExists = rows[0].count > 0;
+
+    res.json({ exists: emailExists });
+  } catch (error) {
+    console.error('Error checking email:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // POST endpoint to add new unit
 app.post('/api/units', express.json(), async (req, res) => {
   const { nama_unit } = req.body;

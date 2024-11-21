@@ -54,7 +54,6 @@ const updateSupplier = async () => {
   if (!supplierData.value.no_hp) {
     errors.value.no_hp = 'Phone number is required.';
   } else if (!/^0\d{9,14}$/.test(supplierData.value.no_hp)) {
-    // Regex ensures the number starts with "0" and contains 10-15 digits
     errors.value.no_hp =
       'Phone number must start with "0" and be 10-15 digits long.';
   }
@@ -65,6 +64,25 @@ const updateSupplier = async () => {
     return;
   }
 
+  // Check if the email is unique
+  try {
+    const response = await axios.post('/api/suppliers/check-email', {
+      email: supplierData.value.email,
+      id_supplier: supplierId, // Include the supplier's ID to exclude it
+    });
+
+    if (response.data.exists) {
+      toast.warning('The email address is already in use.');
+      errors.value.email = 'Email already exists.';
+      return; // Stop the update process
+    }
+  } catch (error) {
+    console.error('Error checking email:', error);
+    toast.error('Failed to validate email uniqueness.');
+    return;
+  }
+
+  // Proceed with updating the supplier
   try {
     const formattedSupplierData = {
       ...supplierData.value,
@@ -72,7 +90,7 @@ const updateSupplier = async () => {
 
     await axios.put(`/api/suppliers/${supplierId}`, formattedSupplierData);
     toast.success('Supplier updated successfully!');
-    router.push({ name: 'supplier' }); // Navigate back to the categories page
+    router.push({ name: 'supplier' }); // Navigate back to the supplier page
   } catch (error) {
     console.error('Error updating supplier:', error);
     toast.error('Failed to update supplier.');

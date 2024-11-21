@@ -41,7 +41,7 @@ const years = ref([]); // Populate dynamically based on data
 const option = ref({
   title: {
     text: viewType.value === 'revenue' ? 'Revenue' : 'Profit',
-    subtext: 'Revenue/Profit Progress',
+    subtext: 'To see if we are growing or loosing.',
     left: 'center',
     textStyle: {
       fontFamily: 'LXGW WenKai TC, sans-serif',
@@ -190,6 +190,18 @@ function applyFilter() {
 watch(filterType, applyFilter);
 // Watch for changes in viewType
 watch(viewType, () => {
+  updateChart(filteredDates.value, filteredPrices.value, filteredProfits.value);
+});
+
+// Watch for changes in viewType
+watch(viewType, () => {
+  // Update the title text dynamically
+  option.value.title.text = viewType.value === 'revenue' ? 'Revenue' : 'Profit';
+  // Update the series name dynamically
+  option.value.series[0].name =
+    viewType.value === 'revenue' ? 'Total Harga' : 'Profit';
+
+  // Refresh the chart data
   updateChart(filteredDates.value, filteredPrices.value, filteredProfits.value);
 });
 

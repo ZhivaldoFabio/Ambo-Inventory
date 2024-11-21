@@ -42,7 +42,6 @@ const addSupplier = async () => {
   if (!newSupplier.value.no_hp) {
     errors.value.no_hp = 'Phone number is required.';
   } else if (!/^0\d{9,14}$/.test(newSupplier.value.no_hp)) {
-    // Regex ensures the number starts with "0" and contains 10-15 digits
     errors.value.no_hp =
       'Phone number must start with "0" and be 10-15 digits long.';
   }
@@ -50,6 +49,22 @@ const addSupplier = async () => {
   // Show validation errors if any
   if (Object.keys(errors.value).length > 0) {
     Object.values(errors.value).forEach((error) => toast.error(error));
+    return;
+  }
+
+  // Check if the email is already used
+  try {
+    const emailCheckResponse = await axios.post('api/suppliers/check-email', {
+      email: newSupplier.value.email,
+    });
+
+    if (emailCheckResponse.data.exists) {
+      toast.warning('Email is already in use.');
+      return;
+    }
+  } catch (emailCheckError) {
+    console.error('Error checking email:', emailCheckError);
+    toast.error('Failed to check email availability.');
     return;
   }
 
