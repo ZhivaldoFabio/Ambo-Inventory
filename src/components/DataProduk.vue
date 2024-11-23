@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';
 
 // Reactive variables
 const products = ref([]); // Daftar produk
@@ -14,6 +15,7 @@ onMounted(async () => {
     products.value = response.data;
   } catch (error) {
     console.error('Error fetching products data:', error);
+    toast.error('Failed to fetch products. Please try again later.');
   }
 });
 
@@ -37,8 +39,10 @@ const deleteProduct = async (productId) => {
     products.value = products.value.filter(
       (product) => product.id_produk !== productId
     );
+    toast.success('Product deleted successfully.');
   } catch (error) {
     console.error('Error deleting product:', error);
+    toast.error('Failed to delete the product. Please try again.');
   }
 };
 </script>

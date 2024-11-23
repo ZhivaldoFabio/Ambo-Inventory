@@ -33,9 +33,7 @@ const categories = ref([]);
 onMounted(async () => {
   try {
     // Fetch stock details
-    const stockResponse = await axios.get(
-      `/api/stocks/${stockId}`
-    );
+    const stockResponse = await axios.get(`/api/stocks/${stockId}`);
 
     // Format dates before setting them in the reactive stockData object
     const stock = stockResponse.data;
@@ -66,17 +64,14 @@ onMounted(async () => {
 // Update the stock data
 const updateStock = async () => {
   try {
-    // Revert the date format back to ISO before sending it to the server if necessary
+    // Format the dates to 'YYYY-MM-DD' instead of ISO string
     const formattedStockData = {
       ...stockData.value,
-      tgl_masuk: new Date(stockData.value.tgl_masuk).toISOString(),
-      tgl_exp: new Date(stockData.value.tgl_exp).toISOString(),
+      tgl_masuk: stockData.value.tgl_masuk,
+      tgl_exp: stockData.value.tgl_exp,
     };
 
-    await axios.put(
-      `/api/stocks/${stockId}`,
-      formattedStockData
-    );
+    await axios.put(`/api/stocks/${stockId}`, formattedStockData);
     toast.success('Stock updated successfully!');
     router.push({ name: 'stock' }); // Navigate back to the Stock page
   } catch (error) {

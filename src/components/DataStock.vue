@@ -39,7 +39,7 @@ const deleteStock = async (id) => {
   try {
     await axios.delete(`/api/stocks/${id}`);
     stocks.value = stocks.value.filter((stock) => stock.id_stock !== id);
-    toast.success('Stock deleted successfully!');
+    toast.info('Stock deleted successfully!');
   } catch (error) {
     toast.error('Error deleting stock.');
     console.error('Error deleting stock:', error);

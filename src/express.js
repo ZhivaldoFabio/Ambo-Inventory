@@ -211,6 +211,56 @@ app.get('/api/stocks/:id', async (req, res) => {
   }
 });
 
+// Update stock details
+app.put('/api/stocks/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    id_produk,
+    id_supplier,
+    id_unit,
+    id_kategori,
+    jumlah_stock,
+    tgl_masuk,
+    tgl_exp,
+  } = req.body;
+
+  const query = `
+    UPDATE stock 
+    SET 
+      id_produk = ?, 
+      id_supplier = ?, 
+      id_unit = ?, 
+      id_kategori = ?, 
+      jumlah_stock = ?, 
+      tgl_masuk = ?, 
+      tgl_exp = ?
+    WHERE id_stock = ?
+  `;
+
+  try {
+    const [result] = await pool.execute(query, [
+      id_produk,
+      id_supplier,
+      id_unit,
+      id_kategori,
+      jumlah_stock,
+      tgl_masuk,
+      tgl_exp,
+      id,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Stock not found or no changes made' });
+    }
+
+    res.json({ message: 'Stock updated successfully' });
+  } catch (err) {
+    console.error('Error updating stock data:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+
 // DELETE endpoint to delete stock
 app.delete('/api/stocks/:id', async (req, res) => {
   const { id } = req.params;
