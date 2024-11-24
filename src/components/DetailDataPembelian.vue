@@ -66,7 +66,6 @@ const formatCurrency = (value) => {
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Supplier Name</th>
           <th class="px-4 py-2 border-b">Product Name</th>
           <th class="px-4 py-2 border-b">Unit</th>
           <th class="px-4 py-2 border-b">Product Quantity</th>

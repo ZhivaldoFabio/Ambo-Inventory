@@ -58,7 +58,6 @@ const option = ref({
       name: viewType.value === 'revenue' ? 'Total Harga' : 'Profit',
       type: 'line',
       data: [],
-      smooth: true,
       label: {
         show: true,
         position: 'top',
