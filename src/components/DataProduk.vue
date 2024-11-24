@@ -40,7 +40,7 @@ const deleteProduct = async (productId) => {
     products.value = products.value.filter(
       (product) => product.id_produk !== productId
     );
-    toast.info('Product deleted successfully.');
+    toast.success('Product deleted successfully.');
   } catch (error) {
     console.error('Error deleting product:', error);
     toast.error('Failed to delete the product. Please try again.');
