@@ -7,6 +7,7 @@ import { useToast } from 'vue-toastification';
 // Reactive variables
 const products = ref([]); // Daftar produk
 const searchQuery = ref(''); // Query pencarian
+const toast = useToast();
 
 // Fetch products on mount
 onMounted(async () => {
@@ -39,7 +40,7 @@ const deleteProduct = async (productId) => {
     products.value = products.value.filter(
       (product) => product.id_produk !== productId
     );
-    toast.success('Product deleted successfully.');
+    toast.info('Product deleted successfully.');
   } catch (error) {
     console.error('Error deleting product:', error);
     toast.error('Failed to delete the product. Please try again.');
