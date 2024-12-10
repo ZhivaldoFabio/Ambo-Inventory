@@ -1175,15 +1175,17 @@ app.post('/api/penjualan', async (req, res) => {
       for (const stock of stockEntries) {
         if (remainingQuantity <= 0) break;
 
-        // Determine how much to deduct from the current stock entry
-        const deduction = Math.min(stock.jumlah_stock, remainingQuantity);
-        remainingQuantity -= deduction;
+        // Deduct stock from the oldest entry first
+        if (stock.jumlah_stock > 0) {
+          const deduction = Math.min(stock.jumlah_stock, remainingQuantity);
+          remainingQuantity -= deduction;
 
-        // Update the stock quantity in the database
-        await connection.query(
-          'UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_stock = ?',
-          [deduction, stock.id_stock]
-        );
+          // Update the stock quantity in the database for this entry
+          await connection.query(
+            'UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_stock = ?',
+            [deduction, stock.id_stock]
+          );
+        }
       }
 
       // If remainingQuantity is not zero after processing all stock entries, throw an error
