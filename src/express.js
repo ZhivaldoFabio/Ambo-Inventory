@@ -363,7 +363,7 @@ app.put('/api/products/:id', async (req, res) => {
   try {
     const query = `
       UPDATE produk
-      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?,stock_minimum= ?,
+      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?, stock_minimum= ?
       WHERE id_produk = ?
     `;
     const values = [
@@ -871,49 +871,6 @@ app.get('/api/all-products', async (req, res) => {
   } catch (err) {
     console.error('Error fetching all-products: ', err);
     res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
-  }
-});
-
-// PUT endpoint to update product
-app.put('/api/products/:id', async (req, res) => {
-  console.log(req.body); // Log the incoming request body for debugging
-  const { id } = req.params;
-  const {
-    id_supplier,
-    id_unit,
-    id_kategori,
-    nama_produk,
-    harga_beli,
-    harga_jual,
-  } = req.body;
-
-  try {
-    const query = `
-      UPDATE produk
-      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?
-      WHERE id_produk = ?
-    `;
-    const values = [
-      nama_produk,
-      id_supplier,
-      id_unit,
-      id_kategori,
-      harga_beli,
-      harga_jual,
-      id,
-    ];
-
-    // Use the correct connection object
-    const [result] = await pool.query().execute(query, values);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Product not found.' });
-    }
-
-    res.status(200).json({ message: 'Product updated successfully.' });
-  } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).json({ error: 'Failed to update product.' });
   }
 });
 
