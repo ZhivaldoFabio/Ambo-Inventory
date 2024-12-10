@@ -63,6 +63,29 @@ app.get('/api/sales-data', async (req, res) => {
   }
 });
 
+// Endpoint to get all stock data from MySQL (for the stock page)
+app.get('/api/all-stocks', async (req, res) => {
+  const query = `
+  SELECT stock.id_stock, produk.nama_produk, suppliers.nama_supplier, units.nama_unit, kategori.nama_kategori, 
+           stock.jumlah_stock, stock.tgl_masuk, stock.tgl_exp
+    FROM stock
+    JOIN produk ON produk.id_produk = stock.id_produk
+    JOIN suppliers ON suppliers.id_supplier = stock.id_supplier
+    JOIN units ON units.id_unit = stock.id_unit
+    JOIN kategori ON kategori.id_kategori = stock.id_kategori
+    ORDER BY id_stock ASC  `;
+
+  try {
+    // Execute the query using promise API
+    const [results] = await pool.execute(query);
+
+    res.status(200).json(results); // Return the results
+  } catch (err) {
+    console.error('Error fetching stock data: ', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // POST ENDPOINT to add new stock
 app.post('/api/stocks', express.json(), async (req, res) => {
   const {
@@ -453,7 +476,7 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
-// Endpoint to get all stock data from MySQL (for the stock page)
+// Endpoint to get product data from MySQL (for the edit product page)
 app.get('/api/products/:id', async (req, res) => {
   const { id } = req.params;
   const query = `
@@ -473,7 +496,6 @@ app.get('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch product.' });
   }
 });
-
 
 // POST endpoint to add new supplier
 app.post('/api/suppliers', express.json(), async (req, res) => {
