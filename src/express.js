@@ -316,11 +316,12 @@ app.post('/api/products', express.json(), async (req, res) => {
     id_kategori,
     harga_beli,
     harga_jual,
+    stock_minimum,
   } = req.body;
 
   const query = `
-    INSERT INTO produk (nama_produk, id_supplier, id_unit, id_kategori, harga_beli, harga_jual)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO produk (nama_produk, id_supplier, id_unit, id_kategori, harga_beli, harga_jual, stock_minimum)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
   try {
@@ -332,6 +333,7 @@ app.post('/api/products', express.json(), async (req, res) => {
       id_kategori,
       harga_beli,
       harga_jual,
+      stock_minimum
     ]);
 
     res
