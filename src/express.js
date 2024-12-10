@@ -250,7 +250,9 @@ app.put('/api/stocks/:id', async (req, res) => {
     ]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Stock not found or no changes made' });
+      return res
+        .status(404)
+        .json({ message: 'Stock not found or no changes made' });
     }
 
     res.json({ message: 'Stock updated successfully' });
@@ -259,7 +261,6 @@ app.put('/api/stocks/:id', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
-
 
 // DELETE endpoint to delete stock
 app.delete('/api/stocks/:id', async (req, res) => {
@@ -333,7 +334,7 @@ app.post('/api/products', express.json(), async (req, res) => {
       id_kategori,
       harga_beli,
       harga_jual,
-      stock_minimum
+      stock_minimum,
     ]);
 
     res
@@ -1167,18 +1168,27 @@ app.post('/api/penjualan', async (req, res) => {
         );
       }
 
-      // Deduct stock from earliest-expiring entries
+      // Deduct stock only from the oldest entry
       let remainingQuantity = item.jumlah_produk;
-      for (const stock of stockEntries) {
-        if (remainingQuantity <= 0) break;
 
-        const deduction = Math.min(stock.jumlah_stock, remainingQuantity);
-        remainingQuantity -= deduction;
+      // Get the oldest stock entry (assumes `stockEntries` is already sorted by expiration date)
+      const oldestStock = stockEntries[0];
 
+      if (oldestStock) {
+        if (remainingQuantity > oldestStock.jumlah_stock) {
+          throw new Error(
+            `Insufficient stock for product ID ${item.id_produk}. Oldest stock available: ${oldestStock.jumlah_stock}, Requested: ${remainingQuantity}`
+          );
+        }
+
+        // Deduct the requested amount from the oldest stock
         await connection.query(
           'UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_stock = ?',
-          [deduction, stock.id_stock]
+          [remainingQuantity, oldestStock.id_stock]
         );
+
+        // Update remainingQuantity to zero as it's fully deducted
+        remainingQuantity = 0;
       }
     }
 
