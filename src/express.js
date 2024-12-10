@@ -357,12 +357,13 @@ app.put('/api/products/:id', async (req, res) => {
     id_kategori,
     harga_beli,
     harga_jual,
+    stock_minimum,
   } = req.body;
 
   try {
     const query = `
       UPDATE produk
-      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?
+      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?,stock_minimum= ?,
       WHERE id_produk = ?
     `;
     const values = [
@@ -372,6 +373,7 @@ app.put('/api/products/:id', async (req, res) => {
       id_kategori,
       harga_beli,
       harga_jual,
+      stock_minimum,
       id,
     ];
 
@@ -423,6 +425,7 @@ app.get('/api/products/:id', async (req, res) => {
       p.nama_produk,
       s.id_supplier, 
       sp.nama_supplier,
+      s.stock_minimum,
       s.id_unit, 
       u.nama_unit,
       s.id_kategori, 
@@ -451,28 +454,26 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 // Endpoint to get all stock data from MySQL (for the stock page)
-app.get('/api/all-stocks', async (req, res) => {
+app.get('/api/products/:id', async (req, res) => {
+  const { id } = req.params;
   const query = `
-    SELECT stock.id_stock, produk.nama_produk, suppliers.nama_supplier, units.nama_unit, kategori.nama_kategori, 
-           stock.jumlah_stock, stock.tgl_masuk, stock.tgl_exp
-    FROM stock
-    JOIN produk ON produk.id_produk = stock.id_produk
-    JOIN suppliers ON suppliers.id_supplier = stock.id_supplier
-    JOIN units ON units.id_unit = stock.id_unit
-    JOIN kategori ON kategori.id_kategori = stock.id_kategori
-    ORDER BY id_stock ASC
+    SELECT produk.id_produk, produk.nama_produk, produk.id_supplier, produk.id_unit, produk.id_kategori,
+           produk.harga_beli, produk.harga_jual, produk.stock_minimum
+    FROM produk
+    WHERE produk.id_produk = ?
   `;
-
   try {
-    // Execute the query using promise API
-    const [results] = await pool.execute(query);
-
-    res.status(200).json(results); // Return the results
-  } catch (err) {
-    console.error('Error fetching stock data: ', err);
-    res.status(500).send('Server error');
+    const [rows] = await pool.execute(query, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Product not found.' });
+    }
+    res.status(200).json(rows[0]); // Pastikan data yang dikirim mencakup stock_minimum
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    res.status(500).json({ error: 'Failed to fetch product.' });
   }
 });
+
 
 // POST endpoint to add new supplier
 app.post('/api/suppliers', express.json(), async (req, res) => {
@@ -856,7 +857,7 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/all-products', async (req, res) => {
   const query = `
     SELECT produk.id_produk, produk.nama_produk, suppliers.nama_supplier, units.nama_unit, kategori.nama_kategori, 
-           produk.harga_beli, produk.harga_jual
+           produk.harga_beli, produk.harga_jual,stock_minimum
     FROM produk
     JOIN suppliers ON suppliers.id_supplier = produk.id_supplier
     JOIN units ON units.id_unit = produk.id_unit

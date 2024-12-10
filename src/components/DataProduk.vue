@@ -82,6 +82,7 @@ const deleteProduct = async (productId) => {
           <th class="px-4 py-2 border-b">Category</th>
           <th class="px-4 py-2 border-b">Purchase price</th>
           <th class="px-4 py-2 border-b">Selling Price</th>
+          <th class="px-4 py-2 border-b">Stock Minimum</th>
           <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>
       </thead>
@@ -99,6 +100,7 @@ const deleteProduct = async (productId) => {
           <td class="px-4 py-2 border-b">{{ produk.nama_kategori }}</td>
           <td class="px-4 py-2 border-b">{{ produk.harga_beli }}</td>
           <td class="px-4 py-2 border-b">{{ produk.harga_jual }}</td>
+          <td class="px-4 py-2 border-b">{{ produk.stock_minimum }}</td>
           <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
               :to="{
