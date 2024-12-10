@@ -18,6 +18,7 @@ const productData = ref({
   id_kategori: '',
   harga_beli: '',
   harga_jual: '',
+  stock_minimum:'',
 });
 
 // Dropdown options for the form
@@ -205,6 +206,18 @@ const updateProduct = async () => {
               id="harga_jual"
               type="text"
               v-model="productData.harga_jual"
+              class="w-full p-2 border rounded"
+            />
+          </div>
+
+          <div class="mb-4">
+            <label for="stock_minimum" class="block font-medium mb-1"
+              >Stock Minimum</label
+            >
+            <input
+              id="stock_minimum"
+              type="text"
+              v-model="productData.stock_minimum"
               class="w-full p-2 border rounded"
             />
           </div>
