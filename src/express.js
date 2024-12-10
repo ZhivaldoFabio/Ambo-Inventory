@@ -1171,24 +1171,26 @@ app.post('/api/penjualan', async (req, res) => {
       // Deduct stock only from the oldest entry
       let remainingQuantity = item.jumlah_produk;
 
-      // Get the oldest stock entry (assumes `stockEntries` is already sorted by expiration date)
-      const oldestStock = stockEntries[0];
+      // Deduct stock from oldest to newest
+      for (const stock of stockEntries) {
+        if (remainingQuantity <= 0) break;
 
-      if (oldestStock) {
-        if (remainingQuantity > oldestStock.jumlah_stock) {
-          throw new Error(
-            `Insufficient stock for product ID ${item.id_produk}. Oldest stock available: ${oldestStock.jumlah_stock}, Requested: ${remainingQuantity}`
-          );
-        }
+        // Determine how much to deduct from the current stock entry
+        const deduction = Math.min(stock.jumlah_stock, remainingQuantity);
+        remainingQuantity -= deduction;
 
-        // Deduct the requested amount from the oldest stock
+        // Update the stock quantity in the database
         await connection.query(
           'UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_stock = ?',
-          [remainingQuantity, oldestStock.id_stock]
+          [deduction, stock.id_stock]
         );
+      }
 
-        // Update remainingQuantity to zero as it's fully deducted
-        remainingQuantity = 0;
+      // If remainingQuantity is not zero after processing all stock entries, throw an error
+      if (remainingQuantity > 0) {
+        throw new Error(
+          `Insufficient stock for product ID ${item.id_produk}. Requested: ${item.jumlah_produk}, Still needed: ${remainingQuantity}`
+        );
       }
     }
 
