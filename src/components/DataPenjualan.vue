@@ -10,6 +10,7 @@ const toast = useToast(); // Initialize Vue Toastification
 const penjualans = ref([]);
 const startDate = ref(''); // Tanggal awal
 const endDate = ref(''); // Tanggal akhir
+const grand_total=ref('');
 
 // Fetch the penjualan list from the API
 onMounted(async () => {
@@ -78,6 +79,12 @@ const filteredPenjualans = computed(() => {
         class="border border-gray-300 rounded-lg px-4 py-2"
         placeholder="End Date"
       />
+    </div>
+    <!-- Display Total Harga -->
+    <div class="mb-4 text-right">
+      <h3 class="text-lg font-semibold">
+        Total Price: <span class="text-primary-500">{{ formatCurrency(grand_total) }}</span>
+      </h3>
     </div>
 
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">

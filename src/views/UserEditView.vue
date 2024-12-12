@@ -1,5 +1,5 @@
 <script setup>
-import UserEdit from '@/components/UserEdit.vue';
+import UserEdit from '@/components/Profile.vue';
 </script>
 
 <template>

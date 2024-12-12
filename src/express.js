@@ -1081,6 +1081,7 @@ app.get('/api/penjualan/:id/details', async (req, res) => {
       detailpenjualan.jumlah_produk,
       detailpenjualan.harga,
       penjualan.total_harga
+      SUM(detailpenjualan.harga * detailpenjualan.jumlah_produk) AS grand_total
     FROM detailpenjualan
     JOIN produk ON produk.id_produk = detailpenjualan.id_produk
     JOIN penjualan ON penjualan.id_penjualan = detailpenjualan.id_penjualan
@@ -1095,6 +1096,17 @@ app.get('/api/penjualan/:id/details', async (req, res) => {
         .status(404)
         .json({ message: 'No details found for this penjualan ID.' });
     }
+    // Fetch penjualan details including grand total
+onMounted(async () => {
+  try {
+    const response = await axios.get(`/api/penjualan/${id}/details`);
+    penjualans.value = response.data.data;
+    grandTotal.value = response.data.grandTotal; // Set grand total
+  } catch (error) {
+    console.error('Error fetching penjualan details:', error);
+    toast.error('Failed to fetch penjualan details.');
+  }
+});
     return res.json({ success: true, data: results });
   } catch (error) {
     console.error('Error fetching penjualan details:', error);
