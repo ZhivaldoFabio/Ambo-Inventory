@@ -47,7 +47,17 @@ const deleteProduct = async (productId) => {
   }
 };
 </script>
-
+// Function to handle deletion
+const deleteStock = async (id) => {
+  try {
+    await axios.delete(`/api/stocks/${id}`);
+    stocks.value = stocks.value.filter((stock) => stock.id_stock !== id);
+    toast.success('Stock deleted successfully!');
+  } catch (error) {
+    toast.error('Error deleting stock.');
+    console.error('Error deleting stock:', error);
+  }
+};
 <template>
   <div class="container mx-auto p-4">
     <!-- Header Section -->
