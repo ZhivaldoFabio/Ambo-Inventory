@@ -47,7 +47,17 @@ const deleteProduct = async (productId) => {
   }
 };
 </script>
-
+// Function to handle deletion
+const deleteStock = async (id) => {
+  try {
+    await axios.delete(`/api/stocks/${id}`);
+    stocks.value = stocks.value.filter((stock) => stock.id_stock !== id);
+    toast.success('Stock deleted successfully!');
+  } catch (error) {
+    toast.error('Error deleting stock.');
+    console.error('Error deleting stock:', error);
+  }
+};
 <template>
   <div class="container mx-auto p-4">
     <!-- Header Section -->
@@ -82,6 +92,7 @@ const deleteProduct = async (productId) => {
           <th class="px-4 py-2 border-b">Category</th>
           <th class="px-4 py-2 border-b">Purchase price</th>
           <th class="px-4 py-2 border-b">Selling Price</th>
+          <th class="px-4 py-2 border-b">Stock Minimum</th>
           <th class="px-4 py-2 border-b text-center">Action</th>
         </tr>
       </thead>
@@ -99,6 +110,7 @@ const deleteProduct = async (productId) => {
           <td class="px-4 py-2 border-b">{{ produk.nama_kategori }}</td>
           <td class="px-4 py-2 border-b">{{ produk.harga_beli }}</td>
           <td class="px-4 py-2 border-b">{{ produk.harga_jual }}</td>
+          <td class="px-4 py-2 border-b">{{ produk.stock_minimum }}</td>
           <td class="px-4 py-4 border-b flex justify-center space-x-4">
             <RouterLink
               :to="{

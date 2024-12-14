@@ -1,12 +1,12 @@
 // src/express.js
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
 
-import pool from './db.js';
-import { authenticateJWT } from './authMiddleware.js'; // Import the middleware
-import userController from './userController.js'; // Import other controllers
-import { loginUser } from './authMiddleware.js';
+import pool from "./db.js";
+import { authenticateJWT } from "./authMiddleware.js"; // Import the middleware
+import userController from "./userController.js"; // Import other controllers
+import { loginUser } from "./authMiddleware.js";
 
 const app = express();
 const port = 3000;
@@ -15,8 +15,8 @@ app.use(express.json());
 app.use(cors());
 
 // Routes
-app.post('/api/login', loginUser); // User login and JWT token generation
-app.use('/api/user', authenticateJWT, userController); // Protect the user route
+app.post("/api/login", loginUser); // User login and JWT token generation
+app.use("/api/user", authenticateJWT, userController); // Protect the user route
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
@@ -26,13 +26,13 @@ app.listen(PORT, () => {
 // Add this to ensure Express can parse JSON requests
 app.use(express.json());
 
-app.post('/api/logout', (req, res) => {
+app.post("/api/logout", (req, res) => {
   // Invalidate the session or token if needed
-  res.status(200).send({ message: 'Logged out successfully' });
+  res.status(200).send({ message: "Logged out successfully" });
 });
 
 // GET endpoint to fetch sales data for the pie chart
-app.get('/api/sales-data', async (req, res) => {
+app.get("/api/sales-data", async (req, res) => {
   try {
     // Query to get product sales and total quantity sold
     const query = `
@@ -47,7 +47,7 @@ app.get('/api/sales-data', async (req, res) => {
     const [rows] = await pool.execute(query);
 
     if (!rows.length) {
-      return res.status(404).json({ message: 'No sales data found' });
+      return res.status(404).json({ message: "No sales data found" });
     }
 
     // Format the data to match your chart's expected format
@@ -58,13 +58,36 @@ app.get('/api/sales-data', async (req, res) => {
 
     res.json(pieData);
   } catch (error) {
-    console.error('Error fetching sales data:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching sales data:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Endpoint to get all stock data from MySQL (for the stock page)
+app.get("/api/all-stocks", async (req, res) => {
+  const query = `
+  SELECT stock.id_stock, produk.nama_produk, suppliers.nama_supplier, units.nama_unit, kategori.nama_kategori, 
+           stock.jumlah_stock, stock.tgl_masuk, stock.tgl_exp
+    FROM stock
+    JOIN produk ON produk.id_produk = stock.id_produk
+    JOIN suppliers ON suppliers.id_supplier = stock.id_supplier
+    JOIN units ON units.id_unit = stock.id_unit
+    JOIN kategori ON kategori.id_kategori = stock.id_kategori
+    ORDER BY id_stock ASC  `;
+
+  try {
+    // Execute the query using promise API
+    const [results] = await pool.execute(query);
+
+    res.status(200).json(results); // Return the results
+  } catch (err) {
+    console.error("Error fetching stock data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // POST ENDPOINT to add new stock
-app.post('/api/stocks', express.json(), async (req, res) => {
+app.post("/api/stocks", express.json(), async (req, res) => {
   const {
     id_produk,
     id_supplier,
@@ -94,18 +117,18 @@ app.post('/api/stocks', express.json(), async (req, res) => {
 
     res
       .status(201)
-      .json({ message: 'Stock added successfully', id: result.insertId });
+      .json({ message: "Stock added successfully", id: result.insertId });
   } catch (err) {
-    console.error('Error inserting data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error inserting data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // Endpoint untuk menambah penjualan
-app.post('/api/penjualan', async (req, res) => {
+app.post("/api/penjualan", async (req, res) => {
   const { items, total_harga, tanggal_penjualan } = req.body;
   if (!items || items.length === 0) {
-    return res.status(400).json({ message: 'Invoice items are required.' });
+    return res.status(400).json({ message: "Invoice items are required." });
   }
 
   const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
@@ -117,7 +140,7 @@ app.post('/api/penjualan', async (req, res) => {
 
     // Insert ke tabel penjualan
     const [penjualanResult] = await connection.execute(
-      'INSERT INTO penjualan (total_harga, tanggal_penjualan) VALUES (?, ?)',
+      "INSERT INTO penjualan (total_harga, tanggal_penjualan) VALUES (?, ?)",
       [total_harga, date]
     );
     const id_penjualan = penjualanResult.insertId;
@@ -131,31 +154,31 @@ app.post('/api/penjualan', async (req, res) => {
     ]);
 
     await connection.query(
-      'INSERT INTO detailpenjualan (id_penjualan, id_produk, jumlah_produk, harga) VALUES ?',
+      "INSERT INTO detailpenjualan (id_penjualan, id_produk, jumlah_produk, harga) VALUES ?",
       [detailItems]
     );
 
     // Update stok produk di tabel stock
     for (let item of items) {
       await connection.execute(
-        'UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_produk = ?',
+        "UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_produk = ?",
         [item.jumlah_produk, item.id_produk]
       );
     }
 
     await connection.commit();
-    res.status(201).json({ message: 'Sale added successfully', id_penjualan });
+    res.status(201).json({ message: "Sale added successfully", id_penjualan });
   } catch (err) {
     await connection.rollback();
-    console.error('Error adding sale:', err);
-    res.status(500).json({ message: 'Failed to create sale.' });
+    console.error("Error adding sale:", err);
+    res.status(500).json({ message: "Failed to create sale." });
   } finally {
     connection.release();
   }
 });
 
 // Endpoint to get available stock data for each product
-app.get('/api/jumlah-stock', async (req, res) => {
+app.get("/api/jumlah-stock", async (req, res) => {
   const query = `
     SELECT id_produk, SUM(jumlah_stock) AS available_stock
     FROM stock
@@ -166,13 +189,13 @@ app.get('/api/jumlah-stock', async (req, res) => {
     const [results] = await pool.execute(query); // Fetch stock data grouped by product
     res.status(200).json(results); // Respond with stock data
   } catch (err) {
-    console.error('Error fetching stock data: ', err);
-    res.status(500).json({ error: 'Failed to fetch stock data.' });
+    console.error("Error fetching stock data: ", err);
+    res.status(500).json({ error: "Failed to fetch stock data." });
   }
 });
 
 // GET endpoint to fetch stock by ID
-app.get('/api/stocks/:id', async (req, res) => {
+app.get("/api/stocks/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
@@ -201,18 +224,18 @@ app.get('/api/stocks/:id', async (req, res) => {
     const [results] = await pool.execute(query, [id]);
 
     if (results.length === 0) {
-      return res.status(404).send('Stock not found');
+      return res.status(404).send("Stock not found");
     }
 
     res.json(results[0]); // Return the first result (there should only be one)
   } catch (err) {
-    console.error('Error fetching stock data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error fetching stock data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // Update stock details
-app.put('/api/stocks/:id', async (req, res) => {
+app.put("/api/stocks/:id", async (req, res) => {
   const { id } = req.params;
   const {
     id_produk,
@@ -250,19 +273,20 @@ app.put('/api/stocks/:id', async (req, res) => {
     ]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Stock not found or no changes made' });
+      return res
+        .status(404)
+        .json({ message: "Stock not found or no changes made" });
     }
 
-    res.json({ message: 'Stock updated successfully' });
+    res.json({ message: "Stock updated successfully" });
   } catch (err) {
-    console.error('Error updating stock data:', err);
-    res.status(500).send('Server error');
+    console.error("Error updating stock data:", err);
+    res.status(500).send("Server error");
   }
 });
 
-
 // DELETE endpoint to delete stock
-app.delete('/api/stocks/:id', async (req, res) => {
+app.delete("/api/stocks/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     DELETE FROM stock
@@ -274,18 +298,18 @@ app.delete('/api/stocks/:id', async (req, res) => {
     const [result] = await pool.execute(query, [id]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).send('Stock not found');
+      return res.status(404).send("Stock not found");
     }
 
-    res.json({ message: 'Stock deleted successfully' });
+    res.json({ message: "Stock deleted successfully" });
   } catch (err) {
-    console.error('Error deleting data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error deleting data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // Endpoint to get stock data
-app.get('/api/stocks', async (req, res) => {
+app.get("/api/stocks", async (req, res) => {
   const query = `
     SELECT produk.nama_produk, kategori.nama_kategori, suppliers.nama_supplier, produk.stock_minimum, stock.jumlah_stock,
       (stock.jumlah_stock / produk.stock_minimum) * 100 AS percentage
@@ -302,13 +326,13 @@ app.get('/api/stocks', async (req, res) => {
     const [results] = await pool.query(query); // No need for `.execute()`
     res.json(results); // Return the results as JSON
   } catch (err) {
-    console.error('Error fetching data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error fetching data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // POST endpoint to add new product
-app.post('/api/products', express.json(), async (req, res) => {
+app.post("/api/products", express.json(), async (req, res) => {
   const {
     nama_produk,
     id_supplier,
@@ -316,11 +340,12 @@ app.post('/api/products', express.json(), async (req, res) => {
     id_kategori,
     harga_beli,
     harga_jual,
+    stock_minimum,
   } = req.body;
 
   const query = `
-    INSERT INTO produk (nama_produk, id_supplier, id_unit, id_kategori, harga_beli, harga_jual)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO produk (nama_produk, id_supplier, id_unit, id_kategori, harga_beli, harga_jual, stock_minimum)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
   try {
@@ -332,19 +357,20 @@ app.post('/api/products', express.json(), async (req, res) => {
       id_kategori,
       harga_beli,
       harga_jual,
+      stock_minimum,
     ]);
 
     res
       .status(201)
-      .json({ message: 'Product added successfully', id: result.insertId });
+      .json({ message: "Product added successfully", id: result.insertId });
   } catch (err) {
-    console.error('Error inserting data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error inserting data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // PUT endpoint to update product
-app.put('/api/products/:id', async (req, res) => {
+app.put("/api/products/:id", async (req, res) => {
   console.log(req.body); // Log the incoming request body for debugging
   const { id } = req.params;
   const {
@@ -354,12 +380,13 @@ app.put('/api/products/:id', async (req, res) => {
     id_kategori,
     harga_beli,
     harga_jual,
+    stock_minimum,
   } = req.body;
 
   try {
     const query = `
       UPDATE produk
-      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?
+      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?, stock_minimum= ?
       WHERE id_produk = ?
     `;
     const values = [
@@ -369,6 +396,7 @@ app.put('/api/products/:id', async (req, res) => {
       id_kategori,
       harga_beli,
       harga_jual,
+      stock_minimum,
       id,
     ];
 
@@ -376,18 +404,18 @@ app.put('/api/products/:id', async (req, res) => {
     const [result] = await pool.execute(query, values);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Product not found.' });
+      return res.status(404).json({ error: "Product not found." });
     }
 
-    res.status(200).json({ message: 'Product updated successfully.' });
+    res.status(200).json({ message: "Product updated successfully." });
   } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).json({ error: 'Failed to update product.' });
+    console.error("Error updating product:", error);
+    res.status(500).json({ error: "Failed to update product." });
   }
 });
 
 // DELETE endpoint to delete product
-app.delete('/api/products/:id', async (req, res) => {
+app.delete("/api/products/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     DELETE FROM produk
@@ -399,18 +427,18 @@ app.delete('/api/products/:id', async (req, res) => {
     const [result] = await pool.execute(query, [id]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Product not found.' });
+      return res.status(404).json({ error: "Product not found." });
     }
 
-    res.status(200).json({ message: 'Product deleted successfully' });
+    res.status(200).json({ message: "Product deleted successfully" });
   } catch (err) {
-    console.error('Error deleting product: ', err);
-    res.status(500).send('Server error');
+    console.error("Error deleting product: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // GET endpoint to fetch product by ID
-app.get('/api/products/:id', async (req, res) => {
+app.get("/api/products/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
@@ -420,6 +448,7 @@ app.get('/api/products/:id', async (req, res) => {
       p.nama_produk,
       s.id_supplier, 
       sp.nama_supplier,
+      s.stock_minimum,
       s.id_unit, 
       u.nama_unit,
       s.id_kategori, 
@@ -437,42 +466,39 @@ app.get('/api/products/:id', async (req, res) => {
     const [results] = await pool.execute(query, [id]);
 
     if (results.length === 0) {
-      return res.status(404).send('Product not found');
+      return res.status(404).send("Product not found");
     }
 
     res.status(200).json(results[0]); // Return the first result (there should only be one)
   } catch (err) {
-    console.error('Error fetching product data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error fetching product data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
-// Endpoint to get all stock data from MySQL (for the stock page)
-app.get('/api/all-stocks', async (req, res) => {
+// Endpoint to get product data from MySQL (for the edit product page)
+app.get("/api/products/:id", async (req, res) => {
+  const { id } = req.params;
   const query = `
-    SELECT stock.id_stock, produk.nama_produk, suppliers.nama_supplier, units.nama_unit, kategori.nama_kategori, 
-           stock.jumlah_stock, stock.tgl_masuk, stock.tgl_exp
-    FROM stock
-    JOIN produk ON produk.id_produk = stock.id_produk
-    JOIN suppliers ON suppliers.id_supplier = stock.id_supplier
-    JOIN units ON units.id_unit = stock.id_unit
-    JOIN kategori ON kategori.id_kategori = stock.id_kategori
-    ORDER BY id_stock ASC
+    SELECT produk.id_produk, produk.nama_produk, produk.id_supplier, produk.id_unit, produk.id_kategori,
+           produk.harga_beli, produk.harga_jual, produk.stock_minimum
+    FROM produk
+    WHERE produk.id_produk = ?
   `;
-
   try {
-    // Execute the query using promise API
-    const [results] = await pool.execute(query);
-
-    res.status(200).json(results); // Return the results
-  } catch (err) {
-    console.error('Error fetching stock data: ', err);
-    res.status(500).send('Server error');
+    const [rows] = await pool.execute(query, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Product not found." });
+    }
+    res.status(200).json(rows[0]); // Pastikan data yang dikirim mencakup stock_minimum
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({ error: "Failed to fetch product." });
   }
 });
 
 // POST endpoint to add new supplier
-app.post('/api/suppliers', express.json(), async (req, res) => {
+app.post("/api/suppliers", express.json(), async (req, res) => {
   const { nama_supplier, alamat, email, no_hp } = req.body;
   const query = `
     INSERT INTO suppliers (nama_supplier, alamat, email, no_hp)
@@ -489,17 +515,17 @@ app.post('/api/suppliers', express.json(), async (req, res) => {
     ]);
 
     res.status(201).json({
-      message: 'Supplier added successfully',
+      message: "Supplier added successfully",
       id: result.insertId,
     });
   } catch (err) {
-    console.error('Error inserting data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error inserting data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // PUT endpoint to update supplier
-app.put('/api/suppliers/:id', async (req, res) => {
+app.put("/api/suppliers/:id", async (req, res) => {
   console.log(req.body); // Log the incoming request body for debugging
   const { id } = req.params;
   const { nama_supplier, alamat, email, no_hp } = req.body;
@@ -516,18 +542,18 @@ app.put('/api/suppliers/:id', async (req, res) => {
     const [result] = await pool.execute(query, values);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Supplier not found.' });
+      return res.status(404).json({ error: "Supplier not found." });
     }
 
-    res.status(200).json({ message: 'Supplier updated successfully.' });
+    res.status(200).json({ message: "Supplier updated successfully." });
   } catch (error) {
-    console.error('Error updating Supplier:', error);
-    res.status(500).json({ error: 'Failed to update Supplier.' });
+    console.error("Error updating Supplier:", error);
+    res.status(500).json({ error: "Failed to update Supplier." });
   }
 });
 
 // DELETE endpoint to delete supplier
-app.delete('/api/suppliers/:id', async (req, res) => {
+app.delete("/api/suppliers/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     DELETE FROM suppliers
@@ -538,18 +564,18 @@ app.delete('/api/suppliers/:id', async (req, res) => {
     const [result] = await pool.execute(query, [id]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Supplier not found.' });
+      return res.status(404).json({ error: "Supplier not found." });
     }
 
-    res.status(200).json({ message: 'Supplier deleted successfully' });
+    res.status(200).json({ message: "Supplier deleted successfully" });
   } catch (err) {
-    console.error('Error deleting supplier: ', err);
-    res.status(500).send('Server error');
+    console.error("Error deleting supplier: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // GET endpoint to fetch supplier by ID
-app.get('/api/suppliers/:id', async (req, res) => {
+app.get("/api/suppliers/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
@@ -565,18 +591,18 @@ app.get('/api/suppliers/:id', async (req, res) => {
     const [results] = await pool.execute(query, [id]);
 
     if (results.length === 0) {
-      return res.status(404).send('Supplier not found');
+      return res.status(404).send("Supplier not found");
     }
 
     res.json(results[0]); // Return the first result (there should only be one)
   } catch (err) {
-    console.error('Error fetching supplier data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error fetching supplier data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // Endpoint to get suppliers data from MySQL
-app.get('/api/suppliers', async (req, res) => {
+app.get("/api/suppliers", async (req, res) => {
   const query = `
     SELECT id_supplier, nama_supplier, alamat, no_hp, email
     FROM suppliers
@@ -586,25 +612,25 @@ app.get('/api/suppliers', async (req, res) => {
     const [results] = await pool.execute(query); // Executes the query
     res.status(200).json(results); // Explicit 200 status for success response
   } catch (err) {
-    console.error('Error fetching suppliers: ', err);
-    res.status(500).send('Server error'); // Send status 500 for errors
+    console.error("Error fetching suppliers: ", err);
+    res.status(500).send("Server error"); // Send status 500 for errors
   }
 });
 
-app.post('/api/suppliers/check-email', async (req, res) => {
+app.post("/api/suppliers/check-email", async (req, res) => {
   const { email, id_supplier } = req.body;
 
   if (!email) {
-    return res.status(400).json({ error: 'Email is required' });
+    return res.status(400).json({ error: "Email is required" });
   }
 
   try {
-    let query = 'SELECT COUNT(*) AS count FROM suppliers WHERE email = ?';
+    let query = "SELECT COUNT(*) AS count FROM suppliers WHERE email = ?";
     const params = [email];
 
     // If `id_supplier` is provided, exclude it from the check
     if (id_supplier) {
-      query += ' AND id_supplier != ?';
+      query += " AND id_supplier != ?";
       params.push(id_supplier);
     }
 
@@ -613,13 +639,13 @@ app.post('/api/suppliers/check-email', async (req, res) => {
 
     res.json({ exists: emailExists });
   } catch (error) {
-    console.error('Error checking email:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error checking email:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 // POST endpoint to add new unit
-app.post('/api/units', express.json(), async (req, res) => {
+app.post("/api/units", express.json(), async (req, res) => {
   const { nama_unit } = req.body;
   const query = `
     INSERT INTO units (nama_unit)
@@ -630,15 +656,15 @@ app.post('/api/units', express.json(), async (req, res) => {
     const [result] = await pool.execute(query, [nama_unit]);
     res
       .status(201)
-      .json({ message: 'Unit added successfully', id: result.insertId });
+      .json({ message: "Unit added successfully", id: result.insertId });
   } catch (err) {
-    console.error('Error inserting data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error inserting data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // PUT endpoint to update unit
-app.put('/api/units/:id', async (req, res) => {
+app.put("/api/units/:id", async (req, res) => {
   const { id } = req.params;
   const { nama_unit } = req.body;
 
@@ -654,18 +680,18 @@ app.put('/api/units/:id', async (req, res) => {
     const [result] = await pool.execute(query, values);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Unit not found.' });
+      return res.status(404).json({ error: "Unit not found." });
     }
 
-    res.status(200).json({ message: 'Unit updated successfully.' });
+    res.status(200).json({ message: "Unit updated successfully." });
   } catch (error) {
-    console.error('Error updating unit:', error);
-    res.status(500).json({ error: 'Failed to update unit.' });
+    console.error("Error updating unit:", error);
+    res.status(500).json({ error: "Failed to update unit." });
   }
 });
 
 // DELETE endpoint to delete unit
-app.delete('/api/units/:id', async (req, res) => {
+app.delete("/api/units/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     DELETE FROM units
@@ -675,17 +701,17 @@ app.delete('/api/units/:id', async (req, res) => {
   try {
     const [result] = await pool.execute(query, [id]);
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Unit not found' });
+      return res.status(404).json({ message: "Unit not found" });
     }
-    res.json({ message: 'Unit deleted successfully' });
+    res.json({ message: "Unit deleted successfully" });
   } catch (err) {
-    console.error('Error deleting data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error deleting data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // GET endpoint to fetch unit by ID
-app.get('/api/units/:id', async (req, res) => {
+app.get("/api/units/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
@@ -698,17 +724,17 @@ app.get('/api/units/:id', async (req, res) => {
   try {
     const [results] = await pool.execute(query, [id]);
     if (results.length === 0) {
-      return res.status(404).send('Unit not found');
+      return res.status(404).send("Unit not found");
     }
     res.json(results[0]); // Return the first result (there should only be one)
   } catch (err) {
-    console.error('Error fetching unit data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error fetching unit data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // Endpoint to get units data from MySQL
-app.get('/api/units', async (req, res) => {
+app.get("/api/units", async (req, res) => {
   const query = `
     SELECT id_unit, nama_unit
     FROM units
@@ -718,13 +744,13 @@ app.get('/api/units', async (req, res) => {
     const [results] = await pool.execute(query);
     res.json(results);
   } catch (err) {
-    console.error('Error fetching units: ', err);
-    res.status(500).send('Server error');
+    console.error("Error fetching units: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // POST endpoint to add new category
-app.post('/api/categories', express.json(), async (req, res) => {
+app.post("/api/categories", express.json(), async (req, res) => {
   const { nama_kategori } = req.body;
   const query = `
     INSERT INTO kategori (nama_kategori)
@@ -735,15 +761,15 @@ app.post('/api/categories', express.json(), async (req, res) => {
     const [result] = await pool.execute(query, [nama_kategori]);
     res
       .status(201)
-      .json({ message: 'Category added successfully', id: result.insertId });
+      .json({ message: "Category added successfully", id: result.insertId });
   } catch (err) {
-    console.error('Error inserting data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error inserting data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // PUT endpoint to update category
-app.put('/api/categories/:id', async (req, res) => {
+app.put("/api/categories/:id", async (req, res) => {
   console.log(req.body); // Log the incoming request body for debugging
   const { id } = req.params;
   const { nama_kategori } = req.body; // Corrected variable name here
@@ -760,18 +786,18 @@ app.put('/api/categories/:id', async (req, res) => {
     const [result] = await pool.execute(query, values);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Category not found.' });
+      return res.status(404).json({ error: "Category not found." });
     }
 
-    res.status(200).json({ message: 'Category updated successfully.' });
+    res.status(200).json({ message: "Category updated successfully." });
   } catch (error) {
-    console.error('Error updating category:', error);
-    res.status(500).json({ error: 'Failed to update category.' });
+    console.error("Error updating category:", error);
+    res.status(500).json({ error: "Failed to update category." });
   }
 });
 
 // DELETE endpoint to delete category
-app.delete('/api/categories/:id', async (req, res) => {
+app.delete("/api/categories/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     DELETE FROM kategori
@@ -782,18 +808,18 @@ app.delete('/api/categories/:id', async (req, res) => {
     const [result] = await pool.execute(query, [id]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Category not found' });
+      return res.status(404).json({ message: "Category not found" });
     }
 
-    res.json({ message: 'Category deleted successfully' });
+    res.json({ message: "Category deleted successfully" });
   } catch (err) {
-    console.error('Error deleting data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error deleting data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // GET endpoint to fetch category by ID
-app.get('/api/categories/:id', async (req, res) => {
+app.get("/api/categories/:id", async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT 
@@ -807,18 +833,18 @@ app.get('/api/categories/:id', async (req, res) => {
     const [results] = await pool.execute(query, [id]);
 
     if (results.length === 0) {
-      return res.status(404).send('Category not found');
+      return res.status(404).send("Category not found");
     }
 
     res.json(results[0]); // Return the first result (there should only be one)
   } catch (err) {
-    console.error('Error fetching category data: ', err);
-    res.status(500).send('Server error');
+    console.error("Error fetching category data: ", err);
+    res.status(500).send("Server error");
   }
 });
 
 // Endpoint to get categories data from MySQL
-app.get('/api/categories', async (req, res) => {
+app.get("/api/categories", async (req, res) => {
   const query = `
     SELECT id_kategori, nama_kategori
     FROM kategori
@@ -828,13 +854,13 @@ app.get('/api/categories', async (req, res) => {
     const [results] = await pool.execute(query); // Use execute for promise-based query execution
     res.status(200).json(results); // Explicit 200 status for successful response
   } catch (err) {
-    console.error('Error fetching categories: ', err);
-    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+    console.error("Error fetching categories: ", err);
+    res.status(500).json({ error: "Server error" }); // Return error message in JSON format
   }
 });
 
 // Endpoint to get products data from MySQL
-app.get('/api/products', async (req, res) => {
+app.get("/api/products", async (req, res) => {
   const query = `
     SELECT *
     FROM produk
@@ -844,16 +870,16 @@ app.get('/api/products', async (req, res) => {
     const [results] = await pool.execute(query); // Use execute for promise-based query execution
     res.status(200).json(results); // Explicit 200 status for successful response
   } catch (err) {
-    console.error('Error fetching products: ', err);
-    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+    console.error("Error fetching products: ", err);
+    res.status(500).json({ error: "Server error" }); // Return error message in JSON format
   }
 });
 
 // Endpoint to get all products data from MySQL
-app.get('/api/all-products', async (req, res) => {
+app.get("/api/all-products", async (req, res) => {
   const query = `
     SELECT produk.id_produk, produk.nama_produk, suppliers.nama_supplier, units.nama_unit, kategori.nama_kategori, 
-           produk.harga_beli, produk.harga_jual
+           produk.harga_beli, produk.harga_jual,stock_minimum
     FROM produk
     JOIN suppliers ON suppliers.id_supplier = produk.id_supplier
     JOIN units ON units.id_unit = produk.id_unit
@@ -865,56 +891,13 @@ app.get('/api/all-products', async (req, res) => {
     const [results] = await pool.execute(query); // Use execute for promise-based query execution
     res.status(200).json(results); // Explicit 200 status for successful response
   } catch (err) {
-    console.error('Error fetching all-products: ', err);
-    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
-  }
-});
-
-// PUT endpoint to update product
-app.put('/api/products/:id', async (req, res) => {
-  console.log(req.body); // Log the incoming request body for debugging
-  const { id } = req.params;
-  const {
-    id_supplier,
-    id_unit,
-    id_kategori,
-    nama_produk,
-    harga_beli,
-    harga_jual,
-  } = req.body;
-
-  try {
-    const query = `
-      UPDATE produk
-      SET nama_produk = ?, id_supplier = ?, id_unit = ?, id_kategori = ?, harga_beli = ?, harga_jual = ?
-      WHERE id_produk = ?
-    `;
-    const values = [
-      nama_produk,
-      id_supplier,
-      id_unit,
-      id_kategori,
-      harga_beli,
-      harga_jual,
-      id,
-    ];
-
-    // Use the correct connection object
-    const [result] = await pool.query().execute(query, values);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Product not found.' });
-    }
-
-    res.status(200).json({ message: 'Product updated successfully.' });
-  } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).json({ error: 'Failed to update product.' });
+    console.error("Error fetching all-products: ", err);
+    res.status(500).json({ error: "Server error" }); // Return error message in JSON format
   }
 });
 
 // Endpoint to get pembelian data from MySQL
-app.get('/api/all-pembelian', async (req, res) => {
+app.get("/api/all-pembelian", async (req, res) => {
   const query = `
     SELECT 
       p.id_pembelian, 
@@ -930,17 +913,17 @@ app.get('/api/all-pembelian', async (req, res) => {
     const [results] = await pool.execute(query); // Use execute for promise-based query execution
     res.status(200).json(results); // Explicit 200 status for successful response
   } catch (err) {
-    console.error('Error fetching pembelian data: ', err);
-    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+    console.error("Error fetching pembelian data: ", err);
+    res.status(500).json({ error: "Server error" }); // Return error message in JSON format
   }
 });
 
 // POST endpoint to add new buys (pembelian)
-app.post('/api/pembelian', async (req, res) => {
+app.post("/api/pembelian", async (req, res) => {
   const { items, id_supplier, total_harga, tanggal_pembelian } = req.body;
 
   if (!items || items.length === 0) {
-    return res.status(400).json({ message: 'Invoice items are required.' });
+    return res.status(400).json({ message: "Invoice items are required." });
   }
 
   // Use current date if tanggal_pembelian is not provided
@@ -987,14 +970,14 @@ app.post('/api/pembelian', async (req, res) => {
     await connection.commit();
 
     res.status(201).json({
-      message: 'Sale added successfully',
+      message: "Sale added successfully",
       id_pembelian,
     });
   } catch (err) {
     // Rollback the transaction in case of error
     await connection.rollback();
-    console.error('Error adding sale:', err);
-    res.status(500).json({ message: 'Failed to create sale.' });
+    console.error("Error adding sale:", err);
+    res.status(500).json({ message: "Failed to create sale." });
   } finally {
     // Release the connection back to the pool
     connection.release();
@@ -1002,12 +985,12 @@ app.post('/api/pembelian', async (req, res) => {
 });
 
 // Endpoint to get details of a specific penjualan
-app.get('/api/pembelian/:id/details', async (req, res) => {
+app.get("/api/pembelian/:id/details", async (req, res) => {
   const { id } = req.params;
 
   // Validate the ID
   if (!id || isNaN(id)) {
-    return res.status(400).json({ message: 'Invalid pembelian ID.' });
+    return res.status(400).json({ message: "Invalid pembelian ID." });
   }
 
   const query = `
@@ -1032,17 +1015,17 @@ app.get('/api/pembelian/:id/details', async (req, res) => {
     if (results.length === 0) {
       return res
         .status(404)
-        .json({ message: 'No details found for this penjualan ID.' });
+        .json({ message: "No details found for this penjualan ID." });
     }
     return res.json({ success: true, data: results });
   } catch (error) {
-    console.error('Error fetching penjualan details:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
+    console.error("Error fetching penjualan details:", error);
+    return res.status(500).json({ message: "Internal server error." });
   }
 });
 
 // Endpoint to get all sales data (Laporan penjualan)
-app.get('/api/laporan-penjualan', (req, res) => {
+app.get("/api/laporan-penjualan", (req, res) => {
   const query = `
     SELECT 
       penjualan.id_penjualan, 
@@ -1053,8 +1036,8 @@ app.get('/api/laporan-penjualan', (req, res) => {
   `;
   connection.query(query, (err, results) => {
     if (err) {
-      console.error('Error fetching all sales data: ', err);
-      res.status(500).send('Server error');
+      console.error("Error fetching all sales data: ", err);
+      res.status(500).send("Server error");
     } else {
       res.json(results);
     }
@@ -1062,7 +1045,7 @@ app.get('/api/laporan-penjualan', (req, res) => {
 });
 
 // Endpoint to get all sales data (penjualan)
-app.get('/api/all-penjualan', async (req, res) => {
+app.get("/api/all-penjualan", async (req, res) => {
   const query = `
     SELECT 
       p.id_penjualan, 
@@ -1076,18 +1059,18 @@ app.get('/api/all-penjualan', async (req, res) => {
     const [results] = await pool.execute(query); // Use execute for promise-based query execution
     res.status(200).json(results); // Explicit 200 status for successful response
   } catch (err) {
-    console.error('Error fetching all sales data: ', err);
-    res.status(500).json({ error: 'Server error' }); // Return error message in JSON format
+    console.error("Error fetching all sales data: ", err);
+    res.status(500).json({ error: "Server error" }); // Return error message in JSON format
   }
 });
 
 // Endpoint to get details of a specific penjualan
-app.get('/api/penjualan/:id/details', async (req, res) => {
+app.get("/api/penjualan/:id/details", async (req, res) => {
   const { id } = req.params;
 
   // Validate the ID
   if (!id || isNaN(id)) {
-    return res.status(400).json({ message: 'Invalid penjualan ID.' });
+    return res.status(400).json({ message: "Invalid penjualan ID." });
   }
 
   const query = `
@@ -1110,20 +1093,56 @@ app.get('/api/penjualan/:id/details', async (req, res) => {
     if (results.length === 0) {
       return res
         .status(404)
-        .json({ message: 'No details found for this penjualan ID.' });
+        .json({ message: "No details found for this penjualan ID." });
     }
     return res.json({ success: true, data: results });
   } catch (error) {
-    console.error('Error fetching penjualan details:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
+    console.error("Error fetching penjualan details:", error);
+    return res.status(500).json({ message: "Internal server error." });
   }
 });
 
+// Endpoint to find the total revenue from penjualan
+app.get('/api/penjualan/total', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    console.log('Received dates:', { startDate, endDate });
+
+    // Validate dates
+    if (startDate && isNaN(Date.parse(startDate))) {
+      return res.status(400).json({ error: 'Invalid startDate format' });
+    }
+    if (endDate && isNaN(Date.parse(endDate))) {
+      return res.status(400).json({ error: 'Invalid endDate format' });
+    }
+
+    // Prepare query
+    let query = 'SELECT SUM(total_harga) AS grand_total FROM penjualan';
+    const params = [];
+    if (startDate && endDate) {
+      query += ' WHERE tanggal_penjualan BETWEEN ? AND ?';
+      params.push(`${startDate} 00:00:00`, `${endDate} 23:59:59`);
+    }
+
+    console.log('Executing query:', query, 'with params:', params);
+
+    const [rows] = await db.query(query, params);
+    res.json({ grand_total: rows[0]?.grand_total || 0 });
+  } catch (err) {
+    console.error('Error fetching total revenue:', err);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  }
+});
+
+
+
+
 // POST endpoint to add new sales (penjualan)
-app.post('/api/penjualan', async (req, res) => {
+app.post("/api/penjualan", async (req, res) => {
   const { items, total_harga, tanggal_penjualan } = req.body;
   if (!items || items.length === 0) {
-    return res.status(400).json({ message: 'Invoice items are required.' });
+    return res.status(400).json({ message: "Invoice items are required." });
   }
 
   const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
@@ -1143,7 +1162,7 @@ app.post('/api/penjualan', async (req, res) => {
     for (const item of items) {
       // Fetch all stock entries for the product
       const [stockEntries] = await connection.query(
-        'SELECT id_stock, jumlah_stock, tgl_exp FROM stock WHERE id_produk = ? ORDER BY tgl_exp ASC',
+        "SELECT id_stock, jumlah_stock, tgl_exp FROM stock WHERE id_produk = ? ORDER BY tgl_exp ASC",
         [item.id_produk]
       );
 
@@ -1165,17 +1184,30 @@ app.post('/api/penjualan', async (req, res) => {
         );
       }
 
-      // Deduct stock from earliest-expiring entries
+      // Deduct stock only from the oldest entry
       let remainingQuantity = item.jumlah_produk;
+
+      // Deduct stock from oldest to newest
       for (const stock of stockEntries) {
         if (remainingQuantity <= 0) break;
 
-        const deduction = Math.min(stock.jumlah_stock, remainingQuantity);
-        remainingQuantity -= deduction;
+        // Deduct stock from the oldest entry first
+        if (stock.jumlah_stock > 0) {
+          const deduction = Math.min(stock.jumlah_stock, remainingQuantity);
+          remainingQuantity -= deduction;
 
-        await connection.query(
-          'UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_stock = ?',
-          [deduction, stock.id_stock]
+          // Update the stock quantity in the database for this entry
+          await connection.query(
+            "UPDATE stock SET jumlah_stock = jumlah_stock - ? WHERE id_stock = ?",
+            [deduction, stock.id_stock]
+          );
+        }
+      }
+
+      // If remainingQuantity is not zero after processing all stock entries, throw an error
+      if (remainingQuantity > 0) {
+        throw new Error(
+          `Insufficient stock for product ID ${item.id_produk}. Requested: ${item.jumlah_produk}, Still needed: ${remainingQuantity}`
         );
       }
     }
@@ -1205,95 +1237,20 @@ app.post('/api/penjualan', async (req, res) => {
     await connection.commit();
 
     res.status(201).json({
-      message: 'Sale added successfully',
+      message: "Sale added successfully",
       id_penjualan,
     });
   } catch (err) {
     await connection.rollback();
-    console.error('Error adding sale:', err);
-    res.status(400).json({ message: err.message || 'Failed to create sale.' });
+    console.error("Error adding sale:", err);
+    res.status(400).json({ message: err.message || "Failed to create sale." });
   } finally {
     connection.release();
   }
 });
 
-// PUT endpoint to update sales (penjualan)
-app.put('/api/penjualan/:id', async (req, res) => {
-  const { id } = req.params;
-  const { items, total_harga, tanggal_penjualan } = req.body;
-
-  // Validate input
-  if (!items || items.length === 0) {
-    return res.status(400).json({ message: 'Invoice items are required.' });
-  }
-
-  // Format date
-  const currentDate = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
-  const date = tanggal_penjualan || currentDate;
-
-  const connection = await mysql.createConnection({
-    host: '127.0.0.1',
-    user: 'root',
-    password: 'your_password',
-    database: 'your_database',
-  });
-
-  try {
-    // Start a transaction
-    await pool.beginTransaction();
-
-    // Update the `penjualan` table
-    const updatePenjualanQuery = `
-      UPDATE penjualan
-      SET total_harga = ?, tanggal_penjualan = ?
-      WHERE id_penjualan = ?
-    `;
-    const [updateResult] = await pool.execute(updatePenjualanQuery, [
-      total_harga,
-      date,
-      id,
-    ]);
-
-    if (updateResult.affectedRows === 0) {
-      return res.status(404).json({ message: 'Sale not found.' });
-    }
-
-    // Prepare data for `detailpenjualan` table
-    const detailItems = items.map((item) => [
-      item.id_produk,
-      item.jumlah_produk,
-      item.harga,
-      id, // Foreign key to `penjualan`
-    ]);
-
-    // First, delete existing details before inserting new ones
-    const deleteDetailsQuery = `DELETE FROM detailpenjualan WHERE id_penjualan = ?`;
-    await pool.execute(deleteDetailsQuery, [id]);
-
-    // Insert new details into `detailpenjualan` table
-    const insertDetailQuery = `
-      INSERT INTO detailpenjualan (id_produk, jumlah_produk, harga, id_penjualan)
-      VALUES ?
-    `;
-    await pool.execute(insertDetailQuery, [detailItems]);
-
-    // Commit the transaction if all queries succeed
-    await pool.commit();
-
-    res.status(200).json({ message: 'Sale updated successfully.' });
-  } catch (err) {
-    // Rollback the transaction in case of error
-    await pool.rollback();
-    console.error('Error updating sale:', err);
-    res.status(500).json({ message: 'Failed to update sale.' });
-  } finally {
-    // Close the connection
-    await pool.end();
-  }
-});
-
 // GET endpoint to fetch penjualan by ID along with its details
-app.get('/api/penjualans/:id', async (req, res) => {
+app.get("/api/penjualans/:id", async (req, res) => {
   const { id } = req.params;
 
   // Query to get the penjualan details along with associated items
@@ -1316,7 +1273,7 @@ app.get('/api/penjualans/:id', async (req, res) => {
     const [rows] = await pool.execute(query, [id]);
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: 'Penjualan not found' });
+      return res.status(404).json({ message: "Penjualan not found" });
     }
 
     // Structure response to return sale data with its details
@@ -1334,8 +1291,8 @@ app.get('/api/penjualans/:id', async (req, res) => {
 
     res.json(saleData);
   } catch (err) {
-    console.error('Error fetching penjualan data: ', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error fetching penjualan data: ", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -1356,12 +1313,12 @@ async function calculateCOGS(tanggal_penjualan) {
     // Return the calculated COGS or 0 if no result
     return rows.length > 0 ? rows[0].total_cogs || 0 : 0;
   } catch (err) {
-    console.error('Error calculating COGS:', err);
+    console.error("Error calculating COGS:", err);
     return 0;
   }
 }
 
-app.get('/api/progress-pendapatan', async (req, res) => {
+app.get("/api/progress-pendapatan", async (req, res) => {
   const query = `
     SELECT
       p.id_penjualan,
@@ -1374,7 +1331,7 @@ app.get('/api/progress-pendapatan', async (req, res) => {
     const [rows] = await pool.execute(query);
 
     if (rows.length === 0) {
-      return res.status(404).json({ message: 'No data found' });
+      return res.status(404).json({ message: "No data found" });
     }
 
     // Calculate profit for each sale
@@ -1394,14 +1351,14 @@ app.get('/api/progress-pendapatan', async (req, res) => {
 
     res.json(result);
   } catch (err) {
-    console.error('Error fetching progress-pendapatan: ', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error fetching progress-pendapatan: ", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
 // GET endpoint to fetch total sum of total_harga (from penjualan)
-app.get('/api/total-harga-sum', async (req, res) => {
-  const query = 'SELECT SUM(total_harga) AS total_harga_sum FROM penjualan';
+app.get("/api/total-harga-sum", async (req, res) => {
+  const query = "SELECT SUM(total_harga) AS total_harga_sum FROM penjualan";
 
   try {
     const [rows] = await pool.execute(query); // Using execute() for promise-based queries
@@ -1410,18 +1367,18 @@ app.get('/api/total-harga-sum', async (req, res) => {
     if (rows && rows.length > 0) {
       res.json({ total_harga_sum: rows[0].total_harga_sum });
     } else {
-      res.status(404).json({ message: 'No sales data found' });
+      res.status(404).json({ message: "No sales data found" });
     }
   } catch (error) {
-    console.error('Error fetching total harga sum:', error);
-    res.status(500).json({ message: 'Error fetching total harga sum' });
+    console.error("Error fetching total harga sum:", error);
+    res.status(500).json({ message: "Error fetching total harga sum" });
   }
 });
 
 // GET endpoint to fetch total sum of jumlah_produk (from detailpenjualan)
-app.get('/api/total-produk-sum', async (req, res) => {
+app.get("/api/total-produk-sum", async (req, res) => {
   const query =
-    'SELECT SUM(jumlah_produk) AS total_produk_sum FROM detailpenjualan';
+    "SELECT SUM(jumlah_produk) AS total_produk_sum FROM detailpenjualan";
 
   try {
     const [rows] = await pool.execute(query); // Using execute() for promise-based query execution
@@ -1430,24 +1387,24 @@ app.get('/api/total-produk-sum', async (req, res) => {
     if (rows && rows.length > 0) {
       res.json({ total_produk_sum: rows[0].total_produk_sum });
     } else {
-      res.status(404).json({ message: 'No product data found' });
+      res.status(404).json({ message: "No product data found" });
     }
   } catch (error) {
-    console.error('Error fetching total produk sum:', error);
-    res.status(500).json({ message: 'Error fetching total produk sum' });
+    console.error("Error fetching total produk sum:", error);
+    res.status(500).json({ message: "Error fetching total produk sum" });
   }
 });
 
 // Get total count of penjualan (sales)
-app.get('/api/total-penjualan', async (req, res) => {
-  const query = 'SELECT COUNT(*) AS total_penjualan FROM penjualan';
+app.get("/api/total-penjualan", async (req, res) => {
+  const query = "SELECT COUNT(*) AS total_penjualan FROM penjualan";
 
   try {
     const [rows] = await pool.execute(query); // Use execute() for promise-based queries
     res.json({ total_penjualan: rows[0].total_penjualan }); // Return total sales count
   } catch (error) {
-    console.error('Error fetching total penjualan:', error);
-    res.status(500).json({ message: 'Error fetching total penjualan' });
+    console.error("Error fetching total penjualan:", error);
+    res.status(500).json({ message: "Error fetching total penjualan" });
   }
 });
 

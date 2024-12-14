@@ -1,26 +1,42 @@
 <script setup>
-import { RouterLink } from 'vue-router';
-import axios from 'axios';
-import { ref, onMounted, computed } from 'vue';
-import { useToast } from 'vue-toastification';
+import { RouterLink } from "vue-router";
+import axios from "axios";
+import { ref, onMounted, computed, watch } from "vue";
+import { useToast } from "vue-toastification";
 
 const toast = useToast(); // Initialize Vue Toastification
 
 // Reactive variables
 const penjualans = ref([]);
-const startDate = ref(''); // Tanggal awal
-const endDate = ref(''); // Tanggal akhir
+const startDate = ref(""); // Tanggal awal
+const endDate = ref(""); // Tanggal akhir
+const grand_total = ref(0); // Total revenue
 
-// Fetch the penjualan list from the API
-onMounted(async () => {
-  try {
-    const response = await axios.get('api/all-penjualan');
-    penjualans.value = response.data;
-  } catch (error) {
-    console.error('Error fetching penjualan data:', error);
-    toast.error('Failed to fetch penjualan data.');
-  }
+// Fetch data on mounted
+onMounted(() => {
+  fetchPenjualanAndTotal();
 });
+
+// Function to fetch penjualan and grand total
+async function fetchPenjualanAndTotal() {
+  try {
+    // Fetch the list of penjualans
+    const response = await axios.get("api/all-penjualan");
+    penjualans.value = response.data;
+
+    // Fetch the grand total with date filters
+    const totalResponse = await axios.get("api/penjualan/total", {
+      params: {
+        startDate: startDate.value || null, // Pass null if empty
+        endDate: endDate.value || null, // Pass null if empty
+      },
+    });
+    grand_total.value = totalResponse.data.grand_total || 0;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    toast.error("Failed to fetch data.");
+  }
+}
 
 // Helper function to format timestamps
 function formatTimestamp(timestamp) {
@@ -30,9 +46,9 @@ function formatTimestamp(timestamp) {
 
 // Helper function to format currency
 const formatCurrency = (value) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
   }).format(value);
 };
 
@@ -50,7 +66,13 @@ const filteredPenjualans = computed(() => {
     return penjualanDate >= start && penjualanDate <= end;
   });
 });
+
+// Watcher for date range changes
+watch([startDate, endDate], () => {
+  fetchPenjualanAndTotal();
+});
 </script>
+
 
 <template>
   <div class="container mx-auto p-4">
@@ -78,6 +100,13 @@ const filteredPenjualans = computed(() => {
         class="border border-gray-300 rounded-lg px-4 py-2"
         placeholder="End Date"
       />
+    </div>
+    <!-- Display Total Harga -->
+    <div class="mb-4 text-right">
+      <h3 class="text-lg font-semibold">
+        Total Revenue:
+        <span class="text-primary-500">{{ formatCurrency(grand_total) }}</span>
+      </h3>
     </div>
 
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">

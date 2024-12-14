@@ -17,6 +17,7 @@ const newProduct = ref({
   id_kategori: '',
   harga_beli: '',
   harga_jual: '',
+  stock_minimum: '',
 });
 
 // Options for dropdowns, fetched from the API
@@ -54,7 +55,8 @@ const checkDuplicateProduct = (product) => {
       rawExistingProduct.harga_jual === product.harga_jual &&
       rawExistingProduct.id_kategori === product.id_kategori &&
       rawExistingProduct.id_unit === product.id_unit &&
-      rawExistingProduct.id_supplier === product.id_supplier
+      rawExistingProduct.id_supplier === product.id_supplier &&
+      rawExistingProduct.stock_minimum === product.stock_minimum
     );
   });
 };
@@ -67,6 +69,15 @@ const handleAddProduct = async () => {
   }
 
   try {
+    // Ensure stock_minimum is a valid number
+    if (
+      isNaN(Number(newProduct.value.stock_minimum)) ||
+      newProduct.value.stock_minimum < 0
+    ) {
+      toast.error('Minimum stock must be a non-negative number.');
+      return;
+    }
+
     await axios.post('/api/products', newProduct.value);
     toast.success('Product added successfully!');
     resetForm();
@@ -85,6 +96,7 @@ const resetForm = () => {
     id_kategori: '',
     harga_beli: '',
     harga_jual: '',
+    stock_minimum: '',
   };
 };
 </script>
@@ -213,8 +225,21 @@ const resetForm = () => {
             </div>
           </div>
 
+          <!-- Minimum Stock -->
+          <div>
+            <label class="" for="harga_jual">Jumlah Minimum Stock</label>
+            <div class="mt-2">
+              <input
+                class="w-full p-2 border rounded shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-accent-500"
+                type="number"
+                v-model="newProduct.stock_minimum"
+                id="harga_jual"
+              />
+            </div>
+          </div>
+
+          <!-- Submit Button -->
           <div class="flex justify-center">
-            <!-- Submit Button -->
             <button
               type="submit"
               class="w-96 px-4 py-2 bg-primary-500 text-white rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
