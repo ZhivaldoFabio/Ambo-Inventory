@@ -1,15 +1,15 @@
 <script setup>
-import { RouterLink } from "vue-router";
-import axios from "axios";
-import { ref, onMounted, computed, watch } from "vue";
-import { useToast } from "vue-toastification";
+import { RouterLink } from 'vue-router';
+import axios from 'axios';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useToast } from 'vue-toastification';
 
 const toast = useToast(); // Initialize Vue Toastification
 
 // Reactive variables
 const penjualans = ref([]);
-const startDate = ref(""); // Tanggal awal
-const endDate = ref(""); // Tanggal akhir
+const startDate = ref(''); // Tanggal awal
+const endDate = ref(''); // Tanggal akhir
 const grand_total = ref(0); // Total revenue
 
 // Fetch data on mounted
@@ -21,11 +21,11 @@ onMounted(() => {
 async function fetchPenjualanAndTotal() {
   try {
     // Fetch the list of penjualans
-    const response = await axios.get("api/all-penjualan");
+    const response = await axios.get('api/all-penjualan');
     penjualans.value = response.data;
 
     // Fetch the grand total with date filters
-    const totalResponse = await axios.get("api/penjualan/total", {
+    const totalResponse = await axios.get('api/penjualan/total', {
       params: {
         startDate: startDate.value || null, // Pass null if empty
         endDate: endDate.value || null, // Pass null if empty
@@ -33,8 +33,8 @@ async function fetchPenjualanAndTotal() {
     });
     grand_total.value = totalResponse.data.grand_total || 0;
   } catch (error) {
-    console.error("Error fetching data:", error);
-    toast.error("Failed to fetch data.");
+    console.error('Error fetching data:', error);
+    toast.error('Failed to fetch data.');
   }
 }
 
@@ -46,9 +46,9 @@ function formatTimestamp(timestamp) {
 
 // Helper function to format currency
 const formatCurrency = (value) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
   }).format(value);
 };
 
@@ -73,7 +73,6 @@ watch([startDate, endDate], () => {
 });
 </script>
 
-
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
@@ -86,27 +85,31 @@ watch([startDate, endDate], () => {
       </RouterLink>
     </div>
 
-    <!-- Search Bar -->
-    <div class="flex items-center space-x-4 mb-4">
-      <input
-        v-model="startDate"
-        type="date"
-        class="border border-gray-300 rounded-lg px-4 py-2"
-        placeholder="Start Date"
-      />
-      <input
-        v-model="endDate"
-        type="date"
-        class="border border-gray-300 rounded-lg px-4 py-2"
-        placeholder="End Date"
-      />
-    </div>
-    <!-- Display Total Harga -->
-    <div class="mb-4 text-right">
-      <h3 class="text-lg font-semibold">
-        Total Revenue:
-        <span class="text-primary-500">{{ formatCurrency(grand_total) }}</span>
-      </h3>
+    <!-- Navigation Bar -->
+    <div class="flex justify-between items-center">
+      <div class="flex items-center space-x-4 mb-4">
+        <input
+          v-model="startDate"
+          type="date"
+          class="border border-gray-300 rounded-lg px-4 py-2"
+          placeholder="Start Date"
+        />
+        <input
+          v-model="endDate"
+          type="date"
+          class="border border-gray-300 rounded-lg px-4 py-2"
+          placeholder="End Date"
+        />
+      </div>
+      <!-- Display Total Harga -->
+      <div class="font-heading text-xl">
+        <h3 class="">
+          Total Revenue:
+          <span class="text-primary-500">{{
+            formatCurrency(grand_total)
+          }}</span>
+        </h3>
+      </div>
     </div>
 
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
