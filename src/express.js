@@ -1292,56 +1292,6 @@ app.put('/api/penjualan/:id', async (req, res) => {
   }
 });
 
-// DELETE endpoint to delete a sale (penjualan)
-app.delete('/api/penjualan/:id', async (req, res) => {
-  const { id } = req.params;
-
-  const connection = await mysql.createConnection({
-    host: '127.0.0.1',
-    user: 'root',
-    password: 'your_password',
-    database: 'your_database',
-  });
-
-  try {
-    // Start a transaction
-    await pool.beginTransaction();
-
-    // First, delete related details from `detailpenjualan`
-    const deleteDetailsQuery = `
-      DELETE FROM detailpenjualan
-      WHERE id_penjualan = ?
-    `;
-    await pool.execute(deleteDetailsQuery, [id]);
-
-    // Then, delete the sale itself from `penjualan`
-    const deleteSaleQuery = `
-      DELETE FROM penjualan
-      WHERE id_penjualan = ?
-    `;
-    const [result] = await pool.execute(deleteSaleQuery, [id]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Sale not found.' });
-    }
-
-    // Commit the transaction if both queries succeed
-    await pool.commit();
-
-    res.json({
-      message: 'Sale and related details deleted successfully',
-    });
-  } catch (err) {
-    // Rollback the transaction in case of error
-    await pool.rollback();
-    console.error('Error deleting sale:', err);
-    res.status(500).json({ message: 'Failed to delete sale.' });
-  } finally {
-    // Close the connection
-    await pool.end();
-  }
-});
-
 // GET endpoint to fetch penjualan by ID along with its details
 app.get('/api/penjualans/:id', async (req, res) => {
   const { id } = req.params;
