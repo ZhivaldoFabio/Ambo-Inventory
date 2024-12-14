@@ -48,6 +48,17 @@ const totalPrice = computed(() =>
   )
 );
 
+// Computed property for total price with tax
+const totalWithTax = computed(() => {
+  const tax = totalPrice.value * 0.11; // 11% tax
+  return totalPrice.value + tax; // Adding tax to the subtotal
+});
+
+// Computed property for tax amount
+const taxAmount = computed(() => {
+  return totalPrice.value * 0.11; // 11% tax
+});
+
 // Add a new empty item to the table
 function addItem() {
   invoiceItems.value.push({ id_produk: '', jumlah_produk: 1, harga: 0 });
@@ -211,11 +222,18 @@ const resetForm = () => {
       </button>
     </div>
 
-    <div class="mt-6">
-      <h3 class="text-xl font-semibold">
-        Total: {{ formatCurrency(totalPrice) }}
-      </h3>
-      <div class="flex justify-end w-full">
+    <div class="flex justify-between items-center">
+      <div class="text-xl font-heading space-y-2">
+        <p class="">Sub Total: {{ formatCurrency(totalPrice) }}</p>
+        <hr />
+        <p class="text-base font-body">
+          Pajak (11%): {{ formatCurrency(taxAmount) }}
+        </p>
+        <hr />
+        <p>Total: {{ formatCurrency(totalWithTax) }}</p>
+      </div>
+
+      <div class="">
         <button
           @click="submitInvoice"
           class="mt-4 px-4 py-2 bg-primary-500 text-white rounded"
