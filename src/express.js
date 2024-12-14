@@ -310,8 +310,8 @@ app.delete('/api/stocks/:id', async (req, res) => {
 
 // Endpoint to get stock data
 app.get('/api/stocks', async (req, res) => {
-  const query = `
-    SELECT produk.nama_produk, kategori.nama_kategori, suppliers.nama_supplier, produk.stock_minimum, stock.jumlah_stock,
+  const queryLowStock = `
+    SELECT produk.nama_produk, kategori.nama_kategori, suppliers.nama_supplier, produk.stock_minimum, stock.jumlah_stock, stock.tgl_exp, stock.tgl_masuk,
       (stock.jumlah_stock / produk.stock_minimum) * 100 AS percentage
     FROM produk
     JOIN kategori ON produk.id_kategori = kategori.id_kategori
@@ -321,10 +321,24 @@ app.get('/api/stocks', async (req, res) => {
     ORDER BY percentage ASC
   `;
 
+  const queryExpiredItems = `
+    SELECT stock.id_produk, produk.nama_produk, kategori.nama_kategori, suppliers.nama_supplier, stock.jumlah_stock, stock.tgl_exp
+    FROM stock
+    JOIN produk ON stock.id_produk = produk.id_produk
+    JOIN kategori ON produk.id_kategori = kategori.id_kategori
+    JOIN suppliers ON stock.id_supplier = suppliers.id_supplier
+    WHERE stock.tgl_exp <= DATE_ADD(NOW(), INTERVAL 1 MONTH)
+    ORDER BY stock.tgl_exp ASC
+  `;
+
   try {
-    // Execute the query using the promise-based connection
-    const [results] = await pool.query(query); // No need for `.execute()`
-    res.json(results); // Return the results as JSON
+    const [lowStockResults] = await pool.query(queryLowStock);
+    const [expiredItemsResults] = await pool.query(queryExpiredItems);
+
+    res.json({
+      lowStock: lowStockResults,
+      expiredItems: expiredItemsResults,
+    });
   } catch (err) {
     console.error('Error fetching data: ', err);
     res.status(500).send('Server error');
@@ -1129,7 +1143,6 @@ app.get('/api/penjualan/total', async (req, res) => {
       query += ' WHERE tanggal_penjualan <= ?';
       params.push(`${endDate} 23:59:59`);
     }
-
 
     // Execute the query using mysql2/promise
     const [rows] = await pool.query(query, params);
