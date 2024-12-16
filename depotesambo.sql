@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `detailpembelian` (
   CONSTRAINT `FK_detailpembelian_units` FOREIGN KEY (`id_unit`) REFERENCES `units` (`id_unit`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table depotesambo.detailpembelian: ~11 rows (approximately)
+-- Dumping data for table depotesambo.detailpembelian: ~14 rows (approximately)
 DELETE FROM `detailpembelian`;
 INSERT INTO `detailpembelian` (`id_detail_pembelian`, `id_pembelian`, `id_produk`, `id_unit`, `jumlah_produk`, `harga`) VALUES
 	(1, 1, 1, 1, 5, 14000),
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `detailpenjualan` (
   CONSTRAINT `detailpenjualan_ibfk_2` FOREIGN KEY (`id_penjualan`) REFERENCES `penjualan` (`id_penjualan`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=latin1;
 
--- Dumping data for table depotesambo.detailpenjualan: ~34 rows (approximately)
+-- Dumping data for table depotesambo.detailpenjualan: ~38 rows (approximately)
 DELETE FROM `detailpenjualan`;
 INSERT INTO `detailpenjualan` (`id_detail_penjualan`, `id_penjualan`, `id_produk`, `jumlah_produk`, `harga`) VALUES
 	(1, 1, 1, 1, 22000),
@@ -124,6 +124,50 @@ INSERT INTO `kategori` (`id_kategori`, `nama_kategori`) VALUES
 	(7, 'SKM'),
 	(8, 'Selai');
 
+-- Dumping structure for table depotesambo.loss
+DROP TABLE IF EXISTS `loss`;
+CREATE TABLE IF NOT EXISTS `loss` (
+  `id_loss` int NOT NULL,
+  `id_produk` int NOT NULL,
+  `jumlah_loss` int NOT NULL,
+  `reason` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `report_time` timestamp NOT NULL,
+  PRIMARY KEY (`id_loss`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table depotesambo.loss: ~0 rows (approximately)
+DELETE FROM `loss`;
+
+-- Dumping structure for table depotesambo.lost
+DROP TABLE IF EXISTS `lost`;
+CREATE TABLE IF NOT EXISTS `lost` (
+  `id_lost` int NOT NULL AUTO_INCREMENT,
+  `id_produk` int NOT NULL,
+  `jumlah_lost` int NOT NULL,
+  `id_opname` int NOT NULL,
+  `report_at` timestamp NOT NULL,
+  PRIMARY KEY (`id_lost`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table depotesambo.lost: ~0 rows (approximately)
+DELETE FROM `lost`;
+
+-- Dumping structure for table depotesambo.opname
+DROP TABLE IF EXISTS `opname`;
+CREATE TABLE IF NOT EXISTS `opname` (
+  `id_opname` int NOT NULL,
+  `id_produk` int NOT NULL,
+  `id_stock` int NOT NULL,
+  `physical_stock` int NOT NULL,
+  `difference` int NOT NULL,
+  `remarks` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `timestamp_created` timestamp NOT NULL,
+  PRIMARY KEY (`id_opname`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table depotesambo.opname: ~0 rows (approximately)
+DELETE FROM `opname`;
+
 -- Dumping structure for table depotesambo.pembelian
 DROP TABLE IF EXISTS `pembelian`;
 CREATE TABLE IF NOT EXISTS `pembelian` (
@@ -136,7 +180,7 @@ CREATE TABLE IF NOT EXISTS `pembelian` (
   CONSTRAINT `FK_pembelian_suppliers` FOREIGN KEY (`id_supplier`) REFERENCES `suppliers` (`id_supplier`) ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
 
--- Dumping data for table depotesambo.pembelian: ~7 rows (approximately)
+-- Dumping data for table depotesambo.pembelian: ~9 rows (approximately)
 DELETE FROM `pembelian`;
 INSERT INTO `pembelian` (`id_pembelian`, `id_supplier`, `tanggal_pembelian`, `total_harga`) VALUES
 	(1, 4, '2024-11-06 16:56:14', 10000),
@@ -252,7 +296,7 @@ CREATE TABLE IF NOT EXISTS `stock` (
 -- Dumping data for table depotesambo.stock: ~11 rows (approximately)
 DELETE FROM `stock`;
 INSERT INTO `stock` (`id_stock`, `id_unit`, `id_kategori`, `id_produk`, `id_supplier`, `jumlah_stock`, `tgl_exp`, `tgl_masuk`) VALUES
-	(1, 1, 1, 1, 2, 160, '2026-11-27', '2024-01-10'),
+	(1, 1, 1, 1, 2, 160, '2024-12-27', '2024-01-10'),
 	(2, 1, 2, 5, 6, 10, '2024-11-11', '2024-11-10'),
 	(3, 1, 2, 6, 5, 12, '2025-11-10', '2024-11-10'),
 	(10, 3, 5, 3, 2, 11, '2025-11-11', '2024-11-11'),
