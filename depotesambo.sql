@@ -130,9 +130,11 @@ CREATE TABLE IF NOT EXISTS `loss` (
   `id_loss` int NOT NULL,
   `id_produk` int NOT NULL,
   `jumlah_loss` int NOT NULL,
-  `reason` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `reason` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `report_time` timestamp NOT NULL,
-  PRIMARY KEY (`id_loss`)
+  PRIMARY KEY (`id_loss`),
+  KEY `FK_loss_produk` (`id_produk`),
+  CONSTRAINT `FK_loss_produk` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.loss: ~0 rows (approximately)
@@ -146,7 +148,11 @@ CREATE TABLE IF NOT EXISTS `lost` (
   `jumlah_lost` int NOT NULL,
   `id_opname` int NOT NULL,
   `report_at` timestamp NOT NULL,
-  PRIMARY KEY (`id_lost`)
+  PRIMARY KEY (`id_lost`),
+  KEY `FK_lost_produk` (`id_produk`),
+  KEY `FK_lost_opname` (`id_opname`),
+  CONSTRAINT `FK_lost_opname` FOREIGN KEY (`id_opname`) REFERENCES `opname` (`id_opname`),
+  CONSTRAINT `FK_lost_produk` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.lost: ~0 rows (approximately)
@@ -160,9 +166,13 @@ CREATE TABLE IF NOT EXISTS `opname` (
   `id_stock` int NOT NULL,
   `physical_stock` int NOT NULL,
   `difference` int NOT NULL,
-  `remarks` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `remarks` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
   `timestamp_created` timestamp NOT NULL,
-  PRIMARY KEY (`id_opname`)
+  PRIMARY KEY (`id_opname`),
+  KEY `FK_opname_produk` (`id_produk`),
+  KEY `FK_opname_stock` (`id_stock`),
+  CONSTRAINT `FK_opname_produk` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`),
+  CONSTRAINT `FK_opname_stock` FOREIGN KEY (`id_stock`) REFERENCES `stock` (`id_stock`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.opname: ~0 rows (approximately)

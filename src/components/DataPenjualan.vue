@@ -116,9 +116,8 @@ watch([startDate, endDate], () => {
       <thead>
         <tr class="bg-gray-200 text-left">
           <th class="px-4 py-2 border-b">No</th>
-          <th class="px-4 py-2 border-b">Sales Number</th>
-          <th class="px-4 py-2 border-b">Total Price</th>
           <th class="px-4 py-2 border-b">Date</th>
+          <th class="px-4 py-2 border-b">Total Price</th>
           <th class="px-4 py-2 border-b">Action</th>
         </tr>
       </thead>
@@ -130,12 +129,11 @@ watch([startDate, endDate], () => {
         >
           <!-- Main Row -->
           <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-          <td class="px-4 py-2 border-b">{{ penjualan.id_penjualan }}</td>
-          <td class="px-4 py-2 border-b">
-            {{ formatCurrency(penjualan.total_harga) }}
-          </td>
           <td class="px-4 py-2 border-b">
             {{ formatTimestamp(penjualan.tanggal_penjualan) }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            {{ formatCurrency(penjualan.total_harga) }}
           </td>
           <td class="px-4 py-2 border-b">
             <RouterLink

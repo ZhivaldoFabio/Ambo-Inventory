@@ -78,7 +78,6 @@ const filteredPenjualans = computed(() => {
         placeholder="End Date"
       />
     </div>
-
     <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
       <thead>
         <tr class="bg-gray-200 text-left">
