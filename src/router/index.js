@@ -14,6 +14,7 @@ import DataKategori from '@/components/DataKategori.vue';
 import DataPembelian from '@/components/DataPembelian.vue';
 import DataSupplier from '@/components/DataSupplier.vue';
 import DataStock from '@/components/DataStock.vue';
+import DataOpname from '@/components/DataOpname.vue';
 import AddDataProduct from '@/components/AddDataProduct.vue';
 import AddDataUnit from '@/components/AddDataUnit.vue';
 import AddDataSupplier from '@/components/AddDataSupplier.vue';
@@ -277,7 +278,19 @@ const router = createRouter({
       },
     },
 
-    // -------------------- BAGIAN Belom --------------------
+    // -------------------- BAGIAN Opname --------------------
+
+    {
+      path: '/data-opname',
+      name: 'data-opname',
+      component: DataOpname,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Admin', 'Gudang', 'Kasir'],
+      },
+    },
+
+    // -------------------- BAGIAN Error --------------------
 
     {
       path: '/:pathMatch(.*)*',

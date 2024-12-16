@@ -157,6 +157,22 @@ onMounted(() => {
           </RouterLink>
         </li>
       </ul>
+
+
+      <ul class="p-4 rounded-md">
+        <li class="text-primary-300 flex items-center space-x-2 mt-5">
+          <i class="pi pi-box"></i>
+          <span class="text-background-300"> Opname </span>
+        </li>
+        <li class="p-1 ml-5 hover:translate-x-5 duration-300 active:drop-shadow-md">
+          <RouterLink
+            :to="{ name: 'data-opname' }"
+            class="flex items-center space-x-2"
+          >
+            <span>Stock Opname</span>
+          </RouterLink>
+        </li>
+      </ul>
     </div>
   </nav>
 </template>
