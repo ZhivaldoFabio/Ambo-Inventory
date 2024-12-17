@@ -1427,6 +1427,56 @@ app.get('/api/total-penjualan', async (req, res) => {
   }
 });
 
+// BAGIAN OPNAME //
+
+// Endpoint to get all stock opname data
+app.get('/api/opname', async (req, res) => {
+  const query = `
+    SELECT 
+      opname.id_opname,
+      produk.nama_produk,
+      stock.jumlah_stock AS stock_system,
+      opname.physical_stock,
+      opname.discrepancy,
+      opname.timestamp_created
+    FROM opname
+    JOIN produk ON produk.id_produk = opname.id_produk
+    JOIN stock ON stock.id_stock = opname.id_stock
+    ORDER BY opname.timestamp_created DESC
+  `;
+
+  try {
+    const [results] = await pool.execute(query);
+    res.status(200).json(results);
+  } catch (err) {
+    console.error('Error fetching stock opname data: ', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Endpoint to get all stock loss data
+app.get('/api/loss', async (req, res) => {
+  const query = `
+    SELECT 
+      loss.id_loss,
+      produk.nama_produk,
+      loss.loss_qty,
+      loss.reason,
+      loss.report_time
+    FROM loss
+    JOIN produk ON produk.id_produk = loss.id_produk
+    ORDER BY loss.report_time DESC
+  `;
+
+  try {
+    const [results] = await pool.execute(query);
+    res.status(200).json(results);
+  } catch (err) {
+    console.error('Error fetching stock loss data: ', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // INI LISTEN HARUS PALING BAWAH!
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

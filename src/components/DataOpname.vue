@@ -1,36 +1,42 @@
-<!-- DashboardGudang.vue -->
+<!-- DataOpname.vue -->
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
-const lowStock = ref([]); // Array to hold low stock data
-const expiredItems = ref([]); // Array to hold expired items data
+// State variables to store API data
+const opnameData = ref([]); // For Stock Opname table
+const lossData = ref([]); // For Stock Loss table
 
-// Function to calculate the days left until expiration
-const calculateDaysLeft = (expirationDate) => {
-  const currentDate = new Date();
-  const expDate = new Date(expirationDate);
-  const timeDiff = expDate - currentDate;
-  const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24)); // Convert ms to days
-
-  return daysLeft < 0 ? 'Expired' : daysLeft;
+// Function to fetch data for stock opname
+const fetchOpnameData = async () => {
+  try {
+    const response = await axios.get('/api/opname');
+    opnameData.value = response.data;
+  } catch (error) {
+    console.error('Error fetching opname data:', error);
+  }
 };
 
-// Function to format expiration date
-function formatExpirationDate(expirationDate) {
-  const date = new Date(expirationDate);
-  return date.toLocaleDateString('en-GB'); // Format as DD/MM/YYYY
-}
-
-onMounted(async () => {
+// Function to fetch data for stock loss
+const fetchLossData = async () => {
   try {
-    const response = await axios.get('/api/stocks');
-    lowStock.value = response.data.lowStock;
-    expiredItems.value = response.data.expiredItems;
+    const response = await axios.get('/api/loss');
+    lossData.value = response.data;
   } catch (error) {
-    console.error('Error fetching stocks:', error);
+    console.error('Error fetching loss data:', error);
   }
+};
+
+// Format date to DD/MM/YYYY
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('en-GB');
+};
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchOpnameData();
+  fetchLossData();
 });
 </script>
 
@@ -50,37 +56,40 @@ onMounted(async () => {
             <tr class="bg-gray-200 text-left">
               <th class="px-4 py-2 border-b">No</th>
               <th class="px-4 py-2 border-b">Product Name</th>
-              <th class="px-4 py-2 border-b">Category</th>
-              <th class="px-4 py-2 border-b">Supplier</th>
-              <th class="px-4 py-2 border-b">Stock Minimum</th>
-              <th class="px-4 py-2 border-b">Available stock</th>
-              <th class="px-4 py-2 border-b">Presentation</th>
+              <th class="px-4 py-2 border-b">Stock by System</th>
+              <th class="px-4 py-2 border-b">Physical Stock</th>
+              <th class="px-4 py-2 border-b">Discrepancy</th>
+              <th class="px-4 py-2 border-b">Status</th>
+              <th class="px-4 py-2 border-b">Timestamp</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="(stock, index) in lowStock"
+              v-for="(item, index) in opnameData"
               :key="index"
               class="hover:bg-gray-50"
             >
               <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-              <td class="px-4 py-2 border-b">{{ stock.nama_produk }}</td>
-              <td class="px-4 py-2 border-b">{{ stock.nama_kategori }}</td>
-              <td class="px-4 py-2 border-b">{{ stock.nama_supplier }}</td>
+              <td class="px-4 py-2 border-b">{{ item.nama_produk }}</td>
+              <td class="px-4 py-2 border-b">{{ item.stock_system }}</td>
+              <td class="px-4 py-2 border-b">{{ item.phisycal_stock }}</td>
               <td class="px-4 py-2 border-b">
-                {{ stock.stock_minimum || 'N/A' }}
+                {{ item.phisycal_stock - item.stock_system }}
               </td>
-              <td class="px-4 py-2 border-b">{{ stock.jumlah_stock }}</td>
               <td class="px-4 py-2 border-b">
-                {{
-                  stock.stock_minimum > 0
-                    ? (
-                        (stock.jumlah_stock / stock.stock_minimum) *
-                        100
-                      ).toFixed(2)
-                    : 'N/A'
-                }}%
+                <span
+                  v-if="item.phisycal_stock === item.stock_system"
+                  class="text-green-500"
+                  >Match</span
+                >
+                <span v-else class="text-red-500">Discrepancy</span>
               </td>
+              <td class="px-4 py-2 border-b">
+                {{ formatDate(item.timestamp_created) }}
+              </td>
+            </tr>
+            <tr v-if="opnameData.length === 0">
+              <td colspan="7" class="text-center py-4">No data available</td>
             </tr>
           </tbody>
         </table>
@@ -91,7 +100,7 @@ onMounted(async () => {
     <div class="container mx-auto p-4">
       <div class="flex items-center space-x-2">
         <i class="pi pi-exclamation-triangle flex text-xl text-accent-500"></i>
-        <h1 class="flex text-2xl text-heading">Stock Rusak</h1>
+        <h1 class="flex text-2xl text-heading">Stock Loss</h1>
       </div>
       <div>
         <table
@@ -101,31 +110,23 @@ onMounted(async () => {
             <tr class="bg-gray-200 text-left">
               <th class="px-4 py-2 border-b">No</th>
               <th class="px-4 py-2 border-b">Product Name</th>
-              <th class="px-4 py-2 border-b">Category</th>
-              <th class="px-4 py-2 border-b">Supplier</th>
-              <th class="px-4 py-2 border-b">QTY</th>
-              <th class="px-4 py-2 border-b">Expiration Date</th>
-              <th class="px-4 py-2 border-b">Days Left</th>
+              <th class="px-4 py-2 border-b">Loss QTY</th>
+              <th class="px-4 py-2 border-b">Reason</th>
+              <th class="px-4 py-2 border-b">Report Time</th>
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(stock, index) in expiredItems"
-              :key="index"
-              class="hover:bg-gray-50"
-            >
+            <tr v-for="(item, index) in lossData" :key="index" class="hover:bg-gray-50">
               <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-              <td class="px-4 py-2 border-b">{{ stock.nama_produk }}</td>
-              <td class="px-4 py-2 border-b">{{ stock.nama_kategori }}</td>
-              <td class="px-4 py-2 border-b">{{ stock.nama_supplier }}</td>
-              <td class="px-4 py-2 border-b">{{ stock.jumlah_stock }}</td>
+              <td class="px-4 py-2 border-b">{{ item.nama_produk }}</td>
+              <td class="px-4 py-2 border-b">{{ item.loss_qty }}</td>
+              <td class="px-4 py-2 border-b">{{ item.reason }}</td>
               <td class="px-4 py-2 border-b">
-                {{ formatExpirationDate(stock.tgl_exp) }}
+                {{ formatDate(item.report_time) }}
               </td>
-              <td class="px-4 py-2 border-b">
-                <!-- Calculate days left based on expiration date -->
-                {{ calculateDaysLeft(stock.tgl_exp) }}
-              </td>
+            </tr>
+            <tr v-if="lossData.length === 0">
+              <td colspan="5" class="text-center py-4">No data available</td>
             </tr>
           </tbody>
         </table>
