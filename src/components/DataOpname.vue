@@ -48,6 +48,12 @@ onMounted(() => {
         <i class="pi pi-exclamation-circle flex text-xl text-accent-500"></i>
         <h1 class="flex text-2xl text-heading">Stock Opname</h1>
       </div>
+      <RouterLink
+          :to="{ name: 'add-data-opname' }"
+          class="max-h-10 py-2 px-3 rounded-md text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
+        >
+          Add New
+        </RouterLink>
       <div>
         <table
           class="min-w-full text-left border border-gray-300 rounded-lg overflow-hidden"

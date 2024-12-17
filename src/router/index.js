@@ -258,6 +258,15 @@ const router = createRouter({
         allowedRoles: ['Gudang'],
       },
     },
+    {
+      path: '/add-data-opname',
+      name: 'add-data-opname',
+      component: AddDataOpname,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
+      },
+    },
     // -------------------- BAGIAN Kasir --------------------
 
     {
