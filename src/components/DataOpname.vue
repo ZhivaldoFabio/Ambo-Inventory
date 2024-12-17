@@ -72,14 +72,14 @@ onMounted(() => {
               <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
               <td class="px-4 py-2 border-b">{{ item.nama_produk }}</td>
               <td class="px-4 py-2 border-b">{{ item.stock_system }}</td>
-              <td class="px-4 py-2 border-b">{{ item.phisycal_stock }}</td>
+              <td class="px-4 py-2 border-b">{{ item.physical_stock }}</td>
               <td class="px-4 py-2 border-b">
-                {{ item.phisycal_stock - item.stock_system }}
+                {{ item.physical_stock - item.stock_system }}
               </td>
               <td class="px-4 py-2 border-b">
                 <span
-                  v-if="item.phisycal_stock === item.stock_system"
-                  class="text-green-500"
+                  v-if="item.physical_stock === item.stock_system"
+                  class="text-primary-500"
                   >Match</span
                 >
                 <span v-else class="text-red-500">Discrepancy</span>
