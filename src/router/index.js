@@ -31,6 +31,7 @@ import DetailDataPenjualan from '@/components/DetailDataPenjualan.vue';
 import DetailDataPembelian from '@/components/DetailDataPembelian.vue';
 import DetailLaporanPenjualan from '@/components/DetailLaporanPenjualan.vue';
 import DetailLaporanPembelian from '@/components/DetailLaporanPembelian.vue';
+import DetailDataOpname from '@/components/DetailDataOpname.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -294,6 +295,15 @@ const router = createRouter({
       path: '/data-opname',
       name: 'data-opname',
       component: DataOpname,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Admin', 'Gudang', 'Kasir'],
+      },
+    },
+    {
+      path: '/detail-data-opname/:id',
+      name: 'detail-data-opname',
+      component: DetailDataOpname,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
         allowedRoles: ['Admin', 'Gudang', 'Kasir'],

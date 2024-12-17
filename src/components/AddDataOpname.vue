@@ -1,189 +1,227 @@
-<!-- AddDataOpname.vue -->
-
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useToast } from 'vue-toastification';
-import { RouterLink } from 'vue-router';
 
 const toast = useToast();
 
-// Form state
-const newStockOpname = ref({
-  id_produk: '',
-  physical_stock: 0,
-  good_item: 0,
-  bad_item: 0,
-  jumlah_loss: 0,
-  reason: '',
-  timestamp_created: '',
-});
+// Table rows state
+const invoiceItems = ref([
+  { id_produk: '', quantity: 1, loss: false, lost: false, reason: '' },
+]);
 
-// Options for dropdowns
+// Product options for dropdown
 const products = ref([]);
 
 // Fetch product data for dropdown
 onMounted(async () => {
   try {
-    const productResponse = await axios.get('/api/products');
-    products.value = productResponse.data;
+    const response = await axios.get('/api/products');
+    products.value = response.data;
   } catch (error) {
     console.error('Error fetching products:', error);
+    toast.error('Failed to load products.');
   }
 });
 
-// Calculate loss dynamically
-const calculateLoss = () => {
-  newStockOpname.value.jumlah_loss =
-    newStockOpname.value.physical_stock - newStockOpname.value.good_item;
+// Add a new empty row
+const addItem = () => {
+  invoiceItems.value.push({
+    id_produk: '',
+    quantity: 1,
+    loss: false,
+    lost: false,
+    reason: '',
+  });
 };
 
-// Handle form submission
-const addStockOpname = async () => {
+// Remove a specific row
+const removeItem = (index) => {
+  invoiceItems.value.splice(index, 1);
+};
+
+// Submit the form
+const submitOpname = async () => {
   try {
-    // Prepare payload
+    // Validation: Ensure all rows are filled
+    for (const item of invoiceItems.value) {
+      if (!item.id_produk || item.quantity <= 0) {
+        toast.error('Please fill all fields before submitting.');
+        return;
+      }
+    }
+
+    // Get the user role from localStorage or from your app state
+    const userRole = localStorage.getItem('userRole'); // Assuming userRole is stored after login
+
+    if (!userRole) {
+      toast.error('User role not found. Please log in again.');
+      return;
+    }
+
+    // Send the role along with the request
     const payload = {
-      id_produk: newStockOpname.value.id_produk,
-      physical_stock: newStockOpname.value.physical_stock,
-      good_item: newStockOpname.value.good_item,
-      bad_item: newStockOpname.value.bad_item,
-      jumlah_loss: newStockOpname.value.jumlah_loss,
-      reason: newStockOpname.value.reason,
-      timestamp_created: new Date().toISOString(),
+      details: invoiceItems.value.map((item) => ({
+        id_produk: item.id_produk,
+        physical_stock: item.quantity, // Assuming quantity represents physical stock
+        jumlah_stock: 0, // Or fetch this from the backend if necessary
+        loss: item.loss, // Include loss as a boolean
+        lost: item.lost, // Include lost as a boolean
+        remarks: item.reason || null,
+      })),
     };
 
-    // Send data to the backend
-    await axios.post('/api/opname', payload);
+    await axios.post('/api/stock-opname', payload, {
+      headers: {
+        userrole: userRole, // Send the role as part of the header
+      },
+    });
 
-    toast.success('Stock opname added successfully!');
-    resetForm();
+    toast.success('Stock Opname submitted successfully!');
+
+    // Reset the form
+    invoiceItems.value = [
+      { id_produk: '', quantity: 1, loss: false, lost: false, reason: '' },
+    ];
   } catch (error) {
-    toast.error('Error adding stock opname.');
-    console.error('Error:', error);
+    console.error('Error submitting opname:', error);
+    toast.error('Failed to submit stock opname.');
   }
-};
-
-// Reset form fields
-const resetForm = () => {
-  newStockOpname.value = {
-    id_produk: '',
-    physical_stock: 0,
-    good_item: 0,
-    bad_item: 0,
-    jumlah_loss: 0,
-    reason: '',
-    timestamp_created: '',
-  };
 };
 </script>
 
 <template>
-  <div class="min-w-[50rem] max-w-full mx-auto p-4">
+  <div class="container mx-auto p-4">
+    <!-- Title -->
     <div class="flex justify-between items-center mb-4">
-      <div class="flex items-center space-x-2">
-        <i class="pi pi-file-plus text-2xl"></i>
-        <h2 class="text-2xl font-heading">Add Stock Opname</h2>
+      <div class="flex items-center mb-4 space-x-2">
+        <i class="pi pi-file-check text-2xl"></i>
+        <h2 class="text-2xl font-heading">Stock Opname</h2>
       </div>
       <RouterLink
         :to="{ name: 'data-opname' }"
-        class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
-      >
-        <i
+        class="text-center content-center w-10 h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
+        ><i
           class="pi pi-angle-left text-primary-700"
           style="font-size: 1.3rem"
-        ></i>
-      </RouterLink>
+        ></i
+      ></RouterLink>
     </div>
 
-    <form @submit.prevent="addStockOpname">
-      <div class="font-body w-full">
-        <div class="space-y-5">
+    <!-- Table -->
+    <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+      <thead>
+        <tr class="bg-gray-100 text-left">
+          <th class="px-4 py-2 border-b">Product Name</th>
+          <th class="px-4 py-2 border-b">Quantity</th>
+          <th class="px-4 py-2 border-b">Loss</th>
+          <th class="px-4 py-2 border-b">Lost</th>
+          <th class="px-4 py-2 border-b">Reason</th>
+          <th class="px-4 py-2 border-b">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(item, index) in invoiceItems"
+          :key="index"
+          class="hover:bg-gray-50"
+        >
           <!-- Product Dropdown -->
-          <div>
-            <label for="id_produk">Product</label>
-            <div class="mt-2">
-              <select
-                v-model="newStockOpname.id_produk"
-                id="id_produk"
-                class="w-full p-2 border rounded shadow-sm ring-1 ring-gray-300 focus:ring-2 focus:ring-accent-500"
-                required
-              >
-                <option value="" disabled>Select Product</option>
-                <option
-                  v-for="product in products"
-                  :key="product.id_produk"
-                  :value="product.id_produk"
-                >
-                  {{ product.nama_produk }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Physical Stock -->
-          <div>
-            <label for="physical_stock">Physical Stock Amount</label>
-            <input
-              v-model.number="newStockOpname.physical_stock"
-              @input="calculateLoss"
-              id="physical_stock"
-              type="number"
-              min="0"
-              class="w-full p-2 border rounded shadow-sm ring-1 ring-gray-300 focus:ring-2 focus:ring-accent-500"
+          <td class="px-4 py-2 border-b">
+            <select
+              v-model="item.id_produk"
+              class="border rounded p-1 w-full"
               required
-            />
-          </div>
-          <!-- Good Item -->
-          <div>
-            <label for="good_item">Good Item Amount</label>
-            <input
-              v-model.number="newStockOpname.good_item"
-              @input="calculateLoss"
-              id="good_item"
-              type="number"
-              min="0"
-              class="w-full p-2 border rounded shadow-sm ring-1 ring-gray-300 focus:ring-2 focus:ring-accent-500"
-              required
-            />
-          </div>
-
-          <!-- Loss Amount (Read-Only) -->
-          <div>
-            <label for="jumlah_loss">Loss Amount</label>
-            <input
-              v-model="newStockOpname.jumlah_loss"
-              id="jumlah_loss"
-              type="number"
-              class="w-full p-2 border rounded shadow-sm bg-gray-100"
-              readonly
-            />
-          </div>
-
-          <!-- Reason -->
-          <div>
-            <label for="reason">Reason</label>
-            <textarea
-              v-model="newStockOpname.reason"
-              id="reason"
-              rows="3"
-              class="w-full p-2 border rounded shadow-sm ring-1 ring-gray-300 focus:ring-2 focus:ring-accent-500"
-              placeholder="Enter reason for discrepancy..."
-              required
-            ></textarea>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="flex justify-center">
-            <button
-              type="submit"
-              class="w-96 px-4 py-2 bg-primary-500 text-white rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
             >
-              <i class="pi pi-plus"></i>
-              Add Stock Opname
+              <option value="" disabled>Select Product</option>
+              <option
+                v-for="product in products"
+                :key="product.id_produk"
+                :value="product.id_produk"
+              >
+                {{ product.nama_produk }}
+              </option>
+            </select>
+          </td>
+
+          <!-- Quantity Input -->
+          <td class="px-4 py-2 border-b">
+            <input
+              v-model.number="item.quantity"
+              type="number"
+              class="border rounded p-1 w-full"
+              min="1"
+              placeholder="0"
+              required
+            />
+          </td>
+
+          <!-- Loss Checkbox -->
+          <td class="px-4 py-2 border-b text-center">
+            <input
+              v-model="item.loss"
+              type="checkbox"
+              class="w-6 h-6 accent-red-500"
+            />
+          </td>
+
+          <!-- Lost Checkbox -->
+          <td class="px-4 py-2 border-b text-center">
+            <input
+              v-model="item.lost"
+              type="checkbox"
+              class="w-6 h-6 accent-red-500"
+            />
+          </td>
+
+          <!-- Reason Input -->
+          <td class="px-4 py-2 border-b">
+            <input
+              v-model="item.reason"
+              type="text"
+              class="border rounded p-1 w-full"
+              placeholder="Reason for loss"
+              :disabled="!(item.loss || item.lost)"
+            />
+          </td>
+
+          <!-- Delete Button -->
+          <td class="px-4 py-2 border-b text-center">
+            <button
+              @click="removeItem(index)"
+              class="text-red-500 hover:text-red-700"
+            >
+              <i class="pi pi-trash"></i> Delete
             </button>
-          </div>
-        </div>
-      </div>
-    </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Add Row Button -->
+    <div class="flex justify-end mt-4">
+      <button
+        @click="addItem"
+        class="px-4 py-2 bg-secondary-500 text-white rounded"
+      >
+        Add Item
+      </button>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="flex justify-end mt-6">
+      <button
+        @click="submitOpname"
+        class="px-6 py-2 bg-primary-500 text-white rounded"
+      >
+        Submit Opname
+      </button>
+    </div>
   </div>
 </template>
+
+<style scoped>
+table {
+  border-collapse: collapse;
+}
+</style>

@@ -1,142 +1,139 @@
 <!-- DataOpname.vue -->
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { RouterLink } from 'vue-router';
 import axios from 'axios';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useToast } from 'vue-toastification';
 
-// State variables to store API data
-const opnameData = ref([]); // For Stock Opname table
-const lossData = ref([]); // For Stock Loss table
+const toast = useToast(); // Initialize Vue Toastification
 
-// Function to fetch data for stock opname
+// Reactive variables
+const startDate = ref(''); // Start Date
+const endDate = ref(''); // End Date
+const opname = ref([]); // List of stock opname records
+const loading = ref(false); // Loading state
+
+// Helper function to format timestamps
+function formatTimestamp(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString();
+}
+
+// Fetch Opname Data from Backend
 const fetchOpnameData = async () => {
+  loading.value = true;
   try {
-    const response = await axios.get('/api/opname');
-    opnameData.value = response.data;
+    const response = await axios.get('/api/stock-opname'); // Replace with your endpoint
+    opname.value = response.data; // Store the fetched data
   } catch (error) {
     console.error('Error fetching opname data:', error);
+    toast.error('Failed to fetch opname data. Please try again.');
+  } finally {
+    loading.value = false;
   }
 };
 
-// Function to fetch data for stock loss
-const fetchLossData = async () => {
-  try {
-    const response = await axios.get('/api/loss');
-    lossData.value = response.data;
-  } catch (error) {
-    console.error('Error fetching loss data:', error);
+// Filtered Opname Records Based on Date Range
+const filteredOpnames = computed(() => {
+  if (!startDate.value && !endDate.value) {
+    return opname.value;
   }
-};
 
-// Format date to DD/MM/YYYY
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('en-GB');
-};
+  const start = new Date(startDate.value);
+  const end = new Date(endDate.value);
 
-// Fetch data on component mount
-onMounted(() => {
-  fetchOpnameData();
-  fetchLossData();
+  return opname.value.filter((item) => {
+    const opnameDate = new Date(item.tanggal_opname);
+    return opnameDate >= start && opnameDate <= end;
+  });
 });
+
+// Watch for Date Changes and Fetch Data
+watch([startDate, endDate], fetchOpnameData);
+
+// Fetch Data on Component Mount
+onMounted(fetchOpnameData);
 </script>
 
 <template>
-  <div class="biarsamaHomeView flex-1 p-4">
-    <!-- Low Stock Table -->
-    <div class="container mx-auto p-4">
-      <div class="flex items-center space-x-2">
-        <i class="pi pi-exclamation-circle flex text-xl text-accent-500"></i>
-        <h1 class="flex text-2xl text-heading">Stock Opname</h1>
-      </div>
+  <div class="container mx-auto p-4">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-heading">Stock Opname</h2>
       <RouterLink
-          :to="{ name: 'add-data-opname' }"
-          class="max-h-10 py-2 px-3 rounded-md text-white-50 bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
-        >
-          Add New
-        </RouterLink>
-      <div>
-        <table
-          class="min-w-full text-left border border-gray-300 rounded-lg overflow-hidden"
-        >
-          <thead>
-            <tr class="bg-gray-200 text-left">
-              <th class="px-4 py-2 border-b">No</th>
-              <th class="px-4 py-2 border-b">Product Name</th>
-              <th class="px-4 py-2 border-b">Stock by System</th>
-              <th class="px-4 py-2 border-b">Physical Stock</th>
-              <th class="px-4 py-2 border-b">Discrepancy</th>
-              <th class="px-4 py-2 border-b">Status</th>
-              <th class="px-4 py-2 border-b">Timestamp</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(item, index) in opnameData"
-              :key="index"
-              class="hover:bg-gray-50"
-            >
-              <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-              <td class="px-4 py-2 border-b">{{ item.nama_produk }}</td>
-              <td class="px-4 py-2 border-b">{{ item.stock_system }}</td>
-              <td class="px-4 py-2 border-b">{{ item.physical_stock }}</td>
-              <td class="px-4 py-2 border-b">
-                {{ item.physical_stock - item.stock_system }}
-              </td>
-              <td class="px-4 py-2 border-b">
-                <span
-                  v-if="item.physical_stock === item.stock_system"
-                  class="text-primary-500"
-                  >Match</span
-                >
-                <span v-else class="text-red-500">Discrepancy</span>
-              </td>
-              <td class="px-4 py-2 border-b">
-                {{ formatDate(item.timestamp_created) }}
-              </td>
-            </tr>
-            <tr v-if="opnameData.length === 0">
-              <td colspan="7" class="text-center py-4">No data available</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        :to="{ name: 'add-data-opname' }"
+        class="max-h-10 py-2 px-3 rounded-md self-center text-white bg-primary-500 hover:shadow-lg shadow-primary-500 active:scale-90"
+      >
+        Add New Opname
+      </RouterLink>
     </div>
 
-    <!-- Expired Stock Table -->
-    <div class="container mx-auto p-4">
-      <div class="flex items-center space-x-2">
-        <i class="pi pi-exclamation-triangle flex text-xl text-accent-500"></i>
-        <h1 class="flex text-2xl text-heading">Stock Loss</h1>
-      </div>
-      <div>
-        <table
-          class="min-w-full text-left border border-gray-300 rounded-lg overflow-hidden"
+    <!-- Date Filters -->
+    <div class="flex items-center space-x-4 mb-4">
+      <input
+        v-model="startDate"
+        type="date"
+        class="border border-gray-300 rounded-lg px-4 py-2"
+        placeholder="Start Date"
+      />
+      <input
+        v-model="endDate"
+        type="date"
+        class="border border-gray-300 rounded-lg px-4 py-2"
+        placeholder="End Date"
+      />
+    </div>
+
+    <!-- Table -->
+    <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+      <thead>
+        <tr class="bg-gray-200 text-left">
+          <th class="px-4 py-2 border-b">No</th>
+          <th class="px-4 py-2 border-b">Date</th>
+          <th class="px-4 py-2 border-b">Time</th>
+          <th class="px-4 py-2 border-b">Opnamer</th>
+          <th class="px-4 py-2 border-b">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(item, index) in filteredOpnames"
+          :key="item.id_opname"
+          class="hover:bg-gray-50"
         >
-          <thead>
-            <tr class="bg-gray-200 text-left">
-              <th class="px-4 py-2 border-b">No</th>
-              <th class="px-4 py-2 border-b">Product Name</th>
-              <th class="px-4 py-2 border-b">Loss QTY</th>
-              <th class="px-4 py-2 border-b">Reason</th>
-              <th class="px-4 py-2 border-b">Report Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(item, index) in lossData" :key="index" class="hover:bg-gray-50">
-              <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
-              <td class="px-4 py-2 border-b">{{ item.nama_produk }}</td>
-              <td class="px-4 py-2 border-b">{{ item.loss_qty }}</td>
-              <td class="px-4 py-2 border-b">{{ item.reason }}</td>
-              <td class="px-4 py-2 border-b">
-                {{ formatDate(item.report_time) }}
-              </td>
-            </tr>
-            <tr v-if="lossData.length === 0">
-              <td colspan="5" class="text-center py-4">No data available</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+          <td class="px-4 py-2 border-b">{{ index + 1 }}</td>
+          <td class="px-4 py-2 border-b">
+            {{ formatTimestamp(item.tanggal_opname) }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            {{ new Date(item.tanggal_opname).toLocaleTimeString() }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            {{ item.opnamer_name || 'Unknown' }}
+          </td>
+          <td class="px-4 py-2 border-b">
+            <RouterLink
+              :to="{
+                name: 'detail-data-opname',
+                params: { id: item.id_opname },
+              }"
+              class="p-2 px-4 bg-primary-500 text-white rounded-md hover:shadow-md"
+            >
+              View
+            </RouterLink>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Loading Indicator -->
+    <div v-if="loading" class="text-center my-4">Loading...</div>
+    <div
+      v-if="!loading && filteredOpnames.length === 0"
+      class="text-center my-4"
+    >
+      No stock opname data found.
     </div>
   </div>
 </template>

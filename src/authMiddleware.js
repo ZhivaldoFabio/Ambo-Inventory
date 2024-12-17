@@ -17,6 +17,7 @@ export const authenticateJWT = async (req, res, next) => {
         return res.status(403).json({ message: 'Forbidden' });
       }
       req.userId = user.id; // Attach the user ID to the request object
+      req.username = user.username; // Attach username to the request
       next();
     });
   } else {
@@ -32,7 +33,7 @@ export const loginUser = async (req, res) => {
 
     // Fetch user data from the database using email
     const [rows] = await connection.execute(
-      'SELECT id_user, email, password, role FROM users WHERE email = ?',
+      'SELECT id_user, username, email, password, role FROM users WHERE email = ?',
       [email]
     );
 
@@ -48,9 +49,9 @@ export const loginUser = async (req, res) => {
       return res.status(403).json({ message: 'Invalid credentials' });
     }
 
-    // Generate a JWT token including the user ID
+    // Generate a JWT token including the user ID, role, and username
     const token = jwt.sign(
-      { id: user.id_user, role: user.role },
+      { id: user.id_user, username: user.username, role: user.role },
       process.env.JWT_SECRET,
       {
         expiresIn: '1h',
@@ -67,7 +68,6 @@ export const loginUser = async (req, res) => {
 
 // To fetch user details from the database (use this in your route handler)
 export const getUserDetails = async (userId) => {
-
   if (!userId) {
     console.error('User ID is missing');
     return null; // If no userId is passed, return null
@@ -86,3 +86,22 @@ export const getUserDetails = async (userId) => {
   // console.log('Fetched User:', rows[0]); // Debug fetched user details
   return rows[0]; // Return user data if found
 };
+
+// Middleware to authenticate role
+export const authenticateRole = (requiredRole) => {
+  return (req, res, next) => {
+    const userRole = req.headers['userrole']; // Get the role from the header
+
+    if (!userRole) {
+      return res.status(401).json({ message: 'Role not provided' });
+    }
+
+    // Check if the user has the required role
+    if (userRole !== requiredRole) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    next(); // Proceed if role matches
+  };
+};
+

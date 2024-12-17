@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 
 import pool from './db.js';
-import { authenticateJWT } from './authMiddleware.js'; // Import the middleware
+import { authenticateJWT, authenticateRole } from './authMiddleware.js'; // Import the middleware
 import userController from './userController.js'; // Import other controllers
 import { loginUser } from './authMiddleware.js';
 
@@ -1429,8 +1429,28 @@ app.get('/api/total-penjualan', async (req, res) => {
 
 // BAGIAN OPNAME //
 
-// Endpoint to get all stock opname data
-app.get('/api/opname', async (req, res) => {
+// Ednpoint to get opname data
+app.get('/api/stock-opname', async (req, res) => {
+  const query = `
+    SELECT 
+      id_opname,
+      tanggal_opname,
+      id_user
+    FROM opname
+    ORDER BY tanggal_opname DESC
+  `;
+
+  try {
+    const [results] = await pool.execute(query);
+    res.status(200).json(results);
+  } catch (err) {
+    console.error('Error fetching stock opname:', err.message);
+    res.status(500).json({ error: 'Failed to fetch stock opname' });
+  }
+});
+
+// Endpoint to get detailed opname data
+app.get('/api/opname/:id', async (req, res) => {
   const query = `
     SELECT 
       opname.id_opname,
@@ -1460,7 +1480,7 @@ app.get('/api/loss', async (req, res) => {
     SELECT 
       loss.id_loss,
       produk.nama_produk,
-      loss.loss_qty,
+      loss.jumlah_loss,
       loss.reason,
       loss.report_time
     FROM loss
@@ -1474,6 +1494,91 @@ app.get('/api/loss', async (req, res) => {
   } catch (err) {
     console.error('Error fetching stock loss data: ', err);
     res.status(500).send('Server error');
+  }
+});
+
+// Endpoint to post new opname data
+app.post('/api/stock-opname', async (req, res) => {
+  const { details } = req.body;
+
+  if (!details || details.length === 0) {
+    return res
+      .status(400)
+      .json({ message: 'Stock opname details are required.' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Insert into 'opname' table
+    const [opnameResult] = await connection.execute(
+      'INSERT INTO opname (tanggal_opname) VALUES (CURRENT_TIMESTAMP)'
+    );
+    const id_opname = opnameResult.insertId;
+
+    // Prepare details for 'detailopname' table
+    const detailValues = [];
+    for (const item of details) {
+      // Fetch id_stock and jumlah_stock based on id_produk
+      const [stockResult] = await connection.execute(
+        'SELECT id_stock, jumlah_stock FROM stock WHERE id_produk = ? LIMIT 1',
+        [item.id_produk]
+      );
+
+      const id_stock = stockResult.length > 0 ? stockResult[0].id_stock : null;
+      const jumlahStock =
+        stockResult.length > 0 ? stockResult[0].jumlah_stock : 0;
+
+      // If no stock is found, you can handle this case (e.g., return an error or skip)
+      if (!id_stock) {
+        console.error(`No stock found for product ID: ${item.id_produk}`);
+        continue; // Skip this item or handle it as needed
+      }
+
+      const physicalStock = item.physical_stock || 0; // Ensure this is coming through
+      const discrepancy = physicalStock - jumlahStock;
+
+      // Add loss and lost values
+      const loss = item.loss || false; // Default to false if not provided
+      const lost = item.lost || false; // Default to false if not provided
+
+      detailValues.push([
+        id_opname,
+        item.id_produk,
+        id_stock,
+        physicalStock, // Ensure this is passed correctly
+        discrepancy,
+        item.remarks || null, // Remarks can be null if not provided
+        loss, // Add loss value
+        lost, // Add lost value
+      ]);
+    }
+
+    // If there are no valid detail values, return an error
+    if (detailValues.length === 0) {
+      return res
+        .status(400)
+        .json({ message: 'No valid stock items to process.' });
+    }
+
+    // Insert details into 'detailopname' table
+    await connection.query(
+      'INSERT INTO detailopname (id_opname, id_produk, id_stock, physical_stock, discrepancy, remarks, loss, lost) VALUES ?',
+      [detailValues]
+    );
+
+    // Commit the transaction
+    await connection.commit();
+    res.status(201).json({ message: 'Stock opname added successfully.' });
+  } catch (error) {
+    // If any error occurs, rollback the transaction
+    await connection.rollback();
+    console.error('Error adding stock opname:', error);
+    res.status(500).json({ message: 'Failed to add stock opname.' });
+  } finally {
+    // Release the connection back to the pool
+    connection.release();
   }
 });
 
