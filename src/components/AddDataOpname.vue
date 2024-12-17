@@ -15,6 +15,7 @@ const newStockOpname = ref({
   good_item: 0,
   bad_item: 0,
   jumlah_loss: 0,
+  reason: '',
   timestamp_created: '',
 });
 
@@ -47,6 +48,7 @@ const addStockOpname = async () => {
       good_item: newStockOpname.value.good_item,
       bad_item: newStockOpname.value.bad_item,
       jumlah_loss: newStockOpname.value.jumlah_loss,
+      reason: newStockOpname.value.reason,
       timestamp_created: new Date().toISOString(),
     };
 
@@ -69,6 +71,7 @@ const resetForm = () => {
     good_item: 0,
     bad_item: 0,
     jumlah_loss: 0,
+    reason: '',
     timestamp_created: '',
   };
 };
@@ -82,7 +85,7 @@ const resetForm = () => {
         <h2 class="text-2xl font-heading">Add Stock Opname</h2>
       </div>
       <RouterLink
-        :to="{ name: 'stock' }"
+        :to="{ name: 'data-opname' }"
         class="text-center place-content-center min-w-10 min-h-10 bg-primary-500 rounded-md shadow-md hover:bg-primary-400 hover:shadow-2xl active:bg-primary-600"
       >
         <i
@@ -130,7 +133,6 @@ const resetForm = () => {
               required
             />
           </div>
-
           <!-- Good Item -->
           <div>
             <label for="good_item">Good Item Amount</label>
@@ -138,19 +140,6 @@ const resetForm = () => {
               v-model.number="newStockOpname.good_item"
               @input="calculateLoss"
               id="good_item"
-              type="number"
-              min="0"
-              class="w-full p-2 border rounded shadow-sm ring-1 ring-gray-300 focus:ring-2 focus:ring-accent-500"
-              required
-            />
-          </div>
-
-          <!-- Bad Item -->
-          <div>
-            <label for="bad_item">Bad Item Amount</label>
-            <input
-              v-model.number="newStockOpname.bad_item"
-              id="bad_item"
               type="number"
               min="0"
               class="w-full p-2 border rounded shadow-sm ring-1 ring-gray-300 focus:ring-2 focus:ring-accent-500"
@@ -168,6 +157,19 @@ const resetForm = () => {
               class="w-full p-2 border rounded shadow-sm bg-gray-100"
               readonly
             />
+          </div>
+
+          <!-- Reason -->
+          <div>
+            <label for="reason">Reason</label>
+            <textarea
+              v-model="newStockOpname.reason"
+              id="reason"
+              rows="3"
+              class="w-full p-2 border rounded shadow-sm ring-1 ring-gray-300 focus:ring-2 focus:ring-accent-500"
+              placeholder="Enter reason for discrepancy..."
+              required
+            ></textarea>
           </div>
 
           <!-- Submit Button -->

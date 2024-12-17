@@ -21,6 +21,7 @@ import AddDataSupplier from '@/components/AddDataSupplier.vue';
 import AddDataCategory from '@/components/AddDataCategory.vue';
 import AddDataStock from '@/components/AddDataStock.vue';
 import AddDataPembelian from '@/components/AddDataPembelian.vue';
+import AddDataOpname from '@/components/AddDataOpname.vue';
 import EditDataProduct from '@/components/EditDataProduct.vue';
 import EditDataUnit from '@/components/EditDataUnit.vue';
 import EditDataCategory from '@/components/EditDataCategory.vue';
@@ -252,6 +253,15 @@ const router = createRouter({
       path: '/add-data-pembelian',
       name: 'add-data-pembelian',
       component: AddDataPembelian,
+      meta: {
+        requiresAuth: true, // This metadata marks the route as requiring authentication
+        allowedRoles: ['Gudang'],
+      },
+    },
+    {
+      path: '/add-data-opname',
+      name: 'add-data-opname',
+      component: AddDataOpname,
       meta: {
         requiresAuth: true, // This metadata marks the route as requiring authentication
         allowedRoles: ['Gudang'],
