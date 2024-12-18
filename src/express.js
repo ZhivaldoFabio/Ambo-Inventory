@@ -1451,22 +1451,28 @@ app.get('/api/stock-opname', async (req, res) => {
 
 // Endpoint to get detailed opname data
 app.get('/api/opname/:id', async (req, res) => {
+  const { id } = req.params; // Extract the 'id' from the request params
   const query = `
     SELECT 
-      opname.id_opname,
+      detailopname.id_opname,
       produk.nama_produk,
       stock.jumlah_stock AS stock_system,
-      opname.physical_stock,
-      opname.discrepancy,
-      opname.timestamp_created
-    FROM opname
-    JOIN produk ON produk.id_produk = opname.id_produk
-    JOIN stock ON stock.id_stock = opname.id_stock
-    ORDER BY opname.timestamp_created DESC
+      detailopname.physical_stock,
+      detailopname.discrepancy,
+      detailopname.loss,
+      detailopname.lost,
+      detailopname.remarks,
+      detailopname.timestamp_created
+    FROM detailopname
+    JOIN produk ON produk.id_produk = detailopname.id_produk
+    JOIN stock ON stock.id_stock = detailopname.id_stock
+    WHERE detailopname.id_opname = ?
+    ORDER BY detailopname.timestamp_created DESC
   `;
 
   try {
-    const [results] = await pool.execute(query);
+    // Pass the 'id' as a parameter to the query
+    const [results] = await pool.execute(query, [id]);
     res.status(200).json(results);
   } catch (err) {
     console.error('Error fetching stock opname data: ', err);
