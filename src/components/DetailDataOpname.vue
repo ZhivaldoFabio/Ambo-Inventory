@@ -1,4 +1,3 @@
-i
 <!-- DetailDataOpname.vue -->
 
 <script setup>

@@ -1546,7 +1546,7 @@ app.post('/api/stock-opname', async (req, res) => {
       const discrepancy = physicalStock - jumlahStock;
 
       // Determine the loss value (e.g., if discrepancy is negative)
-      const loss = discrepancy < 0;
+      const loss = discrepancy < 0 ? 'true' : 'false'; // Convert boolean to 'true' or 'false'
 
       detailValues.push([
         id_opname,
@@ -1555,7 +1555,7 @@ app.post('/api/stock-opname', async (req, res) => {
         physicalStock,
         discrepancy,
         item.remarks || null, // Remarks can be null if not provided
-        loss, // Add loss value
+        loss, // Add loss value as 'true' or 'false'
       ]);
     }
 

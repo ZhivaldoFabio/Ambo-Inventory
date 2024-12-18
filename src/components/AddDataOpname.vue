@@ -69,8 +69,10 @@ const submitOpname = async () => {
       details: invoiceItems.value.map((item) => ({
         id_produk: item.id_produk,
         physical_stock: item.quantity, // Assuming quantity represents physical stock
+        jumlah_stock: 0, // Or fetch this from the backend if necessary
+        loss: item.loss ? 'true' : 'false', // Convert boolean to 'true' or 'false'
+        lost: item.lost ? 'true' : 'false', // Convert boolean to 'true' or 'false'
         remarks: item.reason || null,
-        loss: item.loss, // Include loss as a boolean
       })),
     };
 
