@@ -115,7 +115,6 @@ const submitOpname = async () => {
           <th class="px-4 py-2 border-b">Product Name</th>
           <th class="px-4 py-2 border-b">Quantity</th>
           <th class="px-4 py-2 border-b">Loss</th>
-          <th class="px-4 py-2 border-b">Lost</th>
           <th class="px-4 py-2 border-b">Reason</th>
           <th class="px-4 py-2 border-b">Actions</th>
         </tr>
@@ -160,15 +159,6 @@ const submitOpname = async () => {
           <td class="px-4 py-2 border-b text-center">
             <input
               v-model="item.loss"
-              type="checkbox"
-              class="w-6 h-6 accent-red-500"
-            />
-          </td>
-
-          <!-- Lost Checkbox -->
-          <td class="px-4 py-2 border-b text-center">
-            <input
-              v-model="item.lost"
               type="checkbox"
               class="w-6 h-6 accent-red-500"
             />
