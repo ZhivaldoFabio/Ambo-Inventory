@@ -84,12 +84,12 @@ onMounted(() => {
             </td>
             <td class="px-4 py-2 border-b">
               <i
-                v-if="item.loss === true || item.loss === 'true'"
+                v-if="item.lost === true || item.lost === 'true'"
                 class="pi pi-exclamation-circle text-xl text-red-500"
               ></i>
             </td>
-            <td>
-              {{ item.remarks }}
+            <td :class="{ 'text-gray-500 px-4 py-2 border-b': !item.remarks }">
+              {{ item.remarks || 'NULL' }}
             </td>
             <td class="px-4 py-2 border-b">
               {{ formatDate(item.timestamp_created) }}
