@@ -1,3 +1,5 @@
+<!-- AddDataOpname.vue -->
+
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
@@ -7,7 +9,7 @@ const toast = useToast();
 
 // Table rows state
 const invoiceItems = ref([
-  { id_produk: '', quantity: 1, loss: false, lost: false, reason: '' },
+  { id_produk: '', quantity: 1, loss: false, reason: '' },
 ]);
 
 // Product options for dropdown
@@ -30,7 +32,6 @@ const addItem = () => {
     id_produk: '',
     quantity: 1,
     loss: false,
-    lost: false,
     reason: '',
   });
 };
@@ -49,6 +50,10 @@ const submitOpname = async () => {
         toast.error('Please fill all fields before submitting.');
         return;
       }
+      if (item.loss && !item.reason) {
+        toast.error('Please provide a reason for the loss.');
+        return;
+      }
     }
 
     // Get the user role from localStorage or from your app state
@@ -59,18 +64,17 @@ const submitOpname = async () => {
       return;
     }
 
-    // Send the role along with the request
+    // Prepare payload
     const payload = {
       details: invoiceItems.value.map((item) => ({
         id_produk: item.id_produk,
         physical_stock: item.quantity, // Assuming quantity represents physical stock
-        jumlah_stock: 0, // Or fetch this from the backend if necessary
-        loss: item.loss, // Include loss as a boolean
-        lost: item.lost, // Include lost as a boolean
         remarks: item.reason || null,
+        loss: item.loss, // Include loss as a boolean
       })),
     };
 
+    // Submit to the API
     await axios.post('/api/stock-opname', payload, {
       headers: {
         userrole: userRole, // Send the role as part of the header
@@ -81,7 +85,7 @@ const submitOpname = async () => {
 
     // Reset the form
     invoiceItems.value = [
-      { id_produk: '', quantity: 1, loss: false, lost: false, reason: '' },
+      { id_produk: '', quantity: 1, loss: false, reason: '' },
     ];
   } catch (error) {
     console.error('Error submitting opname:', error);
@@ -171,7 +175,7 @@ const submitOpname = async () => {
               type="text"
               class="border rounded p-1 w-full"
               placeholder="Reason for loss"
-              :disabled="!(item.loss || item.lost)"
+              :disabled="!item.loss"
             />
           </td>
 

@@ -1536,28 +1536,26 @@ app.post('/api/stock-opname', async (req, res) => {
       const jumlahStock =
         stockResult.length > 0 ? stockResult[0].jumlah_stock : 0;
 
-      // If no stock is found, you can handle this case (e.g., return an error or skip)
+      // If no stock is found, handle the case (e.g., skip or log an error)
       if (!id_stock) {
         console.error(`No stock found for product ID: ${item.id_produk}`);
-        continue; // Skip this item or handle it as needed
+        continue; // Skip this item
       }
 
       const physicalStock = item.physical_stock || 0; // Ensure this is coming through
       const discrepancy = physicalStock - jumlahStock;
 
-      // Add loss and lost values
-      const loss = item.loss || false; // Default to false if not provided
-      const lost = item.lost || false; // Default to false if not provided
+      // Determine the loss value (e.g., if discrepancy is negative)
+      const loss = discrepancy < 0;
 
       detailValues.push([
         id_opname,
         item.id_produk,
         id_stock,
-        physicalStock, // Ensure this is passed correctly
+        physicalStock,
         discrepancy,
         item.remarks || null, // Remarks can be null if not provided
         loss, // Add loss value
-        lost, // Add lost value
       ]);
     }
 
@@ -1570,7 +1568,7 @@ app.post('/api/stock-opname', async (req, res) => {
 
     // Insert details into 'detailopname' table
     await connection.query(
-      'INSERT INTO detailopname (id_opname, id_produk, id_stock, physical_stock, discrepancy, remarks, loss, lost) VALUES ?',
+      'INSERT INTO detailopname (id_opname, id_produk, id_stock, physical_stock, discrepancy, remarks, loss) VALUES ?',
       [detailValues]
     );
 
