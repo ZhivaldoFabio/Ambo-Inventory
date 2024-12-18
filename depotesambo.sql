@@ -14,6 +14,45 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+-- Dumping structure for table depotesambo.detailopname
+DROP TABLE IF EXISTS `detailopname`;
+CREATE TABLE IF NOT EXISTS `detailopname` (
+  `id_detail_opname` int NOT NULL AUTO_INCREMENT,
+  `id_opname` int NOT NULL,
+  `id_produk` int NOT NULL,
+  `id_stock` int NOT NULL,
+  `physical_stock` int DEFAULT NULL,
+  `discrepancy` int DEFAULT NULL,
+  `loss` enum('true','false') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'false',
+  `lost` enum('true','false') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'false',
+  `remarks` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '',
+  `timestamp_created` timestamp NOT NULL DEFAULT (now()),
+  PRIMARY KEY (`id_detail_opname`) USING BTREE,
+  KEY `FK_opname_produk` (`id_produk`),
+  KEY `FK_opname_stock` (`id_stock`),
+  KEY `FK_detailopname_opname` (`id_opname`),
+  CONSTRAINT `FK_detailopname_opname` FOREIGN KEY (`id_opname`) REFERENCES `opname` (`id_opname`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_opname_produk` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_opname_stock` FOREIGN KEY (`id_stock`) REFERENCES `stock` (`id_stock`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table depotesambo.detailopname: ~13 rows (approximately)
+DELETE FROM `detailopname`;
+INSERT INTO `detailopname` (`id_detail_opname`, `id_opname`, `id_produk`, `id_stock`, `physical_stock`, `discrepancy`, `loss`, `lost`, `remarks`, `timestamp_created`) VALUES
+	(7, 11, 1, 1, 158, -2, 'true', 'false', NULL, '2024-12-17 22:14:25'),
+	(10, 11, 3, 10, 1, -10, 'false', 'false', NULL, '2024-12-17 22:14:25'),
+	(11, 11, 4, 14, 1, -54, 'false', 'false', NULL, '2024-12-17 22:14:25'),
+	(12, 11, 5, 2, 1, -9, 'false', 'false', NULL, '2024-12-17 22:14:25'),
+	(13, 11, 6, 3, 1, -11, 'false', 'false', NULL, '2024-12-17 22:14:25'),
+	(14, 11, 13, 13, 1, -90, 'false', 'false', NULL, '2024-12-17 22:14:25'),
+	(15, 11, 14, 15, 1, -78, 'false', 'false', NULL, '2024-12-17 22:14:25'),
+	(16, 11, 16, 18, 1, -50, 'false', 'false', NULL, '2024-12-17 22:14:25'),
+	(17, 11, 20, 12, 1, -71, 'false', 'false', NULL, '2024-12-17 22:14:25'),
+	(18, 11, 24, 17, 1, -54, 'false', 'false', NULL, '2024-12-17 22:14:25'),
+	(19, 12, 1, 1, 158, -2, 'false', 'false', 'pecah 1 terus 1 nya gatau kemana hilang', '2024-12-17 22:31:38'),
+	(20, 13, 1, 1, 160, 0, 'false', 'false', 'asdasd', '2024-12-17 22:34:22'),
+	(21, 14, 1, 1, 158, -2, 'true', 'true', 'asdasd', '2024-12-17 22:38:26');
+
 -- Dumping structure for table depotesambo.detailpembelian
 DROP TABLE IF EXISTS `detailpembelian`;
 CREATE TABLE IF NOT EXISTS `detailpembelian` (
@@ -127,14 +166,14 @@ INSERT INTO `kategori` (`id_kategori`, `nama_kategori`) VALUES
 -- Dumping structure for table depotesambo.loss
 DROP TABLE IF EXISTS `loss`;
 CREATE TABLE IF NOT EXISTS `loss` (
-  `id_loss` int NOT NULL,
+  `id_loss` int NOT NULL AUTO_INCREMENT,
   `id_produk` int NOT NULL,
   `jumlah_loss` int NOT NULL,
   `reason` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `report_time` timestamp NOT NULL,
   PRIMARY KEY (`id_loss`),
   KEY `FK_loss_produk` (`id_produk`),
-  CONSTRAINT `FK_loss_produk` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`)
+  CONSTRAINT `FK_loss_produk` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.loss: ~0 rows (approximately)
@@ -151,8 +190,8 @@ CREATE TABLE IF NOT EXISTS `lost` (
   PRIMARY KEY (`id_lost`),
   KEY `FK_lost_produk` (`id_produk`),
   KEY `FK_lost_opname` (`id_opname`),
-  CONSTRAINT `FK_lost_opname` FOREIGN KEY (`id_opname`) REFERENCES `opname` (`id_opname`),
-  CONSTRAINT `FK_lost_produk` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`)
+  CONSTRAINT `FK_lost_opname` FOREIGN KEY (`id_opname`) REFERENCES `detailopname` (`id_detail_opname`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_lost_produk` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table depotesambo.lost: ~0 rows (approximately)
@@ -161,22 +200,21 @@ DELETE FROM `lost`;
 -- Dumping structure for table depotesambo.opname
 DROP TABLE IF EXISTS `opname`;
 CREATE TABLE IF NOT EXISTS `opname` (
-  `id_opname` int NOT NULL,
-  `id_produk` int NOT NULL,
-  `id_stock` int NOT NULL,
-  `physical_stock` int NOT NULL,
-  `difference` int NOT NULL,
-  `remarks` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
-  `timestamp_created` timestamp NOT NULL,
+  `id_opname` int NOT NULL AUTO_INCREMENT,
+  `tanggal_opname` timestamp NOT NULL DEFAULT (now()),
+  `id_user` int DEFAULT NULL,
   PRIMARY KEY (`id_opname`),
-  KEY `FK_opname_produk` (`id_produk`),
-  KEY `FK_opname_stock` (`id_stock`),
-  CONSTRAINT `FK_opname_produk` FOREIGN KEY (`id_produk`) REFERENCES `produk` (`id_produk`),
-  CONSTRAINT `FK_opname_stock` FOREIGN KEY (`id_stock`) REFERENCES `stock` (`id_stock`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  KEY `FK_opname_users` (`id_user`),
+  CONSTRAINT `FK_opname_users` FOREIGN KEY (`id_user`) REFERENCES `users` (`id_user`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table depotesambo.opname: ~0 rows (approximately)
+-- Dumping data for table depotesambo.opname: ~4 rows (approximately)
 DELETE FROM `opname`;
+INSERT INTO `opname` (`id_opname`, `tanggal_opname`, `id_user`) VALUES
+	(11, '2024-12-17 22:14:25', NULL),
+	(12, '2024-12-17 22:31:38', NULL),
+	(13, '2024-12-17 22:34:22', NULL),
+	(14, '2024-12-17 22:38:26', NULL);
 
 -- Dumping structure for table depotesambo.pembelian
 DROP TABLE IF EXISTS `pembelian`;
