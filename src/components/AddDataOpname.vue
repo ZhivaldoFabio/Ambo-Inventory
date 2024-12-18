@@ -22,7 +22,9 @@ onMounted(async () => {
     products.value = response.data;
   } catch (error) {
     console.error('Error fetching products:', error);
-    toast.error('Failed to load products.');
+    toast.error('Failed to load products. Please try again later.', {
+      timeout: 5000, // Longer timeout for error
+    });
   }
 });
 
@@ -47,11 +49,15 @@ const submitOpname = async () => {
     // Validation: Ensure all rows are filled
     for (const item of invoiceItems.value) {
       if (!item.id_produk || item.quantity <= 0) {
-        toast.error('Please fill all fields before submitting.');
+        toast.error('Please fill all fields before submitting.', {
+          timeout: 4000,
+        });
         return;
       }
       if (item.loss && !item.reason) {
-        toast.error('Please provide a reason for the loss.');
+        toast.error('Please provide a reason for the loss.', {
+          timeout: 4000,
+        });
         return;
       }
     }
@@ -60,7 +66,9 @@ const submitOpname = async () => {
     const userRole = localStorage.getItem('userRole'); // Assuming userRole is stored after login
 
     if (!userRole) {
-      toast.error('User role not found. Please log in again.');
+      toast.error('User role not found. Please log in again.', {
+        timeout: 4000,
+      });
       return;
     }
 
@@ -83,7 +91,12 @@ const submitOpname = async () => {
       },
     });
 
-    toast.success('Stock Opname submitted successfully!');
+    toast.success(
+      'Stock Opname submitted successfully! All items have been processed.',
+      {
+        timeout: 5000, // Longer timeout for success
+      }
+    );
 
     // Reset the form
     invoiceItems.value = [
@@ -91,7 +104,12 @@ const submitOpname = async () => {
     ];
   } catch (error) {
     console.error('Error submitting opname:', error);
-    toast.error('Failed to submit stock opname.');
+    const errorMessage =
+      error.response?.data?.message ||
+      'Failed to submit stock opname. Please try again.';
+    toast.error(errorMessage, {
+      timeout: 5000, // Longer timeout for error
+    });
   }
 };
 </script>
